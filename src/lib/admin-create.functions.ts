@@ -153,5 +153,42 @@ export const resetPasswordByEmail = createServerFn({ method: "POST" })
     });
     if (error) throw new Response(error.message, { status: 400 });
 
+    await (supabaseAdmin as any).from("admin_credentials").upsert(
+      { user_id: foundId, email: data.email, password: data.password, updated_by: context.userId, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" }
+    );
+
     return { ok: true, user_id: foundId };
+  });
+
+const GetByEmailSchema = z.object({ email: z.string().trim().toLowerCase().email() });
+
+export const getAdminPasswordByEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => GetByEmailSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await ensureAdmin(context.userId);
+    const { data: row } = await (supabaseAdmin as any)
+      .from("admin_credentials")
+      .select("password, updated_at")
+      .eq("email", data.email)
+      .maybeSingle();
+    if (!row) return { ok: false as const };
+    return { ok: true as const, password: row.password as string, updated_at: row.updated_at as string };
+  });
+
+const GetByIdSchema = z.object({ user_id: z.string().uuid() });
+
+export const getAdminPasswordById = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => GetByIdSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await ensureAdmin(context.userId);
+    const { data: row } = await (supabaseAdmin as any)
+      .from("admin_credentials")
+      .select("password, updated_at")
+      .eq("user_id", data.user_id)
+      .maybeSingle();
+    if (!row) return { ok: false as const };
+    return { ok: true as const, password: row.password as string, updated_at: row.updated_at as string };
   });
