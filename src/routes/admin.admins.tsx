@@ -325,6 +325,125 @@ function ResetPasswordByEmailDialog({
   );
 }
 
+type Creds = { email: string; password: string };
+
+function formatCredentialsText(c: Creds): string {
+  const date = new Date().toLocaleString("ar-EG");
+  return [
+    "═══════════════════════════════════════",
+    "    بيانات الدخول — لوحة تحكم وصلني",
+    "═══════════════════════════════════════",
+    "",
+    `البريد الإلكتروني : ${c.email}`,
+    `كلمة المرور       : ${c.password}`,
+    "",
+    `تاريخ الإصدار: ${date}`,
+    "",
+    "ملاحظة: يُرجى تغيير كلمة المرور بعد أول دخول.",
+    "═══════════════════════════════════════",
+  ].join("\n");
+}
+
+function downloadCredentialsTxt(c: Creds) {
+  const blob = new Blob([formatCredentialsText(c)], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `wasalni-admin-${c.email.replace(/[^a-z0-9]/gi, "_")}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportCredentialsPDF(c: Creds) {
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const W = doc.internal.pageSize.getWidth();
+  const date = new Date().toLocaleString("en-GB");
+
+  // Border
+  doc.setDrawColor(60, 100, 180);
+  doc.setLineWidth(2);
+  doc.rect(30, 30, W - 60, 360);
+
+  // Title
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.setTextColor(30, 60, 140);
+  doc.text("Wasalni — Admin Credentials", W / 2, 80, { align: "center" });
+
+  doc.setDrawColor(200);
+  doc.setLineWidth(0.5);
+  doc.line(60, 100, W - 60, 100);
+
+  // Body labels
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(80);
+  doc.text("Email:", 70, 150);
+  doc.text("Password:", 70, 200);
+  doc.text("Issued:", 70, 250);
+
+  // Body values
+  doc.setFont("courier", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor(20);
+  doc.text(c.email, 180, 150);
+  doc.text(c.password, 180, 200);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(80);
+  doc.text(date, 180, 250);
+
+  // Note
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(10);
+  doc.setTextColor(150, 60, 60);
+  doc.text(
+    "Please change the password after the first login.",
+    W / 2,
+    320,
+    { align: "center" }
+  );
+
+  // Footer
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(140);
+  doc.text("Wasalni Admin Dashboard — Confidential", W / 2, 370, { align: "center" });
+
+  doc.save(`wasalni-admin-${c.email.replace(/[^a-z0-9]/gi, "_")}.pdf`);
+}
+
+function printCredentials(c: Creds) {
+  const date = new Date().toLocaleString("ar-EG");
+  const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>بيانات الدخول</title>
+<style>
+  body{font-family:'Segoe UI',Tahoma,sans-serif;padding:40px;color:#222}
+  .card{max-width:560px;margin:0 auto;border:2px solid #2d5fb4;border-radius:14px;padding:32px}
+  h1{color:#1e3c8c;text-align:center;margin:0 0 8px;font-size:22px}
+  .sub{text-align:center;color:#777;font-size:12px;margin-bottom:24px}
+  .row{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed #ccc}
+  .lbl{font-weight:700;color:#555;min-width:140px}
+  .val{font-family:'Courier New',monospace;font-weight:700;color:#111;direction:ltr;text-align:left;flex:1}
+  .note{margin-top:20px;color:#a14040;font-style:italic;text-align:center;font-size:12px}
+  .ft{text-align:center;color:#999;font-size:11px;margin-top:18px}
+</style></head><body>
+<div class="card">
+  <h1>بيانات الدخول — لوحة تحكم وصلني</h1>
+  <div class="sub">${date}</div>
+  <div class="row"><div class="lbl">البريد الإلكتروني</div><div class="val">${c.email}</div></div>
+  <div class="row"><div class="lbl">كلمة المرور</div><div class="val">${c.password}</div></div>
+  <div class="note">يُرجى تغيير كلمة المرور بعد أول دخول.</div>
+  <div class="ft">Wasalni Admin Dashboard — Confidential</div>
+</div>
+<script>window.onload=()=>{window.print();setTimeout(()=>window.close(),500)};</script>
+</body></html>`;
+  const w = window.open("", "_blank", "width=720,height=600");
+  if (!w) { toast.error("افتح نوافذ منبثقة للطباعة"); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
 function AdminsPage() {
   const createAdmin = useServerFn(createAdminAccount);
   const [emails, setEmails] = useState<AdminEmail[]>([]);
