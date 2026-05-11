@@ -43,6 +43,7 @@ function RidePage() {
   const [rated, setRated] = useState(false);
   const [stars, setStars] = useState(5);
   const [countdown, setCountdown] = useState(0);
+  const [etaSec, setEtaSec] = useState(0);
 
   useEffect(() => {
     let cancel = false;
