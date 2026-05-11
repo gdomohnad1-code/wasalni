@@ -74,28 +74,40 @@ const STATUSES = [
 
 type AdRow = any;
 
-const emptyForm = {
-  title: "", description: "",
-  type: "banner",
-  placements: [] as string[],
-  target_audience: "both",
-  target_cities: "",
-  target_min_rides: "" as string,
-  target_max_rides: "" as string,
-  media_type: "image",
-  media_url: "",
-  external_link: "",
-  qr_data: "",
-  start_at: "", end_at: "",
-  daily_start_hour: "" as string,
-  daily_end_hour: "" as string,
-  max_impressions_per_user: 0,
-  priority: 0,
-  is_sponsored: false,
-  sponsor_name: "",
-  status: "draft",
-  auto_rotate: true,
-};
+function makeEmptyForm() {
+  const now = new Date();
+  const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const fmt = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  return {
+    title: "", description: "",
+    type: "banner",
+    placements: [] as string[],
+    target_audience: "both",
+    target_cities: "",
+    target_min_rides: "" as string,
+    target_max_rides: "" as string,
+    media_type: "image",
+    media_url: "",
+    external_link: "",
+    qr_data: "",
+    start_at: fmt(now), end_at: fmt(end),
+    daily_start_hour: "" as string,
+    daily_end_hour: "" as string,
+    max_impressions_per_user: 0,
+    priority: 0,
+    is_sponsored: false,
+    sponsor_name: "",
+    status: "draft",
+    auto_rotate: true,
+    target_area_lat: null as number | null,
+    target_area_lng: null as number | null,
+    target_area_radius_m: 2000,
+  };
+}
+type AdForm = ReturnType<typeof makeEmptyForm>;
 
 function AdsManagerPage() {
   const [rows, setRows] = useState<AdRow[]>([]);
