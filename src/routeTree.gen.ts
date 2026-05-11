@@ -16,6 +16,7 @@ import { Route as AppWalletRouteImport } from './routes/_app/wallet'
 import { Route as AppTripsRouteImport } from './routes/_app/trips'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
+import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppBookRouteImport } from './routes/_app/book'
 import { Route as AppRideIdRouteImport } from './routes/_app/ride.$id'
 
@@ -53,6 +54,11 @@ const AppHomeRoute = AppHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDriverRoute = AppDriverRouteImport.update({
+  id: '/driver',
+  path: '/driver',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBookRoute = AppBookRouteImport.update({
   id: '/book',
   path: '/book',
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/book': typeof AppBookRoute
+  '/driver': typeof AppDriverRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/trips': typeof AppTripsRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/book': typeof AppBookRoute
+  '/driver': typeof AppDriverRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/trips': typeof AppTripsRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/book': typeof AppBookRoute
+  '/_app/driver': typeof AppDriverRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/trips': typeof AppTripsRoute
@@ -102,6 +111,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/book'
+    | '/driver'
     | '/home'
     | '/profile'
     | '/trips'
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/book'
+    | '/driver'
     | '/home'
     | '/profile'
     | '/trips'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/auth'
     | '/_app/book'
+    | '/_app/driver'
     | '/_app/home'
     | '/_app/profile'
     | '/_app/trips'
@@ -187,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHomeRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/driver': {
+      id: '/_app/driver'
+      path: '/driver'
+      fullPath: '/driver'
+      preLoaderRoute: typeof AppDriverRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/book': {
       id: '/_app/book'
       path: '/book'
@@ -206,6 +225,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppBookRoute: typeof AppBookRoute
+  AppDriverRoute: typeof AppDriverRoute
   AppHomeRoute: typeof AppHomeRoute
   AppProfileRoute: typeof AppProfileRoute
   AppTripsRoute: typeof AppTripsRoute
@@ -215,6 +235,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppBookRoute: AppBookRoute,
+  AppDriverRoute: AppDriverRoute,
   AppHomeRoute: AppHomeRoute,
   AppProfileRoute: AppProfileRoute,
   AppTripsRoute: AppTripsRoute,
