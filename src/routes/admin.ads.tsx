@@ -288,6 +288,9 @@ function AdEditor({
         sponsor_name: editing.sponsor_name ?? "",
         status: editing.status ?? "draft",
         auto_rotate: editing.auto_rotate ?? true,
+        target_area_lat: editing.target_area_lat ?? null,
+        target_area_lng: editing.target_area_lng ?? null,
+        target_area_radius_m: editing.target_area_radius_m ?? 2000,
       });
     } else {
       setForm(makeEmptyForm());
