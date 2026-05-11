@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useLocation } from "@tanstack/
 import { Home, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
+import { useRideNotifications } from "@/hooks/use-ride-notifications";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
   const loc = useLocation();
   const { t } = useI18n();
+  useRideNotifications();
   const tabs = [
     { to: "/home", label: t("nav.home"), icon: Home },
     { to: "/profile", label: t("nav.account"), icon: User },
