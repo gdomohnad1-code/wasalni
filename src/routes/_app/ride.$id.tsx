@@ -19,6 +19,10 @@ interface Ride {
   status: string;
   pickup_address: string;
   destination_address: string;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
+  destination_lat: number | null;
+  destination_lng: number | null;
   ride_type: string;
   distance_km: number;
   duration_min: number;
@@ -26,6 +30,8 @@ interface Ride {
   driver_id: string | null;
   rider_id: string;
   rating: number | null;
+  accepted_at: string | null;
+  started_at: string | null;
 }
 
 function RidePage() {
