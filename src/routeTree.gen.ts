@@ -10,8 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminRidesRouteImport } from './routes/admin.rides'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
+import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
+import { Route as AdminComplaintsRouteImport } from './routes/admin.complaints'
 import { Route as AppWalletRouteImport } from './routes/_app/wallet'
 import { Route as AppTripsRouteImport } from './routes/_app/trips'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
@@ -25,6 +32,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -33,6 +45,36 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRidesRoute = AdminRidesRouteImport.update({
+  id: '/rides',
+  path: '/rides',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPayoutsRoute = AdminPayoutsRouteImport.update({
+  id: '/payouts',
+  path: '/payouts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDriversRoute = AdminDriversRouteImport.update({
+  id: '/drivers',
+  path: '/drivers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminComplaintsRoute = AdminComplaintsRouteImport.update({
+  id: '/complaints',
+  path: '/complaints',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AppWalletRoute = AppWalletRouteImport.update({
   id: '/wallet',
@@ -72,6 +114,7 @@ const AppRideIdRoute = AppRideIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/book': typeof AppBookRoute
   '/driver': typeof AppDriverRoute
@@ -79,6 +122,12 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProfileRoute
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
+  '/admin/complaints': typeof AdminComplaintsRoute
+  '/admin/drivers': typeof AdminDriversRoute
+  '/admin/payouts': typeof AdminPayoutsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/rides': typeof AdminRidesRoute
+  '/admin/': typeof AdminIndexRoute
   '/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRoutesByTo {
@@ -90,12 +139,19 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProfileRoute
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
+  '/admin/complaints': typeof AdminComplaintsRoute
+  '/admin/drivers': typeof AdminDriversRoute
+  '/admin/payouts': typeof AdminPayoutsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/rides': typeof AdminRidesRoute
+  '/admin': typeof AdminIndexRoute
   '/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/book': typeof AppBookRoute
   '/_app/driver': typeof AppDriverRoute
@@ -103,12 +159,19 @@ export interface FileRoutesById {
   '/_app/profile': typeof AppProfileRoute
   '/_app/trips': typeof AppTripsRoute
   '/_app/wallet': typeof AppWalletRoute
+  '/admin/complaints': typeof AdminComplaintsRoute
+  '/admin/drivers': typeof AdminDriversRoute
+  '/admin/payouts': typeof AdminPayoutsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/rides': typeof AdminRidesRoute
+  '/admin/': typeof AdminIndexRoute
   '/_app/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/auth'
     | '/book'
     | '/driver'
@@ -116,6 +179,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/trips'
     | '/wallet'
+    | '/admin/complaints'
+    | '/admin/drivers'
+    | '/admin/payouts'
+    | '/admin/reports'
+    | '/admin/rides'
+    | '/admin/'
     | '/ride/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,11 +196,18 @@ export interface FileRouteTypes {
     | '/profile'
     | '/trips'
     | '/wallet'
+    | '/admin/complaints'
+    | '/admin/drivers'
+    | '/admin/payouts'
+    | '/admin/reports'
+    | '/admin/rides'
+    | '/admin'
     | '/ride/$id'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/admin'
     | '/auth'
     | '/_app/book'
     | '/_app/driver'
@@ -139,12 +215,19 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/_app/trips'
     | '/_app/wallet'
+    | '/admin/complaints'
+    | '/admin/drivers'
+    | '/admin/payouts'
+    | '/admin/reports'
+    | '/admin/rides'
+    | '/admin/'
     | '/_app/ride/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
 }
 
@@ -155,6 +238,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -170,6 +260,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/rides': {
+      id: '/admin/rides'
+      path: '/rides'
+      fullPath: '/admin/rides'
+      preLoaderRoute: typeof AdminRidesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/payouts': {
+      id: '/admin/payouts'
+      path: '/payouts'
+      fullPath: '/admin/payouts'
+      preLoaderRoute: typeof AdminPayoutsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/drivers': {
+      id: '/admin/drivers'
+      path: '/drivers'
+      fullPath: '/admin/drivers'
+      preLoaderRoute: typeof AdminDriversRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/complaints': {
+      id: '/admin/complaints'
+      path: '/complaints'
+      fullPath: '/admin/complaints'
+      preLoaderRoute: typeof AdminComplaintsRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_app/wallet': {
       id: '/_app/wallet'
@@ -245,21 +377,32 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AdminRouteChildren {
+  AdminComplaintsRoute: typeof AdminComplaintsRoute
+  AdminDriversRoute: typeof AdminDriversRoute
+  AdminPayoutsRoute: typeof AdminPayoutsRoute
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminRidesRoute: typeof AdminRidesRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminComplaintsRoute: AdminComplaintsRoute,
+  AdminDriversRoute: AdminDriversRoute,
+  AdminPayoutsRoute: AdminPayoutsRoute,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminRidesRoute: AdminRidesRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

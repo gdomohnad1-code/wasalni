@@ -59,7 +59,7 @@ function DriversAdmin() {
 
   useEffect(() => { load(); }, []);
 
-  const update = async (patch: Partial<DriverRow> & Record<string, any>) => {
+  const update = async (patch: Record<string, any>) => {
     if (!selected) return;
     setBusy(true);
     const { error } = await supabase.from("driver_documents").update(patch).eq("driver_id", selected.driver_id);
