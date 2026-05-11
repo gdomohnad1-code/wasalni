@@ -568,6 +568,28 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const distToTarget = pos && routeTo ? distKm(pos, routeTo) : 0;
   const etaMin = Math.max(1, Math.ceil((distToTarget / 35) * 60));
 
+  // Auto-detect arrival within ~120m and prompt the driver to confirm
+  useEffect(() => {
+    if (!activeRide || !routeTo || !pos) return;
+    if (phase !== "to_pickup" && phase !== "in_progress") return;
+    const key = `${activeRide.id}:${phase}`;
+    if (arrivalFiredRef.current.has(key)) return;
+    if (distToTarget <= 0.12) {
+      arrivalFiredRef.current.add(key);
+      setArrivalPrompt(phase === "to_pickup" ? "pickup" : "destination");
+      try {
+        new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=").play().catch(() => {});
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      } catch { /* ignore */ }
+    }
+  }, [distToTarget, phase, activeRide?.id, routeTo, pos]);
+
+  const confirmArrival = async () => {
+    if (arrivalPrompt === "pickup") await startTrip();
+    else if (arrivalPrompt === "destination") await endTrip();
+    setArrivalPrompt(null);
+  };
+
   return (
     <div className="fixed inset-0 bg-black overflow-hidden" dir="rtl">
       <DriverLiveMap
