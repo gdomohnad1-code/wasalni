@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Check, X, AlertCircle, Clock, Eye, Plus, Copy, Upload } from "lucide-react";
+import { Loader2, Check, X, AlertCircle, Clock, Eye, Plus, Copy, Upload, FileText, Download, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/admin/applicants")({
@@ -160,9 +160,22 @@ function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; on
     car_plate: "",
   });
   const [docs, setDocs] = useState<Record<string, string>>({});
+  const [previews, setPreviews] = useState<
+    Record<string, { url: string; name: string; type: string; size: number }>
+  >({});
   const [uploadingKind, setUploadingKind] = useState<DocKind | null>(null);
   const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
   const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }));
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(previews).forEach((p) => {
+        try { URL.revokeObjectURL(p.url); } catch {}
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const genPw = () => {
     const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
@@ -185,12 +198,41 @@ function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; on
         },
       });
       setDocs((p) => ({ ...p, [urlField]: res.path }));
+      setPreviews((p) => {
+        if (p[urlField]) {
+          try { URL.revokeObjectURL(p[urlField].url); } catch {}
+        }
+        return {
+          ...p,
+          [urlField]: {
+            url: URL.createObjectURL(file),
+            name: file.name,
+            type: file.type || "application/octet-stream",
+            size: file.size,
+          },
+        };
+      });
       toast.success("تم رفع الملف ✅");
     } catch (e: any) {
       toast.error(e?.message ?? "فشل الرفع");
     } finally {
       setUploadingKind(null);
     }
+  };
+
+  const removeDoc = (urlField: string) => {
+    setDocs((p) => {
+      const n = { ...p };
+      delete n[urlField];
+      return n;
+    });
+    setPreviews((p) => {
+      const cur = p[urlField];
+      if (cur) { try { URL.revokeObjectURL(cur.url); } catch {} }
+      const n = { ...p };
+      delete n[urlField];
+      return n;
+    });
   };
 
   const submit = async () => {
@@ -264,29 +306,79 @@ function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; on
                 {DOC_FIELDS.map((d) => {
                   const uploaded = !!docs[d.urlField];
                   const isUp = uploadingKind === d.kind;
+                  const prev = previews[d.urlField];
+                  const isImage = prev?.type.startsWith("image/");
+                  const isPdf = prev?.type === "application/pdf";
                   return (
-                    <div key={d.kind} className="flex items-center gap-2 border rounded-lg p-2">
-                      <div className="flex-1 text-xs">
-                        <div className="font-medium">{d.label}</div>
-                        {uploaded && <div className="text-green-600 truncate">تم الرفع ✓</div>}
+                    <div key={d.kind} className="border rounded-lg p-2 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 text-xs min-w-0">
+                          <div className="font-medium">{d.label}</div>
+                          {uploaded && (
+                            <div className="text-[11px] text-muted-foreground truncate">
+                              {prev?.name} · {prev ? (prev.size / 1024).toFixed(0) + " KB" : ""}
+                            </div>
+                          )}
+                        </div>
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            className="hidden"
+                            disabled={isUp || busy}
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) handleFile(d.kind, d.urlField, f);
+                              e.target.value = "";
+                            }}
+                          />
+                          <span className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-md border bg-background hover:bg-muted">
+                            {isUp ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                            {uploaded ? "استبدال" : "رفع"}
+                          </span>
+                        </label>
                       </div>
-                      <label className="cursor-pointer">
-                        <input
-                          type="file"
-                          accept="image/*,application/pdf"
-                          className="hidden"
-                          disabled={isUp || busy}
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) handleFile(d.kind, d.urlField, f);
-                            e.target.value = "";
-                          }}
-                        />
-                        <span className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-md border bg-background hover:bg-muted">
-                          {isUp ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-                          {uploaded ? "استبدال" : "رفع"}
-                        </span>
-                      </label>
+
+                      {prev && (
+                        <div className="flex items-stretch gap-2">
+                          <div className="h-20 w-20 shrink-0 rounded-md border bg-muted overflow-hidden grid place-items-center">
+                            {isImage ? (
+                              <img src={prev.url} alt={d.label} className="h-full w-full object-cover" />
+                            ) : isPdf ? (
+                              <FileText className="h-8 w-8 text-red-500" />
+                            ) : (
+                              <FileText className="h-8 w-8 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-1 flex-1">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() => window.open(prev.url, "_blank", "noopener,noreferrer")}
+                            >
+                              <Eye className="h-3 w-3 ml-1" /> عرض
+                            </Button>
+                            <a
+                              href={prev.url}
+                              download={prev.name}
+                              className="inline-flex items-center justify-center h-7 text-xs rounded-md border hover:bg-muted gap-1"
+                            >
+                              <Download className="h-3 w-3" /> تحميل
+                            </a>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs text-destructive hover:text-destructive"
+                              onClick={() => removeDoc(d.urlField)}
+                            >
+                              <Trash2 className="h-3 w-3 ml-1" /> إزالة
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
