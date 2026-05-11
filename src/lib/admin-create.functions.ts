@@ -109,3 +109,35 @@ export const resetAdminPassword = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+const ResetByEmailSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(6).max(72),
+});
+
+export const resetPasswordByEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => ResetByEmailSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await ensureSuperAdmin(context.userId);
+
+    // Look up user by email via admin API (paged scan)
+    let foundId: string | null = null;
+    let page = 1;
+    while (page <= 10 && !foundId) {
+      const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+      if (error) throw new Response(error.message, { status: 400 });
+      const u = list.users.find((x) => x.email?.toLowerCase() === data.email);
+      if (u) foundId = u.id;
+      if (list.users.length < 200) break;
+      page++;
+    }
+    if (!foundId) throw new Response("لا يوجد حساب مسجَّل بهذا البريد بعد", { status: 404 });
+
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(foundId, {
+      password: data.password,
+    });
+    if (error) throw new Response(error.message, { status: 400 });
+
+    return { ok: true, user_id: foundId };
+  });

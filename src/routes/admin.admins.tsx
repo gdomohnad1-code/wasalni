@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { createAdminAccount, resetAdminPassword } from "@/lib/admin-create.functions";
+import { createAdminAccount, resetAdminPassword, resetPasswordByEmail } from "@/lib/admin-create.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -256,6 +256,74 @@ function ResetPasswordDialog({
   );
 }
 
+function ResetPasswordByEmailDialog({
+  email,
+  disabled,
+}: { email: string; disabled?: boolean }) {
+  const reset = useServerFn(resetPasswordByEmail);
+  const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const generate = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
+    let p = "";
+    for (let i = 0; i < 12; i++) p += chars[Math.floor(Math.random() * chars.length)];
+    setPw(p); setPw2(p);
+  };
+
+  const submit = async () => {
+    if (pw.length < 6) { toast.error("كلمة المرور 6 أحرف على الأقل"); return; }
+    if (pw !== pw2) { toast.error("كلمتا المرور غير متطابقتين"); return; }
+    setBusy(true);
+    try {
+      await reset({ data: { email, password: pw } });
+      toast.success("تم تعيين كلمة المرور الجديدة ✅");
+      setOpen(false); setPw(""); setPw2("");
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذّر التحديث");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" disabled={disabled} title="تغيير كلمة المرور">
+          <Lock className="h-3.5 w-3.5 ml-1" /> كلمة المرور
+        </Button>
+      </DialogTrigger>
+      <DialogContent dir="rtl">
+        <DialogHeader>
+          <DialogTitle>تغيير كلمة المرور</DialogTitle>
+          <DialogDescription>
+            تعيين كلمة مرور جديدة للحساب: <span dir="ltr" className="font-mono">{email}</span>
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-semibold mb-1 block">كلمة المرور الجديدة</label>
+            <Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="6 أحرف على الأقل" dir="ltr" className="text-left" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold mb-1 block">تأكيد كلمة المرور</label>
+            <Input type="text" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="أعد كتابة كلمة المرور" dir="ltr" className="text-left" />
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={generate}>توليد كلمة مرور قوية</Button>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>إلغاء</Button>
+          <Button onClick={submit} disabled={busy}>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function AdminsPage() {
   const [emails, setEmails] = useState<AdminEmail[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
@@ -450,7 +518,7 @@ function AdminsPage() {
               <TableHead className="text-right">البريد</TableHead>
               <TableHead className="text-right w-56">الدور الافتراضي</TableHead>
               <TableHead className="text-right">تاريخ الإضافة</TableHead>
-              <TableHead className="text-right w-24">إجراء</TableHead>
+              <TableHead className="text-right w-64">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -480,14 +548,19 @@ function AdminsPage() {
                 </TableCell>
                 <TableCell>{new Date(e.created_at).toLocaleDateString("ar-EG")}</TableCell>
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeEmail(e.id, e.email)}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <ResetPasswordByEmailDialog email={e.email} disabled={!isSuper} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled={!isSuper || e.email === "admin@wasalni.app"}
+                      onClick={() => removeEmail(e.id, e.email)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      title="حذف البريد"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
