@@ -71,6 +71,14 @@ export const createAdminAccount = createServerFn({ method: "POST" })
       granted_by: context.userId,
     });
 
+    // Remember the password (visible only to main admin via getAdminPassword)
+    await (supabaseAdmin as any)
+      .from("admin_credentials")
+      .upsert(
+        { user_id: newId, email, password: data.password, updated_by: context.userId, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+
     return {
       ok: true,
       user_id: newId,
