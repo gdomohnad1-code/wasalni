@@ -18,18 +18,21 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          default_permission: Database["public"]["Enums"]["admin_permission"]
           email: string
           id: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          default_permission?: Database["public"]["Enums"]["admin_permission"]
           email: string
           id?: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          default_permission?: Database["public"]["Enums"]["admin_permission"]
           email?: string
           id?: string
         }
