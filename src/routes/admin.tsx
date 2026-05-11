@@ -181,6 +181,17 @@ function AdminLayout() {
         <main className="flex-1 p-4 lg:p-6">
           <Outlet />
         </main>
+        <footer className="border-t bg-card/50 px-4 py-3 text-center text-xs text-muted-foreground">
+          تم التطوير بواسطة{" "}
+          <a
+            href="https://www.rivatalent.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-primary hover:underline"
+          >
+            Riva Talent
+          </a>
+        </footer>
       </div>
     </div>
   );
