@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useLocation } from "@tanstack/react-router";
 import { Home, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
@@ -15,31 +16,31 @@ export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
-const tabs = [
-  { to: "/home", label: "الرئيسية", icon: Home },
-  { to: "/profile", label: "حسابي", icon: User },
-] as const;
-
 function AppLayout() {
   const loc = useLocation();
+  const { t } = useI18n();
+  const tabs = [
+    { to: "/home", label: t("nav.home"), icon: Home },
+    { to: "/profile", label: t("nav.account"), icon: User },
+  ] as const;
   return (
     <div className="min-h-screen bg-background pb-20">
       <Outlet />
       <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border z-40">
         <div className="max-w-md mx-auto grid grid-cols-2">
-          {tabs.map((t) => {
-            const Icon = t.icon;
-            const active = loc.pathname.startsWith(t.to);
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = loc.pathname.startsWith(tab.to);
             return (
               <Link
-                key={t.to}
-                to={t.to}
+                key={tab.to}
+                to={tab.to}
                 className={`flex flex-col items-center gap-1 py-2.5 transition ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 <Icon className={`h-5 w-5 ${active ? "scale-110" : ""}`} />
-                <span className="text-[10px] font-semibold">{t.label}</span>
+                <span className="text-[10px] font-semibold">{tab.label}</span>
               </Link>
             );
           })}
