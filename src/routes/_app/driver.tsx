@@ -1,22 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Siren, Activity, BatteryFull, BatteryLow, BatteryCharging } from "lucide-react";
+import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Siren, Activity, BatteryFull, BatteryLow, BatteryCharging, Power, Navigation2, Flag, PhoneCall } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { submitDriverApplication } from "@/lib/driver-applications.functions";
-import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
 import { useDriverLocationBroadcast, triggerSOS, useBatteryStatus } from "@/hooks/use-driver-location";
 import { useI18n } from "@/lib/i18n";
-import { AdSlot } from "@/components/AdSlot";
+import { DriverLiveMap, type LL } from "@/components/driver/DriverLiveMap";
+import { IncomingRideModal } from "@/components/driver/IncomingRideModal";
+import { DriverReadyScreen } from "@/components/driver/DriverReadyScreen";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
