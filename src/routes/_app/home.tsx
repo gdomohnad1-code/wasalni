@@ -49,8 +49,8 @@ function HomePage() {
       <div className="px-5 pt-6 pb-4 bg-background border-b border-border">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[12px] text-muted-foreground">أهلاً</p>
-            <h2 className="text-xl font-black mt-0.5 text-foreground">{profile?.full_name || "ضيفنا الكريم"}</h2>
+            <p className="text-[12px] text-muted-foreground">{t("home.hello")}</p>
+            <h2 className="text-xl font-black mt-0.5 text-foreground">{profile?.full_name || t("home.guest")}</h2>
           </div>
           <button className="relative h-10 w-10 rounded-full bg-muted grid place-items-center">
             <Bell className="h-5 w-5 text-foreground" />
@@ -65,7 +65,7 @@ function HomePage() {
             <Wallet className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <div className="text-[11px] text-muted-foreground">المحفظة</div>
+            <div className="text-[11px] text-muted-foreground">{t("home.wallet")}</div>
             <div className="text-xl font-black leading-tight text-foreground">
               {Number(profile?.wallet_balance ?? 0).toFixed(0)}
               <span className="text-xs font-bold text-muted-foreground mr-1">ج.م</span>
@@ -82,9 +82,9 @@ function HomePage() {
           onClick={() => navigate({ to: "/book", search: { type: "private" } })}
           className="w-full rounded-lg bg-primary text-primary-foreground p-4 flex items-center justify-between"
         >
-          <div className="text-right">
-            <div className="text-[11px] opacity-80">احجز الآن</div>
-            <div className="text-base font-black">وصلني فوراً</div>
+          <div className="text-start">
+            <div className="text-[11px] opacity-80">{t("home.book_now")}</div>
+            <div className="text-base font-black">{t("home.cta")}</div>
           </div>
           <div className="h-10 w-10 rounded-md bg-white/10 grid place-items-center">
             <ChevronLeft className="h-5 w-5" />
@@ -95,7 +95,7 @@ function HomePage() {
       {/* Services — clean uniform grid */}
       <div className="px-5 mt-7">
         <div className="flex items-baseline justify-between mb-3">
-          <h3 className="font-black text-lg tracking-tight">الخدمات</h3>
+          <h3 className="font-black text-lg tracking-tight">{t("home.services")}</h3>
           <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600">
             <Crown className="h-3 w-3" /> Premium
           </div>
