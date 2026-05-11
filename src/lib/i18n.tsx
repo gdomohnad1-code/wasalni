@@ -386,6 +386,11 @@ const dict = {
     "ride.chat_title": "Ride chat",
     "ride.chat_start": "Start the conversation 💬",
     "ride.chat_ph": "Type your message...",
+    "ride.driver_eta": "Driver arriving in",
+    "ride.arrival_eta": "Arriving in",
+    "ride.min": "min",
+    "ride.on_the_way": "On the way",
+    "ride.in_route": "To destination",
 
     // wallet
     "wallet.title": "Wallet",
