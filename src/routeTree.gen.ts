@@ -38,6 +38,7 @@ import { Route as AppTermsRouteImport } from './routes/_app/terms'
 import { Route as AppSupportRouteImport } from './routes/_app/support'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppReferralRouteImport } from './routes/_app/referral'
+import { Route as AppPushTestRouteImport } from './routes/_app/push-test'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppPrivacyRouteImport } from './routes/_app/privacy'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
@@ -191,6 +192,11 @@ const AppReferralRoute = AppReferralRouteImport.update({
   path: '/referral',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPushTestRoute = AppPushTestRouteImport.update({
+  id: '/push-test',
+  path: '/push-test',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -242,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AppHomeRoute
   '/privacy': typeof AppPrivacyRoute
   '/profile': typeof AppProfileRoute
+  '/push-test': typeof AppPushTestRoute
   '/referral': typeof AppReferralRoute
   '/settings': typeof AppSettingsRoute
   '/support': typeof AppSupportRoute
@@ -279,6 +286,7 @@ export interface FileRoutesByTo {
   '/home': typeof AppHomeRoute
   '/privacy': typeof AppPrivacyRoute
   '/profile': typeof AppProfileRoute
+  '/push-test': typeof AppPushTestRoute
   '/referral': typeof AppReferralRoute
   '/settings': typeof AppSettingsRoute
   '/support': typeof AppSupportRoute
@@ -319,6 +327,7 @@ export interface FileRoutesById {
   '/_app/home': typeof AppHomeRoute
   '/_app/privacy': typeof AppPrivacyRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/push-test': typeof AppPushTestRoute
   '/_app/referral': typeof AppReferralRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/support': typeof AppSupportRoute
@@ -359,6 +368,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/privacy'
     | '/profile'
+    | '/push-test'
     | '/referral'
     | '/settings'
     | '/support'
@@ -396,6 +406,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/privacy'
     | '/profile'
+    | '/push-test'
     | '/referral'
     | '/settings'
     | '/support'
@@ -435,6 +446,7 @@ export interface FileRouteTypes {
     | '/_app/home'
     | '/_app/privacy'
     | '/_app/profile'
+    | '/_app/push-test'
     | '/_app/referral'
     | '/_app/settings'
     | '/_app/support'
@@ -679,6 +691,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReferralRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/push-test': {
+      id: '/_app/push-test'
+      path: '/push-test'
+      fullPath: '/push-test'
+      preLoaderRoute: typeof AppPushTestRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/profile': {
       id: '/_app/profile'
       path: '/profile'
@@ -744,6 +763,7 @@ interface AppRouteChildren {
   AppHomeRoute: typeof AppHomeRoute
   AppPrivacyRoute: typeof AppPrivacyRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppPushTestRoute: typeof AppPushTestRoute
   AppReferralRoute: typeof AppReferralRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSupportRoute: typeof AppSupportRoute
@@ -759,6 +779,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppHomeRoute: AppHomeRoute,
   AppPrivacyRoute: AppPrivacyRoute,
   AppProfileRoute: AppProfileRoute,
+  AppPushTestRoute: AppPushTestRoute,
   AppReferralRoute: AppReferralRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSupportRoute: AppSupportRoute,
