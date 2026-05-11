@@ -25,6 +25,7 @@ import {
   Megaphone, Plus, Pencil, Play, Pause, Trash2, BarChart3, Eye, MousePointerClick, Upload,
 } from "lucide-react";
 import { AdSlot } from "@/components/AdSlot";
+import { AdAreaPicker } from "@/components/admin/AdAreaPicker";
 
 export const Route = createFileRoute("/admin/ads")({
   component: AdsManagerPage,
@@ -73,28 +74,40 @@ const STATUSES = [
 
 type AdRow = any;
 
-const emptyForm = {
-  title: "", description: "",
-  type: "banner",
-  placements: [] as string[],
-  target_audience: "both",
-  target_cities: "",
-  target_min_rides: "" as string,
-  target_max_rides: "" as string,
-  media_type: "image",
-  media_url: "",
-  external_link: "",
-  qr_data: "",
-  start_at: "", end_at: "",
-  daily_start_hour: "" as string,
-  daily_end_hour: "" as string,
-  max_impressions_per_user: 0,
-  priority: 0,
-  is_sponsored: false,
-  sponsor_name: "",
-  status: "draft",
-  auto_rotate: true,
-};
+function makeEmptyForm() {
+  const now = new Date();
+  const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const fmt = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  return {
+    title: "", description: "",
+    type: "banner",
+    placements: [] as string[],
+    target_audience: "both",
+    target_cities: "",
+    target_min_rides: "" as string,
+    target_max_rides: "" as string,
+    media_type: "image",
+    media_url: "",
+    external_link: "",
+    qr_data: "",
+    start_at: fmt(now), end_at: fmt(end),
+    daily_start_hour: "" as string,
+    daily_end_hour: "" as string,
+    max_impressions_per_user: 0,
+    priority: 0,
+    is_sponsored: false,
+    sponsor_name: "",
+    status: "draft",
+    auto_rotate: true,
+    target_area_lat: null as number | null,
+    target_area_lng: null as number | null,
+    target_area_radius_m: 2000,
+  };
+}
+type AdForm = ReturnType<typeof makeEmptyForm>;
 
 function AdsManagerPage() {
   const [rows, setRows] = useState<AdRow[]>([]);
@@ -123,8 +136,10 @@ function AdsManagerPage() {
     const ch = supabase
       .channel("admin-ads")
       .on("postgres_changes", { event: "*", schema: "public", table: "ads" }, load)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "ad_events" }, load)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const iv = setInterval(load, 1000);
+    return () => { supabase.removeChannel(ch); clearInterval(iv); };
   }, []);
 
   const filtered = useMemo(() => {
@@ -246,7 +261,7 @@ function AdsManagerPage() {
 function AdEditor({
   open, onOpenChange, editing, onSaved,
 }: { open: boolean; onOpenChange: (v: boolean) => void; editing: AdRow | null; onSaved: () => void }) {
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<AdForm>(makeEmptyForm());
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -275,9 +290,12 @@ function AdEditor({
         sponsor_name: editing.sponsor_name ?? "",
         status: editing.status ?? "draft",
         auto_rotate: editing.auto_rotate ?? true,
+        target_area_lat: editing.target_area_lat ?? null,
+        target_area_lng: editing.target_area_lng ?? null,
+        target_area_radius_m: editing.target_area_radius_m ?? 2000,
       });
     } else {
-      setForm(emptyForm);
+      setForm(makeEmptyForm());
     }
   }, [editing, open]);
 
@@ -333,6 +351,9 @@ function AdEditor({
         sponsor_name: form.sponsor_name || null,
         status: form.status,
         auto_rotate: form.auto_rotate,
+        target_area_lat: form.target_area_lat,
+        target_area_lng: form.target_area_lng,
+        target_area_radius_m: form.target_area_lat != null ? form.target_area_radius_m : null,
       };
       const { error } = editing
         ? await supabase.from("ads").update(payload).eq("id", editing.id)
@@ -413,6 +434,39 @@ function AdEditor({
                 <Label>أقصى عدد رحلات</Label>
                 <Input type="number" value={form.target_max_rides} onChange={(e) => setForm({ ...form, target_max_rides: e.target.value })} />
               </div>
+            </div>
+
+            <div className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold">منطقة جغرافية محددة (اختياري)</Label>
+                {form.target_area_lat != null && (
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setForm({ ...form, target_area_lat: null, target_area_lng: null })}>
+                    إزالة
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">انقر على الخريطة لاختيار النقطة. سيظهر الإعلان فقط للمستخدمين داخل نطاق نصف القطر.</p>
+              <AdAreaPicker
+                lat={form.target_area_lat}
+                lng={form.target_area_lng}
+                radius={form.target_area_radius_m}
+                onChange={(lat, lng) => setForm((f) => ({ ...f, target_area_lat: lat, target_area_lng: lng }))}
+              />
+              {form.target_area_lat != null && (
+                <div className="grid grid-cols-2 gap-2 items-center">
+                  <div className="text-xs text-muted-foreground">
+                    {form.target_area_lat.toFixed(5)}, {form.target_area_lng?.toFixed(5)}
+                  </div>
+                  <div>
+                    <Label className="text-xs">نصف القطر (متر): {form.target_area_radius_m}</Label>
+                    <Slider
+                      min={200} max={20000} step={100}
+                      value={[form.target_area_radius_m]}
+                      onValueChange={(v) => setForm({ ...form, target_area_radius_m: v[0] })}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -524,7 +578,7 @@ function AdEditor({
   );
 }
 
-function PreviewCard({ form }: { form: typeof emptyForm }) {
+function PreviewCard({ form }: { form: AdForm }) {
   return (
     <div className="max-w-sm mx-auto">
       <Card className="overflow-hidden">
