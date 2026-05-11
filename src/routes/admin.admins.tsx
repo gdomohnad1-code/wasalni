@@ -743,60 +743,72 @@ function AdminsPage() {
             <Mail className="h-4 w-4" /> قائمة البُرد المعتمَدة ({emails.length})
           </h3>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-right">البريد</TableHead>
-              <TableHead className="text-right w-56">الدور الافتراضي</TableHead>
-              <TableHead className="text-right">تاريخ الإضافة</TableHead>
-              <TableHead className="text-right w-64">إجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {emails.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                  لا توجد بُرد مسجلة
-                </TableCell>
-              </TableRow>
-            )}
-            {emails.map((e) => (
-              <TableRow key={e.id}>
-                <TableCell className="font-mono" dir="ltr">{e.email}</TableCell>
-                <TableCell>
-                  <Select
-                    value={e.default_permission}
-                    disabled={!isSuper}
-                    onValueChange={(v) => updateEmailPerm(e.id, v as AdminPerm)}
-                  >
-                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {ALL_PERMS.map((p) => (
-                        <SelectItem key={p} value={p}>{PERM_META[p].label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell>{new Date(e.created_at).toLocaleDateString("ar-EG")}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
+        <div className="p-4 space-y-3">
+          {emails.length === 0 && (
+            <div className="text-center text-muted-foreground py-10 text-sm">
+              لا توجد بُرد مسجلة
+            </div>
+          )}
+          {emails.map((e) => {
+            const meta = PERM_META[e.default_permission];
+            const Icon = meta?.icon ?? Eye;
+            return (
+              <Card key={e.id} className="p-4 border-border/60 hover:border-primary/30 transition-colors">
+                <div className="flex flex-col gap-3">
+                  {/* Header: email + date */}
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <Mail className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-mono font-semibold text-sm truncate" dir="ltr">{e.email}</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                          أُضيف في {new Date(e.created_at).toLocaleDateString("ar-EG")}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-muted/60 px-2.5 py-1 rounded-lg">
+                      <Icon className={`h-3.5 w-3.5 ${meta?.color ?? ""}`} />
+                      <span className="font-semibold">{meta?.label}</span>
+                    </span>
+                  </div>
+
+                  {/* Role selector */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground">الدور الافتراضي</label>
+                    <Select
+                      value={e.default_permission}
+                      disabled={!isSuper}
+                      onValueChange={(v) => updateEmailPerm(e.id, v as AdminPerm)}
+                    >
+                      <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ALL_PERMS.map((p) => (
+                          <SelectItem key={p} value={p}>{PERM_META[p].label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
                     <ResetPasswordByEmailDialog email={e.email} disabled={!isSuper} />
                     <Button
-                      variant="ghost"
-                      size="icon"
+                      variant="outline"
+                      size="sm"
                       disabled={!isSuper || e.email === "admin@wasalni.app"}
                       onClick={() => removeEmail(e.id, e.email)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      title="حذف البريد"
+                      className="text-destructive border-destructive/30 hover:bg-destructive/10 mr-auto"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5 ml-1" /> حذف البريد
                     </Button>
                   </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
       </Card>
 
       <Card className="overflow-hidden">
