@@ -37,7 +37,7 @@ const PERM_META: Record<AdminPerm, { label: string; desc: string; icon: any; col
 
 const ALL_PERMS: AdminPerm[] = ["super_admin", "full_control", "assigner", "collections", "notifications", "viewer"];
 
-interface AdminEmail { id: string; email: string; created_at: string; }
+interface AdminEmail { id: string; email: string; created_at: string; default_permission: AdminPerm; }
 interface AdminUser {
   user_id: string;
   full_name: string;
@@ -48,6 +48,7 @@ function AdminsPage() {
   const [emails, setEmails] = useState<AdminEmail[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [newEmail, setNewEmail] = useState("");
+  const [newPerm, setNewPerm] = useState<AdminPerm>("viewer");
   const [loading, setLoading] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
   const [isSuper, setIsSuper] = useState(false);
@@ -101,14 +102,26 @@ function AdminsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase
       .from("admin_emails")
-      .insert({ email, created_by: user?.id });
+      .insert({ email, default_permission: newPerm, created_by: user?.id });
     setLoading(false);
     if (error) {
       toast.error(error.message.includes("duplicate") ? "هذا البريد مضاف مسبقًا" : "تعذّر الإضافة");
       return;
     }
-    toast.success("تمت الإضافة. أي حساب جديد بهذا البريد سيصبح أدمن تلقائيًا.");
+    toast.success(`تمت الإضافة بدور: ${PERM_META[newPerm].label}`);
     setNewEmail("");
+    setNewPerm("viewer");
+    load();
+  };
+
+  const updateEmailPerm = async (id: string, perm: AdminPerm) => {
+    if (!isSuper) { toast.error("المسؤول الرئيسي فقط"); return; }
+    const { error } = await supabase
+      .from("admin_emails")
+      .update({ default_permission: perm })
+      .eq("id", id);
+    if (error) return toast.error("تعذّر التحديث");
+    toast.success("تم تحديث الدور الافتراضي");
     load();
   };
 
@@ -185,7 +198,7 @@ function AdminsPage() {
         <h3 className="font-bold mb-3 flex items-center gap-2">
           <UserPlus className="h-4 w-4" /> إضافة بريد أدمن جديد
         </h3>
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2">
           <Input
             type="email"
             placeholder="example@wasalni.app"
@@ -193,12 +206,20 @@ function AdminsPage() {
             onChange={(e) => setNewEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addEmail()}
             dir="ltr"
-            className="text-left"
+            className="text-left flex-1"
           />
+          <Select value={newPerm} onValueChange={(v) => setNewPerm(v as AdminPerm)}>
+            <SelectTrigger className="md:w-56"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ALL_PERMS.map((p) => (
+                <SelectItem key={p} value={p}>{PERM_META[p].label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button onClick={addEmail} disabled={loading}>إضافة</Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          الحساب الجديد يبدأ بدور «معاينة فقط» — يمكن للمسؤول الرئيسي ترقيته لاحقًا.
+          اختر الدور الافتراضي — سيُطبَّق تلقائيًا عند تسجيل صاحب البريد. يمكن تعديله لاحقًا.
         </p>
       </Card>
 
@@ -212,6 +233,7 @@ function AdminsPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="text-right">البريد</TableHead>
+              <TableHead className="text-right w-56">الدور الافتراضي</TableHead>
               <TableHead className="text-right">تاريخ الإضافة</TableHead>
               <TableHead className="text-right w-24">إجراء</TableHead>
             </TableRow>
@@ -219,7 +241,7 @@ function AdminsPage() {
           <TableBody>
             {emails.length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                   لا توجد بُرد مسجلة
                 </TableCell>
               </TableRow>
@@ -227,6 +249,20 @@ function AdminsPage() {
             {emails.map((e) => (
               <TableRow key={e.id}>
                 <TableCell className="font-mono" dir="ltr">{e.email}</TableCell>
+                <TableCell>
+                  <Select
+                    value={e.default_permission}
+                    disabled={!isSuper}
+                    onValueChange={(v) => updateEmailPerm(e.id, v as AdminPerm)}
+                  >
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {ALL_PERMS.map((p) => (
+                        <SelectItem key={p} value={p}>{PERM_META[p].label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
                 <TableCell>{new Date(e.created_at).toLocaleDateString("ar-EG")}</TableCell>
                 <TableCell>
                   <Button
