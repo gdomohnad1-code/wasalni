@@ -52,10 +52,8 @@ function HomePage() {
             <p className="text-[12px] text-muted-foreground">{t("home.hello")}</p>
             <h2 className="text-xl font-black mt-0.5 text-foreground">{profile?.full_name || t("home.guest")}</h2>
           </div>
-          <button className="relative h-10 w-10 rounded-full bg-muted grid place-items-center">
-            <Bell className="h-5 w-5 text-foreground" />
-            <span className="absolute top-1.5 left-1.5 h-2 w-2 rounded-full bg-accent" />
-          </button>
+          <NotificationCenter />
+
         </div>
 
         {/* wallet */}
