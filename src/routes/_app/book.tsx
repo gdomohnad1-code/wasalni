@@ -6,7 +6,7 @@ import { ArrowRight, MapPin, Navigation, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RIDE_TYPES, type RideTypeKey, calcPrice, calcDuration, fakeDistance } from "@/lib/pricing";
+import { RIDE_TYPES, type RideTypeKey, type TripMode, calcPrice, calcDuration, fakeDistance, calcCommission, PLATFORM_COMMISSION_RATE } from "@/lib/pricing";
 import { FakeMap } from "@/components/FakeMap";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,7 +27,7 @@ function BookPage() {
   const [rideType, setRideType] = useState<RideTypeKey>(type);
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
-  const [tripMode, setTripMode] = useState<"oneway" | "roundtrip">("oneway");
+  const [tripMode, setTripMode] = useState<TripMode>("oneway");
   const [gpsLoading, setGpsLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -55,9 +55,11 @@ function BookPage() {
     );
   };
 
-  const distance = pickup && destination ? fakeDistance(pickup, destination) * (tripMode === "roundtrip" ? 2 : 1) : 0;
-  const price = distance ? calcPrice(distance, rideType) : 0;
+  const oneWayDistance = pickup && destination ? fakeDistance(pickup, destination) : 0;
+  const distance = tripMode === "roundtrip" ? oneWayDistance * 2 : oneWayDistance;
   const duration = distance ? calcDuration(distance) : 0;
+  const price = oneWayDistance ? calcPrice(oneWayDistance, rideType, tripMode, duration) : 0;
+  const commission = price ? calcCommission(price) : 0;
 
   const handleConfirm = async () => {
     setCreating(true);
@@ -127,10 +129,11 @@ function BookPage() {
           </div>
         </div>
 
-        <Tabs value={tripMode} onValueChange={(v) => setTripMode(v as any)}>
-          <TabsList className="grid grid-cols-2 w-full">
+        <Tabs value={tripMode} onValueChange={(v) => setTripMode(v as TripMode)}>
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="oneway">ذهاب فقط</TabsTrigger>
             <TabsTrigger value="roundtrip">ذهاب وعودة</TabsTrigger>
+            <TabsTrigger value="multistop">عدة وجهات</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -151,14 +154,21 @@ function BookPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="bg-gradient-primary text-primary-foreground rounded-2xl p-4 shadow-soft">
             <div className="flex justify-between text-sm">
-              <span>المسافة</span><span className="font-bold">{distance} كم</span>
+              <span>المسافة</span><span className="font-bold">{distance.toFixed(1)} كم</span>
             </div>
             <div className="flex justify-between text-sm mt-1">
               <span>الوقت المتوقع</span><span className="font-bold">{duration} دقيقة</span>
             </div>
+            {tripMode === "multistop" && (
+              <div className="text-[11px] mt-1 opacity-90">تسعير بالساعة (200 ج.م/س — حد أدنى 75 ج.م)</div>
+            )}
             <div className="flex justify-between mt-2 pt-2 border-t border-white/30">
               <span className="font-bold">السعر النهائي</span>
               <span className="font-black text-2xl">{price} ج.م</span>
+            </div>
+            <div className="flex justify-between text-[11px] opacity-90 mt-1">
+              <span>عمولة المنصة ({Math.round(PLATFORM_COMMISSION_RATE * 100)}%)</span>
+              <span>{commission} ج.م</span>
             </div>
           </motion.div>
         )}

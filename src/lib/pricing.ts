@@ -1,30 +1,94 @@
-// تسعيرة الخدمات
+// تسعيرة الخدمات — وصلني
 export const RIDE_TYPES = {
-  private: { label: "رحلة خاصة", icon: "🚗", multiplier: 1, color: "primary" },
-  shared: { label: "مشاركة", icon: "👥", multiplier: 0.7, color: "accent" },
-  package: { label: "توصيل طرد", icon: "📦", multiplier: 0.9, color: "warning" },
-  female: { label: "رحلة نسائية", icon: "💗", multiplier: 1.15, color: "primary" },
-  vip: { label: "VIP", icon: "👑", multiplier: 1.8, color: "primary" },
+  private: {
+    label: "وصلني عادي",
+    short: "عادي",
+    icon: "🚕",
+    desc: "سيارة عادية لرحلتك اليومية",
+    multiplier: 1,
+    accent: "from-primary/20 to-primary/5",
+  },
+  vip: {
+    label: "وصلني مميز",
+    short: "مميز",
+    icon: "🌟",
+    desc: "سيارات فخمة وراحة استثنائية",
+    multiplier: 1.5,
+    accent: "from-amber-400/30 to-amber-200/5",
+  },
+  package: {
+    label: "وصلي طرد",
+    short: "طرد",
+    icon: "📦",
+    desc: "توصيل من باب لباب — حتى 30 كجم",
+    multiplier: 1,
+    accent: "from-orange-400/25 to-orange-200/5",
+  },
+  shared: {
+    label: "سكوتر",
+    short: "سكوتر",
+    icon: "🛵",
+    desc: "أسرع وأرخص للمشاوير القصيرة",
+    multiplier: 0.6,
+    accent: "from-emerald-400/25 to-emerald-200/5",
+  },
+  female: {
+    label: "فان",
+    short: "فان",
+    icon: "🚐",
+    desc: "للمجموعات والعائلات والأمتعة",
+    multiplier: 1.4,
+    accent: "from-sky-400/25 to-sky-200/5",
+  },
 } as const;
 
 export type RideTypeKey = keyof typeof RIDE_TYPES;
+export type TripMode = "oneway" | "roundtrip" | "multistop";
 
-const BASE_PRICE = 30; // أول 3 كم
-const BASE_KM = 3;
-const PER_KM = 6;
+// عمولة المنصة على كل رحلة
+export const PLATFORM_COMMISSION_RATE = 0.01; // 1%
 
-export function calcPrice(distanceKm: number, type: RideTypeKey): number {
-  const extra = Math.max(0, distanceKm - BASE_KM);
-  const raw = (BASE_PRICE + extra * PER_KM) * RIDE_TYPES[type].multiplier;
-  return Math.round(raw);
-}
-
+// مسافة وزمن
 export function calcDuration(distanceKm: number): number {
   return Math.max(5, Math.round(distanceKm * 2.5));
 }
 
-// مسافة وهمية محسوبة من سلسلة العنوانين (للديمو)
 export function fakeDistance(from: string, to: string): number {
   const seed = (from + to).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   return Math.round((3 + (seed % 18) + (seed % 7) * 0.3) * 10) / 10;
+}
+
+/**
+ * حساب السعر:
+ *  - oneway:    30 ج.م أول 3 كم + 3 ج.م لكل كم زيادة
+ *  - roundtrip: 60 ج.م أول 6 كم + 3 ج.م لكل كم زيادة (المسافة هنا = ذهاب فقط)
+ *  - multistop: 200 ج.م لكل ساعة — أقل سعر 75 ج.م
+ *  ثم يُضرب في معامل نوع الخدمة.
+ */
+export function calcPrice(
+  distanceKm: number,
+  type: RideTypeKey,
+  mode: TripMode = "oneway",
+  durationMin?: number,
+): number {
+  const m = RIDE_TYPES[type].multiplier;
+
+  if (mode === "multistop") {
+    const mins = durationMin ?? calcDuration(distanceKm);
+    const hourly = (mins / 60) * 200;
+    return Math.max(75, Math.round(hourly * m));
+  }
+
+  if (mode === "roundtrip") {
+    const extra = Math.max(0, distanceKm * 2 - 6);
+    return Math.round((60 + extra * 3) * m);
+  }
+
+  // oneway
+  const extra = Math.max(0, distanceKm - 3);
+  return Math.round((30 + extra * 3) * m);
+}
+
+export function calcCommission(price: number): number {
+  return Math.round(price * PLATFORM_COMMISSION_RATE * 100) / 100;
 }
