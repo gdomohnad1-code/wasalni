@@ -25,6 +25,7 @@ import {
   Megaphone, Plus, Pencil, Play, Pause, Trash2, BarChart3, Eye, MousePointerClick, Upload,
 } from "lucide-react";
 import { AdSlot } from "@/components/AdSlot";
+import { AdAreaPicker } from "@/components/admin/AdAreaPicker";
 
 export const Route = createFileRoute("/admin/ads")({
   component: AdsManagerPage,
