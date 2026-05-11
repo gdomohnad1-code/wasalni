@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { createAdminAccount } from "@/lib/admin-create.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Shield, UserPlus, Mail, Crown, Eye, Bell, Wallet, UserCog, KeyRound } from "lucide-react";
+import { Trash2, Shield, UserPlus, Mail, Crown, Eye, Bell, Wallet, UserCog, KeyRound, Loader2, Copy } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
