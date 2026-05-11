@@ -158,6 +158,44 @@ function SettingsPage() {
   );
 }
 
+function ChangePasswordSection() {
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    if (pw.length < 6) { toast.error("كلمة المرور 6 أحرف على الأقل"); return; }
+    if (pw !== pw2) { toast.error("كلمتا المرور غير متطابقتين"); return; }
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: pw });
+    setBusy(false);
+    if (error) return toast.error(error.message || "تعذّر تحديث كلمة المرور");
+    toast.success("تم تغيير كلمة المرور ✅");
+    setPw(""); setPw2("");
+  };
+
+  return (
+    <section className="bg-card rounded-2xl p-4 shadow-card">
+      <h2 className="font-bold mb-3 flex items-center gap-2">
+        <KeyRound className="h-4 w-4 text-primary" /> تغيير كلمة المرور
+      </h2>
+      <div className="space-y-2">
+        <div>
+          <Label className="text-xs">كلمة المرور الجديدة</Label>
+          <Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="6 أحرف على الأقل" dir="ltr" />
+        </div>
+        <div>
+          <Label className="text-xs">تأكيد كلمة المرور</Label>
+          <Input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="أعد كتابة كلمة المرور" dir="ltr" />
+        </div>
+      </div>
+      <Button onClick={submit} disabled={busy} className="w-full mt-3">
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "تحديث كلمة المرور"}
+      </Button>
+    </section>
+  );
+}
+
 function RowLink({ icon: Icon, label, to, onClick }: { icon: any; label: string; to?: string; onClick?: () => void }) {
   const inner = (
     <div className="flex items-center gap-3 p-4 hover:bg-muted/40 transition cursor-pointer">
