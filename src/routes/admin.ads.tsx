@@ -435,6 +435,39 @@ function AdEditor({
                 <Input type="number" value={form.target_max_rides} onChange={(e) => setForm({ ...form, target_max_rides: e.target.value })} />
               </div>
             </div>
+
+            <div className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold">منطقة جغرافية محددة (اختياري)</Label>
+                {form.target_area_lat != null && (
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setForm({ ...form, target_area_lat: null, target_area_lng: null })}>
+                    إزالة
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">انقر على الخريطة لاختيار النقطة. سيظهر الإعلان فقط للمستخدمين داخل نطاق نصف القطر.</p>
+              <AdAreaPicker
+                lat={form.target_area_lat}
+                lng={form.target_area_lng}
+                radius={form.target_area_radius_m}
+                onChange={(lat, lng) => setForm((f) => ({ ...f, target_area_lat: lat, target_area_lng: lng }))}
+              />
+              {form.target_area_lat != null && (
+                <div className="grid grid-cols-2 gap-2 items-center">
+                  <div className="text-xs text-muted-foreground">
+                    {form.target_area_lat.toFixed(5)}, {form.target_area_lng?.toFixed(5)}
+                  </div>
+                  <div>
+                    <Label className="text-xs">نصف القطر (متر): {form.target_area_radius_m}</Label>
+                    <Slider
+                      min={200} max={20000} step={100}
+                      value={[form.target_area_radius_m]}
+                      onValueChange={(v) => setForm({ ...form, target_area_radius_m: v[0] })}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-3">
