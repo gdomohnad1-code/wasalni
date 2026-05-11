@@ -41,6 +41,7 @@ const NAV = [
   { to: "/admin/complaints", label: "الشكاوى", icon: MessageSquareWarning },
   { to: "/admin/rides", label: "الرحلات", icon: Car },
   { to: "/admin/reports", label: "التقارير", icon: TrendingUp },
+  { to: "/admin/notifications", label: "الإشعارات", icon: Bell },
   { to: "/admin/admins", label: "المسؤولون", icon: Shield },
   { to: "/admin/permissions", label: "صلاحياتي", icon: ShieldQuestion },
 ] as const;

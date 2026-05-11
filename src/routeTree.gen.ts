@@ -18,6 +18,7 @@ import { Route as AdminRidesRouteImport } from './routes/admin.rides'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPermissionsRouteImport } from './routes/admin.permissions'
 import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminDuesRouteImport } from './routes/admin.dues'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as AdminComplaintsRouteImport } from './routes/admin.complaints'
@@ -73,6 +74,11 @@ const AdminPermissionsRoute = AdminPermissionsRouteImport.update({
 const AdminPayoutsRoute = AdminPayoutsRouteImport.update({
   id: '/payouts',
   path: '/payouts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDuesRoute = AdminDuesRouteImport.update({
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
     | '/admin/reports'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
     | '/admin/reports'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
     | '/admin/reports'
@@ -343,6 +355,13 @@ declare module '@tanstack/react-router' {
       path: '/payouts'
       fullPath: '/admin/payouts'
       preLoaderRoute: typeof AdminPayoutsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/dues': {
@@ -459,6 +478,7 @@ interface AdminRouteChildren {
   AdminComplaintsRoute: typeof AdminComplaintsRoute
   AdminDriversRoute: typeof AdminDriversRoute
   AdminDuesRoute: typeof AdminDuesRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPayoutsRoute: typeof AdminPayoutsRoute
   AdminPermissionsRoute: typeof AdminPermissionsRoute
   AdminReportsRoute: typeof AdminReportsRoute
@@ -471,6 +491,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminComplaintsRoute: AdminComplaintsRoute,
   AdminDriversRoute: AdminDriversRoute,
   AdminDuesRoute: AdminDuesRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPayoutsRoute: AdminPayoutsRoute,
   AdminPermissionsRoute: AdminPermissionsRoute,
   AdminReportsRoute: AdminReportsRoute,
