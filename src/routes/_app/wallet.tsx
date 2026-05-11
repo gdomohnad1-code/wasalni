@@ -18,6 +18,11 @@ function WalletPage() {
   const [txs, setTxs] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(50);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [processing, setProcessing] = useState(false);
 
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -28,18 +33,41 @@ function WalletPage() {
 
   useEffect(() => { load(); }, []);
 
+  const cleanCard = cardNumber.replace(/\s/g, "");
+  const cardBrand = cleanCard.startsWith("4") ? "visa" : (/^(5[1-5]|2[2-7])/.test(cleanCard) ? "mastercard" : null);
+
+  const formatCard = (v: string) => v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
+  const formatExp = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 4);
+    return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
+  };
+
   const topup = async () => {
+    if (cleanCard.length < 16 || !cardBrand) return toast.error("رقم بطاقة غير صحيح (Visa / Mastercard فقط)");
+    if (!cardName.trim()) return toast.error("ادخل اسم حامل البطاقة");
+    if (expiry.length < 5) return toast.error("تاريخ انتهاء غير صحيح");
+    if (cvv.length < 3) return toast.error("CVV غير صحيح");
+    if (amount < 10) return toast.error("الحد الأدنى للشحن 10 ج.م");
+
+    setProcessing(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) { setProcessing(false); return; }
+
+    // محاكاة عملية الدفع البنكية (يمكن ربطها لاحقاً ببوابة دفع حقيقية)
+    await new Promise((r) => setTimeout(r, 1200));
+
+    const last4 = cleanCard.slice(-4);
     await supabase.from("wallet_transactions").insert({
       user_id: user.id,
       type: "topup",
       amount,
-      description: "شحن المحفظة",
+      description: `شحن عبر ${cardBrand === "visa" ? "Visa" : "Mastercard"} •••• ${last4}`,
     });
     await supabase.from("profiles").update({ wallet_balance: (profile?.wallet_balance || 0) + amount }).eq("id", user.id);
     toast.success(`تم شحن ${amount} ج.م ✨`);
     setOpen(false);
+    setCardNumber(""); setCardName(""); setExpiry(""); setCvv("");
+    setProcessing(false);
     refresh();
     load();
   };
