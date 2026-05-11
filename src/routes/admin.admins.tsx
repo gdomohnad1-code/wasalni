@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { createAdminAccount, resetAdminPassword } from "@/lib/admin-create.functions";
+import { createAdminAccount, resetAdminPassword, resetPasswordByEmail } from "@/lib/admin-create.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
