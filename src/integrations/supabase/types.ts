@@ -35,6 +35,30 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_permissions: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          permission: Database["public"]["Enums"]["admin_permission"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          permission: Database["public"]["Enums"]["admin_permission"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["admin_permission"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -451,6 +475,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_admin_permission: {
+        Args: {
+          _perm: Database["public"]["Enums"]["admin_permission"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -458,6 +489,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       mark_all_overdue_paid: {
         Args: { p_min_amount?: number }
         Returns: number
@@ -465,6 +497,13 @@ export type Database = {
       mark_driver_paid: { Args: { p_driver_id: string }; Returns: number }
     }
     Enums: {
+      admin_permission:
+        | "super_admin"
+        | "assigner"
+        | "full_control"
+        | "viewer"
+        | "notifications"
+        | "collections"
       app_role: "rider" | "driver" | "admin"
       commission_status: "unpaid" | "paid"
       complaint_priority: "low" | "medium" | "high" | "urgent"
@@ -606,6 +645,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_permission: [
+        "super_admin",
+        "assigner",
+        "full_control",
+        "viewer",
+        "notifications",
+        "collections",
+      ],
       app_role: ["rider", "driver", "admin"],
       commission_status: ["unpaid", "paid"],
       complaint_priority: ["low", "medium", "high", "urgent"],
