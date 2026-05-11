@@ -731,8 +731,39 @@ function Pill({ icon, label, value, accent }: { icon: React.ReactNode; label: st
   );
 }
 
-function ToPickupPanel({ address, distanceKm, etaMin, onArrived }: {
-  address: string; distanceKm: number; etaMin: number; onArrived: () => void;
+function navUrl(t: LL) {
+  // Prefer Google Maps turn-by-turn; falls back to web on desktop
+  return `https://www.google.com/maps/dir/?api=1&destination=${t.lat},${t.lng}&travelmode=driving&dir_action=navigate`;
+}
+function wazeNavUrl(t: LL) {
+  return `https://waze.com/ul?ll=${t.lat},${t.lng}&navigate=yes`;
+}
+
+function NavButtons({ target }: { target: LL }) {
+  return (
+    <div className="grid grid-cols-2 gap-2 mb-3">
+      <a
+        href={navUrl(target)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+      >
+        <Navigation2 className="h-4 w-4" /> Google Maps
+      </a>
+      <a
+        href={wazeNavUrl(target)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="h-12 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+      >
+        <Navigation2 className="h-4 w-4" /> Waze
+      </a>
+    </div>
+  );
+}
+
+function ToPickupPanel({ address, distanceKm, etaMin, target, onArrived }: {
+  address: string; distanceKm: number; etaMin: number; target: LL; onArrived: () => void;
 }) {
   return (
     <motion.div
@@ -756,6 +787,7 @@ function ToPickupPanel({ address, distanceKm, etaMin, onArrived }: {
         <Pill icon={<Clock className="h-3.5 w-3.5" />} label="الوصول" value={`${etaMin} د`} />
         <Pill icon={<MapPin className="h-3.5 w-3.5" />} label="المسافة" value={`${distanceKm.toFixed(1)} كم`} />
       </div>
+      <NavButtons target={target} />
       <Button onClick={onArrived} className="w-full h-14 text-base font-black bg-black hover:bg-gray-900 text-white rounded-2xl">
         <Car className="h-5 w-5 ml-2" /> الراكب ركب — بدء الرحلة
       </Button>
@@ -763,8 +795,8 @@ function ToPickupPanel({ address, distanceKm, etaMin, onArrived }: {
   );
 }
 
-function InTripPanel({ address, distanceKm, etaMin, price, onEnd }: {
-  address: string; distanceKm: number; etaMin: number; price: number; onEnd: () => void;
+function InTripPanel({ address, distanceKm, etaMin, price, target, onEnd }: {
+  address: string; distanceKm: number; etaMin: number; price: number; target: LL; onEnd: () => void;
 }) {
   return (
     <motion.div
@@ -789,6 +821,7 @@ function InTripPanel({ address, distanceKm, etaMin, price, onEnd }: {
         <Pill icon={<Clock className="h-3.5 w-3.5" />} label="الوصول" value={`${etaMin} د`} />
         <Pill icon={<MapPin className="h-3.5 w-3.5" />} label="المسافة" value={`${distanceKm.toFixed(1)} كم`} />
       </div>
+      <NavButtons target={target} />
       <Button onClick={onEnd} className="w-full h-14 text-base font-black bg-red-500 hover:bg-red-600 text-white rounded-2xl">
         <Flag className="h-5 w-5 ml-2" /> إنهاء الرحلة
       </Button>
