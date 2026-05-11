@@ -148,6 +148,10 @@ function AuthPage() {
                       <Input required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" className="pr-10" />
                     </div>
                   </div>
+                  <div>
+                    <Label>كود المؤثر (اختياري)</Label>
+                    <Input value={influencerCode} onChange={(e) => setInfluencerCode(e.target.value.toUpperCase())} placeholder="مثال: SARA10" />
+                  </div>
                 </>
               )}
 
