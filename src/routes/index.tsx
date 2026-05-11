@@ -14,7 +14,9 @@ function SplashPage() {
   useEffect(() => {
     const t = setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
-      navigate({ to: data.session ? "/home" : "/auth" });
+      if (!data.session) return navigate({ to: "/auth" });
+      const to = await destinationForUser(data.session.user.id);
+      navigate({ to });
     }, 1400);
     return () => clearTimeout(t);
   }, [navigate]);
