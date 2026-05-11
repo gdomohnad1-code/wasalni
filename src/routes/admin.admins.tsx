@@ -196,6 +196,9 @@ function AdminsPage() {
         </div>
       </Card>
 
+      {/* Direct create admin */}
+      {isSuper && <DirectCreateAdmin onCreated={load} />}
+
       <Card className="p-5">
         <h3 className="font-bold mb-3 flex items-center gap-2">
           <UserPlus className="h-4 w-4" /> إضافة بريد أدمن جديد
