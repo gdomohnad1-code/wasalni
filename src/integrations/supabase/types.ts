@@ -561,6 +561,99 @@ export type Database = {
         }
         Relationships: []
       }
+      influencer_redemptions: {
+        Row: {
+          created_at: string
+          discount_amount: number
+          event_type: Database["public"]["Enums"]["influencer_event_type"]
+          id: string
+          influencer_id: string
+          reward_amount: number
+          ride_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          discount_amount?: number
+          event_type: Database["public"]["Enums"]["influencer_event_type"]
+          id?: string
+          influencer_id: string
+          reward_amount?: number
+          ride_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          discount_amount?: number
+          event_type?: Database["public"]["Enums"]["influencer_event_type"]
+          id?: string
+          influencer_id?: string
+          reward_amount?: number
+          ride_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_redemptions_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "influencer_redemptions_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      influencers: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          reward_type: Database["public"]["Enums"]["influencer_reward_type"]
+          reward_value: number
+          updated_at: string
+          user_discount_value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          reward_type?: Database["public"]["Enums"]["influencer_reward_type"]
+          reward_value?: number
+          updated_at?: string
+          user_discount_value?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          reward_type?: Database["public"]["Enums"]["influencer_reward_type"]
+          reward_value?: number
+          updated_at?: string
+          user_discount_value?: number
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -598,6 +691,7 @@ export type Database = {
           rating: number | null
           referral_code: string | null
           referred_by: string | null
+          referred_by_influencer: string | null
           updated_at: string
           wallet_balance: number
         }
@@ -610,6 +704,7 @@ export type Database = {
           rating?: number | null
           referral_code?: string | null
           referred_by?: string | null
+          referred_by_influencer?: string | null
           updated_at?: string
           wallet_balance?: number
         }
@@ -622,6 +717,7 @@ export type Database = {
           rating?: number | null
           referral_code?: string | null
           referred_by?: string | null
+          referred_by_influencer?: string | null
           updated_at?: string
           wallet_balance?: number
         }
@@ -631,6 +727,20 @@ export type Database = {
             columns: ["referred_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_referred_by_influencer_fkey"
+            columns: ["referred_by_influencer"]
+            isOneToOne: false
+            referencedRelation: "influencer_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_referred_by_influencer_fkey"
+            columns: ["referred_by_influencer"]
+            isOneToOne: false
+            referencedRelation: "influencers"
             referencedColumns: ["id"]
           },
         ]
@@ -804,10 +914,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      influencer_stats: {
+        Row: {
+          active: boolean | null
+          code: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+          phone: string | null
+          reward_type:
+            | Database["public"]["Enums"]["influencer_reward_type"]
+            | null
+          reward_value: number | null
+          rides_count: number | null
+          signups_count: number | null
+          total_discounts: number | null
+          total_rewards: number | null
+          user_discount_value: number | null
+          users_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       ads_tick: { Args: never; Returns: Json }
+      apply_influencer_code: { Args: { p_code: string }; Returns: Json }
       detect_idle_drivers: { Args: { p_minutes?: number }; Returns: number }
       has_admin_permission: {
         Args: {
@@ -890,6 +1021,12 @@ export type Database = {
         | "changes_requested"
       driver_alert_type: "sos" | "idle" | "out_of_zone" | "speeding"
       driver_presence: "available" | "busy" | "offline"
+      influencer_event_type: "signup" | "first_ride" | "ride_use"
+      influencer_reward_type:
+        | "discount"
+        | "credit"
+        | "ride_percentage"
+        | "fixed_bonus"
       ride_status:
         | "searching"
         | "accepted"
@@ -1069,6 +1206,13 @@ export const Constants = {
       ],
       driver_alert_type: ["sos", "idle", "out_of_zone", "speeding"],
       driver_presence: ["available", "busy", "offline"],
+      influencer_event_type: ["signup", "first_ride", "ride_use"],
+      influencer_reward_type: [
+        "discount",
+        "credit",
+        "ride_percentage",
+        "fixed_bonus",
+      ],
       ride_status: [
         "searching",
         "accepted",
