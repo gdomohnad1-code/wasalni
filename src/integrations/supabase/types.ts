@@ -115,6 +115,42 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_commissions: {
+        Row: {
+          amount: number
+          batch_id: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          paid_at: string | null
+          paid_by: string | null
+          ride_id: string
+          status: Database["public"]["Enums"]["commission_status"]
+        }
+        Insert: {
+          amount: number
+          batch_id?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          paid_at?: string | null
+          paid_by?: string | null
+          ride_id: string
+          status?: Database["public"]["Enums"]["commission_status"]
+        }
+        Update: {
+          amount?: number
+          batch_id?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          paid_at?: string | null
+          paid_by?: string | null
+          ride_id?: string
+          status?: Database["public"]["Enums"]["commission_status"]
+        }
+        Relationships: []
+      }
       driver_documents: {
         Row: {
           account_status: Database["public"]["Enums"]["driver_account_status"]
@@ -126,8 +162,10 @@ export type Database = {
           created_at: string
           driver_id: string
           driver_license_url: string | null
+          dues_since: string | null
           id: string
           is_online: boolean
+          last_reminder_at: string | null
           rejection_reason: string | null
           suspension_reason: string | null
         }
@@ -141,8 +179,10 @@ export type Database = {
           created_at?: string
           driver_id: string
           driver_license_url?: string | null
+          dues_since?: string | null
           id?: string
           is_online?: boolean
+          last_reminder_at?: string | null
           rejection_reason?: string | null
           suspension_reason?: string | null
         }
@@ -156,8 +196,10 @@ export type Database = {
           created_at?: string
           driver_id?: string
           driver_license_url?: string | null
+          dues_since?: string | null
           id?: string
           is_online?: boolean
+          last_reminder_at?: string | null
           rejection_reason?: string | null
           suspension_reason?: string | null
         }
@@ -416,9 +458,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_all_overdue_paid: {
+        Args: { p_min_amount?: number }
+        Returns: number
+      }
+      mark_driver_paid: { Args: { p_driver_id: string }; Returns: number }
     }
     Enums: {
       app_role: "rider" | "driver" | "admin"
+      commission_status: "unpaid" | "paid"
       complaint_priority: "low" | "medium" | "high" | "urgent"
       complaint_status: "new" | "in_progress" | "resolved" | "closed"
       driver_account_status: "active" | "suspended" | "banned"
@@ -559,6 +607,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["rider", "driver", "admin"],
+      commission_status: ["unpaid", "paid"],
       complaint_priority: ["low", "medium", "high", "urgent"],
       complaint_status: ["new", "in_progress", "resolved", "closed"],
       driver_account_status: ["active", "suspended", "banned"],
