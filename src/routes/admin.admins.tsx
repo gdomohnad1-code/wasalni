@@ -198,7 +198,7 @@ function AdminsPage() {
         <h3 className="font-bold mb-3 flex items-center gap-2">
           <UserPlus className="h-4 w-4" /> إضافة بريد أدمن جديد
         </h3>
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2">
           <Input
             type="email"
             placeholder="example@wasalni.app"
@@ -206,12 +206,20 @@ function AdminsPage() {
             onChange={(e) => setNewEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addEmail()}
             dir="ltr"
-            className="text-left"
+            className="text-left flex-1"
           />
+          <Select value={newPerm} onValueChange={(v) => setNewPerm(v as AdminPerm)}>
+            <SelectTrigger className="md:w-56"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ALL_PERMS.map((p) => (
+                <SelectItem key={p} value={p}>{PERM_META[p].label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button onClick={addEmail} disabled={loading}>إضافة</Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          الحساب الجديد يبدأ بدور «معاينة فقط» — يمكن للمسؤول الرئيسي ترقيته لاحقًا.
+          اختر الدور الافتراضي — سيُطبَّق تلقائيًا عند تسجيل صاحب البريد. يمكن تعديله لاحقًا.
         </p>
       </Card>
 
