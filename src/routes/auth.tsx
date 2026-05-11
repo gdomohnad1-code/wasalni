@@ -101,10 +101,9 @@ function AuthPage() {
         animate={{ y: 0, opacity: 1 }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-6 text-primary-foreground">
-          <div className="text-5xl mb-2">🚕</div>
-          <h1 className="text-3xl font-black">وصلني</h1>
-          <p className="opacity-90 text-sm">رحلتك تبدأ بنقرة</p>
+        <div className="text-center mb-6">
+          <img src={logo} alt="وصلني" className="h-20 w-20 mx-auto mb-3 rounded-2xl object-contain" />
+          <p className="text-muted-foreground text-sm">رحلتك تبدأ بنقرة</p>
         </div>
 
         <div className="bg-card rounded-3xl shadow-elevated p-6">

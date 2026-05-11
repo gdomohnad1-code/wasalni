@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { destinationForUser } from "@/lib/route-after-login";
+import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/")({
   component: SplashPage,
