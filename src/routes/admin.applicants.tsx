@@ -44,6 +44,9 @@ function ApplicantsPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const { user } = useAuth();
+  const isMainAdmin = user?.email?.toLowerCase() === "admin@wasalni.app";
 
   const load = async () => {
     setLoading(true);
