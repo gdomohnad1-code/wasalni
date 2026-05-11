@@ -138,7 +138,7 @@ function AdminOverview() {
               <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
               <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
               <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-              <Area type="monotone" dataKey="rides" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#g1)" />
+              <Area type="monotone" dataKey="rides" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#g1)" isAnimationActive={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
