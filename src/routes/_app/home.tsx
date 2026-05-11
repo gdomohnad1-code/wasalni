@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import {
   Bell, AlertTriangle, Sparkles, Wallet, ShieldCheck, ChevronLeft,
-  Clock, MapPin, Star,
+  Clock, MapPin, Star, Crown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RIDE_TYPES, type RideTypeKey, PLATFORM_COMMISSION_RATE } from "@/lib/pricing";
+import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -23,11 +23,6 @@ const offers = [
   { title: "ادعو صديق واكسب 30 ج.م", sub: "نظام الإحالة", glyph: "🤝" },
 ];
 
-const PRICING_TILES = [
-  { title: "عادي", value: "30 ج.م", sub: "أول 3 كم + 3 ج.م/كم" },
-  { title: "ذهاب وعودة", value: "60 ج.م", sub: "أول 6 كم + 3 ج.م/كم" },
-  { title: "متعدد الوجهات", value: "200/س", sub: "حد أدنى 75 ج.م" },
-];
 
 function HomePage() {
   const { profile } = useAuth();
@@ -153,64 +148,69 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Services */}
-      <div className="px-5 mt-6">
+      {/* Services — luxe bento */}
+      <div className="px-5 mt-7">
         <div className="flex items-baseline justify-between mb-3">
-          <h3 className="font-extrabold text-lg">خدماتنا</h3>
-          <span className="text-xs text-muted-foreground">5 خدمات</span>
+          <div>
+            <h3 className="font-black text-xl tracking-tight">اختر خدمتك</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">5 خدمات مصممة لراحتك</p>
+          </div>
+          <div className="flex items-center gap-1 text-[10px] font-bold bg-amber-500/10 text-amber-600 px-2 py-1 rounded-full ring-1 ring-amber-500/20">
+            <Crown className="h-3 w-3" /> Premium
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+
+        <div className="grid grid-cols-6 gap-2.5">
           {services.map((key, i) => {
             const v = RIDE_TYPES[key];
-            const span = i === 0 ? "col-span-2" : "";
+            const span = i === 0 ? "col-span-6" : "col-span-3";
+            const big = i === 0;
             return (
               <motion.button
                 key={key}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
+                transition={{ delay: i * 0.06, type: "spring", stiffness: 120 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => goBook(key)}
-                className={`${span} group relative overflow-hidden rounded-2xl border border-border bg-card p-4 text-right shadow-card hover:shadow-elevated transition`}
+                className={`${span} group relative overflow-hidden rounded-2xl border border-border/60 bg-card text-right shadow-card hover:shadow-elevated hover:-translate-y-0.5 transition-all`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-bl ${v.accent} opacity-80 group-hover:opacity-100 transition`} />
-                <div className="relative flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-white/70 backdrop-blur grid place-items-center text-2xl shadow-soft">
-                    {v.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-extrabold text-[15px]">{v.label}</div>
-                    <div className="text-[11px] text-foreground/70 mt-0.5 leading-tight">{v.desc}</div>
-                  </div>
-                  <ChevronLeft className="h-4 w-4 text-foreground/40 group-hover:text-primary transition" />
+                <div className={`absolute inset-0 bg-gradient-to-bl ${v.accent} opacity-90`} />
+                <div className="absolute -top-8 -left-8 h-24 w-24 rounded-full bg-white/40 blur-2xl opacity-60 group-hover:opacity-90 transition" />
+
+                <div className={`relative ${big ? "p-5" : "p-3.5"}`}>
+                  {big ? (
+                    <div className="flex items-center gap-4">
+                      <div className="h-16 w-16 rounded-2xl bg-white/80 backdrop-blur grid place-items-center text-3xl shadow-soft ring-1 ring-white/60">
+                        {v.icon}
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/15 px-1.5 py-0.5 rounded">الأكثر طلباً</span>
+                        <div className="font-black text-lg mt-1">{v.label}</div>
+                        <div className="text-[12px] text-foreground/70 mt-0.5 leading-snug">{v.desc}</div>
+                      </div>
+                      <div className="h-10 w-10 rounded-xl bg-primary text-primary-foreground grid place-items-center shadow-soft">
+                        <ChevronLeft className="h-5 w-5" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-start gap-2 min-h-[120px]">
+                      <div className="h-11 w-11 rounded-xl bg-white/80 backdrop-blur grid place-items-center text-xl shadow-soft ring-1 ring-white/60">
+                        {v.icon}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-extrabold text-[14px] leading-tight">{v.label}</div>
+                        <div className="text-[10.5px] text-foreground/65 mt-0.5 leading-tight line-clamp-2">{v.desc}</div>
+                      </div>
+                      <div className="text-[10px] font-bold text-primary flex items-center gap-0.5">
+                        احجز <ChevronLeft className="h-3 w-3" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </motion.button>
             );
           })}
-        </div>
-      </div>
-
-      {/* Pricing transparency */}
-      <div className="px-5 mt-6">
-        <div className="rounded-2xl border border-border bg-gradient-to-bl from-card to-muted/40 p-4 shadow-card">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h3 className="font-extrabold">تسعيرة شفافة</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">ادفع بثقة — بدون مفاجآت</p>
-            </div>
-            <div className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-1 rounded-md">
-              عمولة المنصة {Math.round(PLATFORM_COMMISSION_RATE * 100)}% فقط
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {PRICING_TILES.map((t) => (
-              <div key={t.title} className="rounded-xl bg-background p-3 ring-1 ring-border">
-                <div className="text-[10px] text-muted-foreground">{t.title}</div>
-                <div className="font-black text-base text-primary mt-0.5">{t.value}</div>
-                <div className="text-[10px] text-foreground/60 mt-0.5 leading-tight">{t.sub}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
