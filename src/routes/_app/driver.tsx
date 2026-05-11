@@ -406,6 +406,19 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
                 <span>يتم بث الموقع</span>
               </div>
             )}
+            {battery && (
+              <div className="flex items-center gap-1.5 mt-1 text-xs opacity-90">
+                {battery.charging
+                  ? <BatteryCharging className="h-3 w-3" />
+                  : battery.level <= 0.2
+                    ? <BatteryLow className="h-3 w-3 text-red-200" />
+                    : <BatteryFull className="h-3 w-3" />}
+                <span>
+                  {Math.round(battery.level * 100)}%
+                  {!battery.charging && battery.level <= 0.2 && " · وضع توفير الطاقة"}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-2 items-end">
             <div className="flex items-center gap-2 bg-white/15 backdrop-blur px-3 py-2 rounded-full">
