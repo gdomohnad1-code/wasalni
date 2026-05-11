@@ -213,14 +213,25 @@ export type Database = {
           car_model: string | null
           car_photo_url: string | null
           car_plate: string | null
+          car_type: string | null
+          change_request_message: string | null
           created_at: string
           driver_id: string
           driver_license_url: string | null
           dues_since: string | null
+          fields_to_fix: string[]
           id: string
+          id_card_back_url: string | null
+          id_card_front_url: string | null
           is_online: boolean
           last_reminder_at: string | null
+          next_attempt_at: string | null
+          rejection_count: number
           rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_url: string | null
+          submitted_at: string | null
           suspension_reason: string | null
         }
         Insert: {
@@ -230,14 +241,25 @@ export type Database = {
           car_model?: string | null
           car_photo_url?: string | null
           car_plate?: string | null
+          car_type?: string | null
+          change_request_message?: string | null
           created_at?: string
           driver_id: string
           driver_license_url?: string | null
           dues_since?: string | null
+          fields_to_fix?: string[]
           id?: string
+          id_card_back_url?: string | null
+          id_card_front_url?: string | null
           is_online?: boolean
           last_reminder_at?: string | null
+          next_attempt_at?: string | null
+          rejection_count?: number
           rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          submitted_at?: string | null
           suspension_reason?: string | null
         }
         Update: {
@@ -247,14 +269,25 @@ export type Database = {
           car_model?: string | null
           car_photo_url?: string | null
           car_plate?: string | null
+          car_type?: string | null
+          change_request_message?: string | null
           created_at?: string
           driver_id?: string
           driver_license_url?: string | null
           dues_since?: string | null
+          fields_to_fix?: string[]
           id?: string
+          id_card_back_url?: string | null
+          id_card_front_url?: string | null
           is_online?: boolean
           last_reminder_at?: string | null
+          next_attempt_at?: string | null
+          rejection_count?: number
           rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          submitted_at?: string | null
           suspension_reason?: string | null
         }
         Relationships: []
@@ -538,7 +571,13 @@ export type Database = {
       commission_status: "unpaid" | "paid"
       complaint_priority: "low" | "medium" | "high" | "urgent"
       complaint_status: "new" | "in_progress" | "resolved" | "closed"
-      driver_account_status: "active" | "suspended" | "banned"
+      driver_account_status:
+        | "active"
+        | "suspended"
+        | "banned"
+        | "pending"
+        | "rejected"
+        | "changes_requested"
       ride_status:
         | "searching"
         | "accepted"
@@ -687,7 +726,14 @@ export const Constants = {
       commission_status: ["unpaid", "paid"],
       complaint_priority: ["low", "medium", "high", "urgent"],
       complaint_status: ["new", "in_progress", "resolved", "closed"],
-      driver_account_status: ["active", "suspended", "banned"],
+      driver_account_status: [
+        "active",
+        "suspended",
+        "banned",
+        "pending",
+        "rejected",
+        "changes_requested",
+      ],
       ride_status: [
         "searching",
         "accepted",

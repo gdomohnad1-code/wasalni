@@ -22,6 +22,7 @@ import { Route as AdminNotificationsRouteImport } from './routes/admin.notificat
 import { Route as AdminDuesRouteImport } from './routes/admin.dues'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as AdminComplaintsRouteImport } from './routes/admin.complaints'
+import { Route as AdminApplicantsRouteImport } from './routes/admin.applicants'
 import { Route as AdminAdminsRouteImport } from './routes/admin.admins'
 import { Route as AppWalletRouteImport } from './routes/_app/wallet'
 import { Route as AppTripsRouteImport } from './routes/_app/trips'
@@ -96,6 +97,11 @@ const AdminComplaintsRoute = AdminComplaintsRouteImport.update({
   path: '/complaints',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminApplicantsRoute = AdminApplicantsRouteImport.update({
+  id: '/applicants',
+  path: '/applicants',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAdminsRoute = AdminAdminsRouteImport.update({
   id: '/admins',
   path: '/admins',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/_app/trips': typeof AppTripsRoute
   '/_app/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/trips'
     | '/wallet'
     | '/admin/admins'
+    | '/admin/applicants'
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/trips'
     | '/wallet'
     | '/admin/admins'
+    | '/admin/applicants'
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/_app/trips'
     | '/_app/wallet'
     | '/admin/admins'
+    | '/admin/applicants'
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
@@ -385,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminComplaintsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/applicants': {
+      id: '/admin/applicants'
+      path: '/applicants'
+      fullPath: '/admin/applicants'
+      preLoaderRoute: typeof AdminApplicantsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/admins': {
       id: '/admin/admins'
       path: '/admins'
@@ -475,6 +494,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AdminRouteChildren {
   AdminAdminsRoute: typeof AdminAdminsRoute
+  AdminApplicantsRoute: typeof AdminApplicantsRoute
   AdminComplaintsRoute: typeof AdminComplaintsRoute
   AdminDriversRoute: typeof AdminDriversRoute
   AdminDuesRoute: typeof AdminDuesRoute
@@ -488,6 +508,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminsRoute: AdminAdminsRoute,
+  AdminApplicantsRoute: AdminApplicantsRoute,
   AdminComplaintsRoute: AdminComplaintsRoute,
   AdminDriversRoute: AdminDriversRoute,
   AdminDuesRoute: AdminDuesRoute,

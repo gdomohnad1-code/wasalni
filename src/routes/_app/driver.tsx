@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Car, FileText, MapPin, DollarSign, Loader2, CheckCircle2 } from "lucide-react";
+import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { submitDriverApplication } from "@/lib/driver-applications.functions";
 import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
 
 export const Route = createFileRoute("/_app/driver")({
@@ -22,62 +25,194 @@ function DriverPage() {
   const [docs, setDocs] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const reload = () => {
     if (!user) return;
     supabase.from("driver_documents").select("*").eq("driver_id", user.id).maybeSingle().then(({ data }) => {
       setDocs(data);
       setLoading(false);
     });
-  }, [user]);
+  };
+
+  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [user]);
 
   if (loading) return <div className="flex justify-center pt-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
-  if (!isDriver || !docs) return <DriverOnboarding onDone={() => { refresh(); }} />;
+  // Active driver → dashboard
+  if (isDriver && docs?.account_status === "active") {
+    return <DriverDashboard docs={docs} setDocs={setDocs} />;
+  }
 
-  return <DriverDashboard docs={docs} setDocs={setDocs} />;
+  // Status screens for application lifecycle
+  const status = docs?.account_status;
+  if (status === "pending") return <StatusPending docs={docs} />;
+  if (status === "rejected") {
+    const ready = docs.next_attempt_at && new Date(docs.next_attempt_at).getTime() <= Date.now();
+    if (!ready) return <StatusRejected docs={docs} onReady={reload} />;
+  }
+  // changes_requested OR rejected-but-cooldown-passed OR no record yet → show form
+  return <DriverApplicationForm docs={docs} onDone={() => { refresh(); reload(); }} />;
 }
 
-function DriverOnboarding({ onDone }: { onDone: () => void }) {
+// ============= Status: Pending =============
+
+function StatusPending({ docs }: { docs: any }) {
+  const submitted = docs.submitted_at ? new Date(docs.submitted_at).getTime() : Date.now();
+  const deadline = submitted + 48 * 60 * 60 * 1000;
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(t); }, []);
+  const remaining = Math.max(0, deadline - now);
+  const hrs = Math.floor(remaining / 3600000);
+  const mins = Math.floor((remaining % 3600000) / 60000);
+  return (
+    <div className="max-w-md mx-auto p-4">
+      <div className="bg-card rounded-2xl p-6 shadow-card text-center mt-6">
+        <div className="h-20 w-20 rounded-full bg-primary/10 grid place-items-center mx-auto mb-4">
+          <Clock className="h-10 w-10 text-primary" />
+        </div>
+        <h2 className="text-xl font-bold mb-2">طلبك قيد المراجعة</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          تم استلام طلب الانضمام كسائق وفريقنا يراجع البيانات. سيتم الرد خلال 48 ساعة.
+        </p>
+        <div className="bg-muted rounded-xl p-4 mb-2">
+          <p className="text-xs text-muted-foreground mb-1">الوقت المتبقي للمراجعة</p>
+          <p className="text-2xl font-black text-primary">{hrs} س : {String(mins).padStart(2, "0")} د</p>
+        </div>
+        <p className="text-xs text-muted-foreground">سنرسل لك إشعاراً فور الانتهاء من المراجعة.</p>
+      </div>
+    </div>
+  );
+}
+
+// ============= Status: Rejected (cooldown) =============
+
+function StatusRejected({ docs, onReady }: { docs: any; onReady: () => void }) {
+  const target = new Date(docs.next_attempt_at).getTime();
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => {
+      const n = Date.now();
+      setNow(n);
+      if (n >= target) onReady();
+    }, 1000);
+    return () => clearInterval(t);
+  }, [target]);
+  const remaining = Math.max(0, target - now);
+  const hrs = Math.floor(remaining / 3600000);
+  const mins = Math.floor((remaining % 3600000) / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  return (
+    <div className="max-w-md mx-auto p-4">
+      <div className="bg-card rounded-2xl p-6 shadow-card text-center mt-6">
+        <div className="h-20 w-20 rounded-full bg-destructive/10 grid place-items-center mx-auto mb-4">
+          <XCircle className="h-10 w-10 text-destructive" />
+        </div>
+        <h2 className="text-xl font-bold mb-2">تم رفض طلبك</h2>
+        {docs.rejection_reason && (
+          <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-lg p-3 mb-4 text-right">
+            <span className="font-bold">السبب:</span> {docs.rejection_reason}
+          </div>
+        )}
+        <p className="text-sm text-muted-foreground mb-4">
+          يمكنك إعادة التقديم بعد انتهاء المدة التالية:
+        </p>
+        <div className="bg-muted rounded-xl p-4">
+          <p className="text-xs text-muted-foreground mb-1">الوقت المتبقي</p>
+          <p className="text-3xl font-black text-foreground tabular-nums">
+            {String(hrs).padStart(2, "0")} : {String(mins).padStart(2, "0")} : {String(secs).padStart(2, "0")}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============= Application Form =============
+
+const STEPS = ["الهوية", "الرخصة", "السيارة", "مراجعة"] as const;
+
+function DriverApplicationForm({ docs, onDone }: { docs: any; onDone: () => void }) {
   const { user } = useAuth();
-  const [carModel, setCarModel] = useState("");
-  const [carPlate, setCarPlate] = useState("");
-  const [files, setFiles] = useState<{ [k: string]: File | null }>({});
+  const submitFn = useServerFn(submitDriverApplication);
+  const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  const onFile = (k: string, f: File | null) => setFiles((p) => ({ ...p, [k]: f }));
+  const fieldsToFix: string[] = docs?.fields_to_fix ?? [];
+  const isResubmit = docs?.account_status === "changes_requested";
 
-  const submit = async () => {
-    if (!user || !files.driver_license || !files.car_license || !files.car_photo) {
-      toast.error("لازم ترفع كل الوثائق");
-      return;
+  // Form state — preload existing values when resubmitting
+  const [carType, setCarType] = useState(docs?.car_type ?? "");
+  const [carModel, setCarModel] = useState(docs?.car_model ?? "");
+  const [carPlate, setCarPlate] = useState(docs?.car_plate ?? "");
+  const [urls, setUrls] = useState<Record<string, string>>({
+    id_card_front_url: docs?.id_card_front_url ?? "",
+    id_card_back_url: docs?.id_card_back_url ?? "",
+    selfie_url: docs?.selfie_url ?? "",
+    driver_license_url: docs?.driver_license_url ?? "",
+    car_photo_url: docs?.car_photo_url ?? "",
+    car_license_url: docs?.car_license_url ?? "",
+  });
+
+  const needsFix = (key: string) => isResubmit && fieldsToFix.includes(key);
+
+  const upload = async (key: string, file: File) => {
+    if (!user) throw new Error("not authenticated");
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${user.id}/${key}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("driver-applications").upload(path, file, { upsert: true });
+    if (error) throw error;
+    // store the bucket-prefixed path so backend knows to sign it
+    setUrls((p) => ({ ...p, [key]: `driver-applications/${path}` }));
+  };
+
+  const onPickFile = (key: string) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    try {
+      await upload(key, f);
+      toast.success("تم رفع الملف");
+    } catch (err: any) {
+      toast.error(err.message ?? "فشل الرفع");
     }
+  };
+
+  const allFilled = useMemo(() => {
+    return urls.id_card_front_url && urls.id_card_back_url && urls.selfie_url
+      && urls.driver_license_url && urls.car_photo_url && urls.car_license_url
+      && carType.trim() && carModel.trim() && carPlate.trim();
+  }, [urls, carType, carModel, carPlate]);
+
+  const send = async () => {
+    if (!allFilled) { toast.error("املأ كل الحقول وارفع كل الصور"); return; }
     setSubmitting(true);
     try {
-      const upload = async (key: string, f: File) => {
-        const path = `${user.id}/${key}-${Date.now()}.${f.name.split(".").pop()}`;
-        const { error } = await supabase.storage.from("driver-docs").upload(path, f);
-        if (error) throw error;
-        return path;
-      };
-      const [dl, cl, cp] = await Promise.all([
-        upload("driver-license", files.driver_license),
-        upload("car-license", files.car_license),
-        upload("car-photo", files.car_photo),
-      ]);
-      await supabase.from("driver_documents").upsert({
-        driver_id: user.id,
-        driver_license_url: dl,
-        car_license_url: cl,
-        car_photo_url: cp,
-        car_model: carModel,
-        car_plate: carPlate,
-        approved: true, // auto-approve for demo
+      // Convert stored "driver-applications/<path>" to a URL placeholder for zod url() check
+      // Backend handles both signed URLs and bucket paths via `signedUrls` path logic;
+      // submitter sends fully-qualified Supabase storage URL for compatibility.
+      const toSubmit: Record<string, string> = {};
+      const keys = ["id_card_front_url", "id_card_back_url", "selfie_url", "driver_license_url", "car_photo_url", "car_license_url"];
+      for (const k of keys) {
+        const v = urls[k];
+        if (v.startsWith("driver-applications/")) {
+          const path = v.replace(/^driver-applications\//, "");
+          // Use Supabase public-style URL (private bucket → admin signs it later for viewing)
+          const { data: pub } = supabase.storage.from("driver-applications").getPublicUrl(path);
+          toSubmit[k] = pub.publicUrl;
+        } else {
+          toSubmit[k] = v;
+        }
+      }
+      await submitFn({
+        data: {
+          ...toSubmit as any,
+          car_type: carType.trim(),
+          car_model: carModel.trim(),
+          car_plate: carPlate.trim(),
+        },
       });
-      await supabase.from("user_roles").insert({ user_id: user.id, role: "driver" }).select();
-      toast.success("تم تسجيلك سائقاً ✅");
+      toast.success("تم إرسال طلبك ✅");
       onDone();
     } catch (e: any) {
-      toast.error(e.message);
+      toast.error(e?.message ?? "تعذّر الإرسال");
     } finally {
       setSubmitting(false);
     }
@@ -85,46 +220,116 @@ function DriverOnboarding({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <div className="text-center mb-6">
+      <div className="text-center mb-4">
         <div className="text-5xl mb-2">🚗</div>
         <h1 className="font-bold text-xl">سجّل كسائق</h1>
-        <p className="text-sm text-muted-foreground">ارفع وثائقك وابدأ تكسب فوراً</p>
+        <p className="text-xs text-muted-foreground">{STEPS[step]} ({step + 1}/{STEPS.length})</p>
+        <Progress value={((step + 1) / STEPS.length) * 100} className="mt-3 h-1.5" />
       </div>
+
+      {isResubmit && docs?.change_request_message && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3 mb-4 text-sm flex gap-2">
+          <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold mb-1">مطلوب تعديل البيانات التالية:</p>
+            <p>{docs.change_request_message}</p>
+          </div>
+        </div>
+      )}
 
       <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
-        <div>
-          <Label>موديل السيارة</Label>
-          <Input value={carModel} onChange={(e) => setCarModel(e.target.value)} placeholder="هيونداي اكسنت 2020" />
-        </div>
-        <div>
-          <Label>رقم اللوحة</Label>
-          <Input value={carPlate} onChange={(e) => setCarPlate(e.target.value)} placeholder="أ ب ج 1234" />
-        </div>
-        <FileField label="رخصة القيادة" k="driver_license" onFile={onFile} f={files.driver_license} />
-        <FileField label="رخصة السيارة" k="car_license" onFile={onFile} f={files.car_license} />
-        <FileField label="صورة السيارة" k="car_photo" onFile={onFile} f={files.car_photo} />
+        {step === 0 && (
+          <>
+            <FileField label="صورة البطاقة (وجه)" k="id_card_front_url" url={urls.id_card_front_url} onPick={onPickFile("id_card_front_url")} highlight={needsFix("id_card_front_url")} />
+            <FileField label="صورة البطاقة (ظهر)" k="id_card_back_url" url={urls.id_card_back_url} onPick={onPickFile("id_card_back_url")} highlight={needsFix("id_card_back_url")} />
+            <FileField label="سيلفي شخصي" k="selfie_url" url={urls.selfie_url} onPick={onPickFile("selfie_url")} highlight={needsFix("selfie_url")} icon={Camera} />
+          </>
+        )}
+        {step === 1 && (
+          <>
+            <FileField label="صورة رخصة القيادة" k="driver_license_url" url={urls.driver_license_url} onPick={onPickFile("driver_license_url")} highlight={needsFix("driver_license_url")} />
+          </>
+        )}
+        {step === 2 && (
+          <>
+            <Field label="نوع السيارة" v={carType} setV={setCarType} placeholder="سيدان / SUV / هاتشباك" highlight={needsFix("car_type")} />
+            <Field label="موديل السيارة" v={carModel} setV={setCarModel} placeholder="هيونداي اكسنت 2020" highlight={needsFix("car_model")} />
+            <Field label="رقم اللوحة" v={carPlate} setV={setCarPlate} placeholder="أ ب ج 1234" highlight={needsFix("car_plate")} />
+            <FileField label="صورة السيارة" k="car_photo_url" url={urls.car_photo_url} onPick={onPickFile("car_photo_url")} highlight={needsFix("car_photo_url")} />
+            <FileField label="صورة رخصة السيارة" k="car_license_url" url={urls.car_license_url} onPick={onPickFile("car_license_url")} highlight={needsFix("car_license_url")} />
+          </>
+        )}
+        {step === 3 && (
+          <div className="space-y-3 text-sm">
+            <p className="text-center text-muted-foreground">راجع البيانات قبل الإرسال:</p>
+            <SummaryRow label="نوع السيارة" v={carType} />
+            <SummaryRow label="الموديل" v={carModel} />
+            <SummaryRow label="رقم اللوحة" v={carPlate} />
+            <SummaryRow label="الصور المرفوعة" v={Object.values(urls).filter(Boolean).length + " / 6"} />
+          </div>
+        )}
 
-        <Button onClick={submit} disabled={submitting} className="w-full h-12 bg-gradient-primary font-bold">
-          {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "إرسال الطلب"}
-        </Button>
+        <div className="flex gap-2 pt-2">
+          {step > 0 && (
+            <Button variant="outline" className="flex-1" onClick={() => setStep((s) => s - 1)}>السابق</Button>
+          )}
+          {step < STEPS.length - 1 ? (
+            <Button className="flex-1 bg-gradient-primary" onClick={() => setStep((s) => s + 1)}>التالي</Button>
+          ) : (
+            <Button onClick={send} disabled={submitting || !allFilled} className="flex-1 h-12 bg-gradient-primary font-bold">
+              {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "إرسال الطلب"}
+            </Button>
+          )}
+        </div>
       </div>
+
+      <p className="text-[11px] text-center text-muted-foreground mt-3">
+        المراجعة خلال 48 ساعة. ستصلك إشعار فور الانتهاء.
+      </p>
     </div>
   );
 }
 
-function FileField({ label, k, onFile, f }: { label: string; k: string; onFile: (k: string, f: File | null) => void; f: File | null }) {
+function Field({ label, v, setV, placeholder, highlight }: { label: string; v: string; setV: (s: string) => void; placeholder?: string; highlight?: boolean }) {
   return (
     <div>
-      <Label>{label}</Label>
+      <Label className={highlight ? "text-destructive" : ""}>{label} {highlight && <span className="text-[10px]">(يلزم التعديل)</span>}</Label>
+      <Input value={v} onChange={(e) => setV(e.target.value)} placeholder={placeholder} className={highlight ? "border-destructive" : ""} />
+    </div>
+  );
+}
+
+function FileField({ label, k, url, onPick, highlight, icon: Icon = Upload }: { label: string; k: string; url: string; onPick: (e: React.ChangeEvent<HTMLInputElement>) => void; highlight?: boolean; icon?: any }) {
+  const has = Boolean(url);
+  return (
+    <div>
+      <Label className={highlight ? "text-destructive" : ""}>{label} {highlight && <span className="text-[10px]">(يلزم التعديل)</span>}</Label>
       <label className="cursor-pointer block">
-        <div className={`border-2 border-dashed rounded-xl p-3 text-center text-sm transition ${f ? "border-primary bg-primary/5" : "border-border"}`}>
-          {f ? <span className="flex items-center justify-center gap-1"><CheckCircle2 className="h-4 w-4 text-primary" /> {f.name}</span> : "اختر ملف..."}
+        <div className={`border-2 border-dashed rounded-xl p-3 text-center text-sm transition ${
+          highlight ? "border-destructive bg-destructive/5"
+          : has ? "border-primary bg-primary/5" : "border-border"
+        }`}>
+          {has ? (
+            <span className="flex items-center justify-center gap-1"><CheckCircle2 className="h-4 w-4 text-primary" /> تم الرفع</span>
+          ) : (
+            <span className="flex items-center justify-center gap-1"><Icon className="h-4 w-4" /> اختر ملف...</span>
+          )}
         </div>
-        <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => onFile(k, e.target.files?.[0] ?? null)} />
+        <input type="file" accept="image/*" className="hidden" onChange={onPick} />
       </label>
     </div>
   );
 }
+
+function SummaryRow({ label, v }: { label: string; v: string }) {
+  return (
+    <div className="flex justify-between border-b border-border py-1.5">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-semibold">{v || "—"}</span>
+    </div>
+  );
+}
+
 
 function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => void }) {
   const { user } = useAuth();
