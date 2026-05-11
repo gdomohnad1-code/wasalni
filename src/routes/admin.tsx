@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Users,
   Wallet,
+  CreditCard,
   MessageSquareWarning,
   Car,
   TrendingUp,
