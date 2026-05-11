@@ -695,6 +695,14 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
         onDismiss={dismissIncoming}
       />
 
+      <ArrivalConfirmModal
+        open={!!arrivalPrompt}
+        kind={arrivalPrompt ?? "pickup"}
+        address={arrivalPrompt === "pickup" ? activeRide?.pickup_address ?? "" : activeRide?.destination_address ?? ""}
+        onConfirm={confirmArrival}
+        onDismiss={() => setArrivalPrompt(null)}
+      />
+
       {showReady && <DriverReadyScreen onStart={closeReady} name={user?.user_metadata?.full_name?.split(" ")[0]} />}
     </div>
   );
