@@ -595,7 +595,25 @@ function AdminsPage() {
                 <Copy className="h-3 w-3" />
               </Button>
             </div>
-            <Button size="sm" variant="ghost" onClick={() => setCreatedInfo(null)}>إخفاء</Button>
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-border/60">
+              <Button size="sm" variant="default" onClick={() => exportCredentialsPDF(createdInfo)}>
+                <FileDown className="h-3.5 w-3.5 ml-1" /> تحميل PDF
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => printCredentials(createdInfo)}>
+                <Printer className="h-3.5 w-3.5 ml-1" /> طباعة
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => downloadCredentialsTxt(createdInfo)}>
+                <FileText className="h-3.5 w-3.5 ml-1" /> تنزيل نص
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => {
+                const txt = formatCredentialsText(createdInfo);
+                navigator.clipboard.writeText(txt);
+                toast.success("تم نسخ البيانات منسقة");
+              }}>
+                <Copy className="h-3.5 w-3.5 ml-1" /> نسخ منسق
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setCreatedInfo(null)}>إخفاء</Button>
+            </div>
           </div>
         )}
       </Card>
