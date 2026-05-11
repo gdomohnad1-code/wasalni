@@ -232,14 +232,24 @@ function LiveTrackingPage() {
         </Card>
 
         {/* Map */}
-        <Card className="p-0 overflow-hidden min-h-[500px] border-border/60 shadow-md">
-          <LiveMap drivers={pins} geofences={geofences} selectedDriverId={selected} onSelectDriver={setSelected} routePoints={routePoints} />
+        <Card className="overflow-hidden border-border/60 shadow-md">
+          <div className="flex items-center gap-2 p-4 pb-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            <h2 className="font-extrabold text-sm">الخريطة المباشرة</h2>
+          </div>
+          <div className="h-[520px] w-full">
+            <LiveMap drivers={pins} geofences={geofences} selectedDriverId={selected} onSelectDriver={setSelected} routePoints={routePoints} />
+          </div>
         </Card>
 
         {/* Detail panel */}
-        <Card className="p-4 max-h-[720px] overflow-y-auto border-border/60 bg-card/60 backdrop-blur">
+        <Card className="p-5 border-border/60 bg-card/60 backdrop-blur">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="h-4 w-4 text-primary" />
+            <h2 className="font-extrabold text-sm">تفاصيل السائق</h2>
+          </div>
           {!selected && (
-            <div className="text-center py-16 text-sm text-muted-foreground">
+            <div className="text-center py-12 text-sm text-muted-foreground">
               <div className="h-14 w-14 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-3">
                 <MapPin className="h-7 w-7 opacity-50" />
               </div>
