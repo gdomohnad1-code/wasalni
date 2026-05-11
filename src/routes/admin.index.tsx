@@ -89,12 +89,12 @@ function AdminOverview() {
   }
 
   const cards = [
-    { label: "رحلات اليوم", value: stats.ridesToday, icon: Car, color: "from-primary to-primary/70" },
-    { label: "رحلات الشهر", value: stats.ridesMonth, icon: TrendingUp, color: "from-blue-500 to-blue-400" },
-    { label: "إيرادات الشهر", value: `${stats.revenue.toFixed(0)} ج.م`, icon: Wallet, color: "from-emerald-500 to-emerald-400" },
-    { label: "سائقون نشطون", value: stats.activeDrivers, icon: Users, color: "from-violet-500 to-violet-400" },
-    { label: "شكاوى مفتوحة", value: stats.openComplaints, icon: MessageSquareWarning, color: "from-orange-500 to-orange-400" },
-    { label: "إجمالي الركاب", value: stats.totalRiders, icon: UserCircle, color: "from-pink-500 to-pink-400" },
+    { label: "رحلات اليوم", value: stats.ridesToday, icon: Car, color: "from-primary to-primary/70", to: "/admin/rides" as const },
+    { label: "رحلات الشهر", value: stats.ridesMonth, icon: TrendingUp, color: "from-blue-500 to-blue-400", to: "/admin/rides" as const },
+    { label: "إيرادات الشهر", value: `${stats.revenue.toFixed(0)} ج.م`, icon: Wallet, color: "from-emerald-500 to-emerald-400", to: "/admin/analytics" as const },
+    { label: "سائقون نشطون", value: stats.activeDrivers, icon: Users, color: "from-violet-500 to-violet-400", to: "/admin/drivers" as const },
+    { label: "شكاوى مفتوحة", value: stats.openComplaints, icon: MessageSquareWarning, color: "from-orange-500 to-orange-400", to: "/admin/complaints" as const },
+    { label: "إجمالي الركاب", value: stats.totalRiders, icon: UserCircle, color: "from-pink-500 to-pink-400", to: "/admin/riders" as const },
   ];
 
   return (
@@ -104,12 +104,14 @@ function AdminOverview() {
           const Icon = c.icon;
           return (
             <motion.div key={c.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <Card className="p-4 relative overflow-hidden">
-                <div className={`absolute -top-6 -left-6 h-20 w-20 rounded-full bg-gradient-to-br ${c.color} opacity-10`} />
-                <Icon className="h-5 w-5 text-muted-foreground mb-2" />
-                <div className="text-2xl font-extrabold">{c.value}</div>
-                <div className="text-xs text-muted-foreground mt-1">{c.label}</div>
-              </Card>
+              <Link to={c.to} className="block">
+                <Card className="p-4 relative overflow-hidden cursor-pointer transition hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/40">
+                  <div className={`absolute -top-6 -left-6 h-20 w-20 rounded-full bg-gradient-to-br ${c.color} opacity-10`} />
+                  <Icon className="h-5 w-5 text-muted-foreground mb-2" />
+                  <div className="text-2xl font-extrabold">{c.value}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{c.label}</div>
+                </Card>
+              </Link>
             </motion.div>
           );
         })}
@@ -149,7 +151,11 @@ function AdminOverview() {
         ) : (
           <div className="space-y-2">
             {live.map((r) => (
-              <div key={r.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/30 border border-border/60">
+              <Link
+                key={r.id}
+                to="/admin/live"
+                className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/30 border border-border/60 transition hover:bg-muted/60 hover:border-primary/40"
+              >
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-semibold truncate">{r.pickup_address} ← {r.destination_address}</div>
                   <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleTimeString("ar-EG")}</div>
@@ -158,7 +164,7 @@ function AdminOverview() {
                   <div className="text-sm font-bold">{Number(r.price).toFixed(0)} ج.م</div>
                   <Badge variant="secondary" className="text-[10px] mt-0.5">{r.status}</Badge>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
