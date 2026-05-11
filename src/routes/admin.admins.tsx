@@ -48,6 +48,7 @@ function AdminsPage() {
   const [emails, setEmails] = useState<AdminEmail[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [newEmail, setNewEmail] = useState("");
+  const [newPerm, setNewPerm] = useState<AdminPerm>("viewer");
   const [loading, setLoading] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
   const [isSuper, setIsSuper] = useState(false);
