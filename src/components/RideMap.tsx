@@ -284,5 +284,23 @@ export function RideMap({
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15, animate: true });
   }, [tripPath, approachPath, driverPos, phase, pickup.lat, pickup.lng, destination.lat, destination.lng]);
 
-  return <div ref={elRef} className={className ?? "w-full h-full rounded-2xl overflow-hidden"} />;
+  return (
+    <div className={`relative ${className ?? "w-full h-full rounded-2xl overflow-hidden"}`}>
+      <div ref={elRef} className="w-full h-full" />
+      <div className="absolute top-3 left-3 z-[1000] bg-white/95 backdrop-blur rounded-full shadow-md flex p-1 text-xs font-medium">
+        <button
+          onClick={() => setMapStyle("streets")}
+          className={`px-3 py-1.5 rounded-full transition ${mapStyle === "streets" ? "bg-black text-white" : "text-gray-700"}`}
+        >
+          خريطة
+        </button>
+        <button
+          onClick={() => setMapStyle("satellite")}
+          className={`px-3 py-1.5 rounded-full transition ${mapStyle === "satellite" ? "bg-black text-white" : "text-gray-700"}`}
+        >
+          قمر صناعي
+        </button>
+      </div>
+    </div>
+  );
 }
