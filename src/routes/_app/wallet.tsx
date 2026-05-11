@@ -106,20 +106,60 @@ function WalletPage() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>شحن المحفظة</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-3 gap-2 my-3">
-            {[20, 50, 100, 200, 500, 1000].map((v) => (
-              <button key={v} onClick={() => setAmount(v)}
-                className={`p-3 rounded-xl border-2 font-bold ${amount === v ? "border-primary bg-primary/10" : "border-border"}`}>
-                {v}
-              </button>
-            ))}
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>شحن المحفظة</DialogTitle>
+          </DialogHeader>
+
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">اختر المبلغ</p>
+            <div className="grid grid-cols-3 gap-2">
+              {[20, 50, 100, 200, 500, 1000].map((v) => (
+                <button key={v} onClick={() => setAmount(v)}
+                  className={`p-3 rounded-xl border-2 font-bold transition ${amount === v ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/40"}`}>
+                  {v}
+                </button>
+              ))}
+            </div>
+            <Input type="number" value={amount} onChange={(e) => setAmount(+e.target.value)} className="mt-2" placeholder="مبلغ مخصص" />
           </div>
-          <Input type="number" value={amount} onChange={(e) => setAmount(+e.target.value)} />
+
+          {/* بطاقة الدفع */}
+          <div className="mt-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 text-white p-4 shadow-lg">
+            <div className="flex items-center justify-between">
+              <CreditCard className="h-6 w-6 opacity-80" />
+              <div className="flex gap-1.5">
+                <span className={`text-[10px] font-black px-2 py-1 rounded ${cardBrand === "visa" ? "bg-white text-blue-700" : "bg-white/20"}`}>VISA</span>
+                <span className={`text-[10px] font-black px-2 py-1 rounded ${cardBrand === "mastercard" ? "bg-white text-orange-600" : "bg-white/20"}`}>MC</span>
+              </div>
+            </div>
+            <div className="mt-4 tracking-[0.2em] font-mono text-lg" dir="ltr">
+              {cardNumber || "•••• •••• •••• ••••"}
+            </div>
+            <div className="mt-3 flex justify-between text-[11px] uppercase opacity-80">
+              <span>{cardName || "اسم حامل البطاقة"}</span>
+              <span dir="ltr">{expiry || "MM/YY"}</span>
+            </div>
+          </div>
+
+          <div className="space-y-2 mt-3">
+            <Input dir="ltr" placeholder="رقم البطاقة" value={cardNumber} onChange={(e) => setCardNumber(formatCard(e.target.value))} inputMode="numeric" />
+            <Input placeholder="اسم حامل البطاقة" value={cardName} onChange={(e) => setCardName(e.target.value.toUpperCase())} />
+            <div className="grid grid-cols-2 gap-2">
+              <Input dir="ltr" placeholder="MM/YY" value={expiry} onChange={(e) => setExpiry(formatExp(e.target.value))} inputMode="numeric" />
+              <Input dir="ltr" placeholder="CVV" value={cvv} onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" type="password" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-2">
+            <Lock className="h-3 w-3" /> الدفع آمن ومشفّر — Visa و Mastercard فقط
+          </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
-            <Button onClick={topup} className="bg-gradient-primary">شحن</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={processing}>إلغاء</Button>
+            <Button onClick={topup} disabled={processing} className="bg-gradient-primary">
+              {processing ? "جارٍ الدفع..." : `ادفع ${amount} ج.م`}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
