@@ -797,7 +797,7 @@ function AdminsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={!isSuper || e.email === "admin@wasalni.app"}
+                      disabled={e.email === "admin@wasalni.app"}
                       onClick={() => removeEmail(e.id, e.email)}
                       className="text-destructive border-destructive/30 hover:bg-destructive/10 mr-auto"
                     >
@@ -873,7 +873,7 @@ function AdminsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={!isSuper || a.user_id === meId}
+                        disabled={a.user_id === meId}
                         onClick={() => revokeAdmin(a.user_id)}
                         className="text-destructive border-destructive/30 hover:bg-destructive/10"
                       >
