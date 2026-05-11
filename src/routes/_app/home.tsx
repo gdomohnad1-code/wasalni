@@ -6,6 +6,7 @@ import {
   Clock, MapPin, Crown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
@@ -26,6 +27,7 @@ const offers = [
 
 function HomePage() {
   const { profile } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [pkgWarn, setPkgWarn] = useState(false);
   const [pkgAgreed, setPkgAgreed] = useState(false);
