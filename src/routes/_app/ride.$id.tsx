@@ -5,7 +5,7 @@ import { Loader2, Phone, MessageCircle, Star, Send, X, ArrowRight, Car } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FakeMap } from "@/components/FakeMap";
+import { RideMap } from "@/components/RideMap";
 import { toast } from "sonner";
 import { RIDE_TYPES } from "@/lib/pricing";
 import { useI18n } from "@/lib/i18n";
