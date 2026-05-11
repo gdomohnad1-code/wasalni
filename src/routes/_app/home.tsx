@@ -97,6 +97,11 @@ function HomePage() {
         </motion.button>
       </div>
 
+      {/* Ads */}
+      <div className="px-5 mt-4">
+        <AdSlot placement="home" />
+      </div>
+
       {/* Services — clean uniform grid */}
       <div className="px-5 mt-7">
         <div className="flex items-baseline justify-between mb-3">
