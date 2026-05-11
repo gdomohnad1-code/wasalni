@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Check, X, AlertCircle, Clock, Eye, Plus, Copy, Upload } from "lucide-react";
+import { Loader2, Check, X, AlertCircle, Clock, Eye, Plus, Copy, Upload, FileText, Download, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/admin/applicants")({
