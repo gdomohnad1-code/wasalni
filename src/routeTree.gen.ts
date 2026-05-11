@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppWalletRouteImport } from './routes/_app/wallet'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppBookRouteImport } from './routes/_app/book'
 import { Route as AppRideIdRouteImport } from './routes/_app/ride.$id'
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppWalletRoute = AppWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppHomeRoute = AppHomeRouteImport.update({
   id: '/home',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/book': typeof AppBookRoute
   '/home': typeof AppHomeRoute
+  '/wallet': typeof AppWalletRoute
   '/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRoutesByTo {
@@ -58,6 +65,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/book': typeof AppBookRoute
   '/home': typeof AppHomeRoute
+  '/wallet': typeof AppWalletRoute
   '/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRoutesById {
@@ -67,13 +75,14 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_app/book': typeof AppBookRoute
   '/_app/home': typeof AppHomeRoute
+  '/_app/wallet': typeof AppWalletRoute
   '/_app/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/book' | '/home' | '/ride/$id'
+  fullPaths: '/' | '/auth' | '/book' | '/home' | '/wallet' | '/ride/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/book' | '/home' | '/ride/$id'
+  to: '/' | '/auth' | '/book' | '/home' | '/wallet' | '/ride/$id'
   id:
     | '__root__'
     | '/'
@@ -81,6 +90,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_app/book'
     | '/_app/home'
+    | '/_app/wallet'
     | '/_app/ride/$id'
   fileRoutesById: FileRoutesById
 }
@@ -113,6 +123,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/wallet': {
+      id: '/_app/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AppWalletRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/home': {
       id: '/_app/home'
       path: '/home'
@@ -140,12 +157,14 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppBookRoute: typeof AppBookRoute
   AppHomeRoute: typeof AppHomeRoute
+  AppWalletRoute: typeof AppWalletRoute
   AppRideIdRoute: typeof AppRideIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppBookRoute: AppBookRoute,
   AppHomeRoute: AppHomeRoute,
+  AppWalletRoute: AppWalletRoute,
   AppRideIdRoute: AppRideIdRoute,
 }
 
