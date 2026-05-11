@@ -188,7 +188,7 @@ function LiveTrackingPage() {
               <TabsTrigger value="out_of_zone" className="text-[11px] rounded-lg">خارج</TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="flex-1 overflow-y-auto space-y-2 -mx-1 px-1 pb-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[500px] overflow-y-auto -mx-1 px-1 pb-1">
             {filtered.length === 0 && (
               <div className="text-center py-12">
                 <Users2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
