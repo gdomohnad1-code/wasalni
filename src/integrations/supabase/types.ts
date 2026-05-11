@@ -118,6 +118,9 @@ export type Database = {
           sponsor_name: string | null
           start_at: string | null
           status: Database["public"]["Enums"]["ad_status"]
+          target_area_lat: number | null
+          target_area_lng: number | null
+          target_area_radius_m: number | null
           target_audience: Database["public"]["Enums"]["ad_audience"]
           target_cities: string[]
           target_max_rides: number | null
@@ -146,6 +149,9 @@ export type Database = {
           sponsor_name?: string | null
           start_at?: string | null
           status?: Database["public"]["Enums"]["ad_status"]
+          target_area_lat?: number | null
+          target_area_lng?: number | null
+          target_area_radius_m?: number | null
           target_audience?: Database["public"]["Enums"]["ad_audience"]
           target_cities?: string[]
           target_max_rides?: number | null
@@ -174,6 +180,9 @@ export type Database = {
           sponsor_name?: string | null
           start_at?: string | null
           status?: Database["public"]["Enums"]["ad_status"]
+          target_area_lat?: number | null
+          target_area_lng?: number | null
+          target_area_radius_m?: number | null
           target_audience?: Database["public"]["Enums"]["ad_audience"]
           target_cities?: string[]
           target_max_rides?: number | null
