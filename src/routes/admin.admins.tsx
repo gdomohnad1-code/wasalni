@@ -552,7 +552,7 @@ function AdminsPage() {
   };
 
   const updateEmailPerm = async (id: string, perm: AdminPerm) => {
-    if (!isSuper) { toast.error("المسؤول الرئيسي فقط"); return; }
+    // any admin allowed
     const { error } = await supabase
       .from("admin_emails")
       .update({ default_permission: perm })
@@ -583,7 +583,7 @@ function AdminsPage() {
   };
 
   const changePerm = async (userId: string, newPerm: AdminPerm) => {
-    if (!isSuper) { toast.error("المسؤول الرئيسي فقط يمكنه تغيير الأدوار"); return; }
+    // any admin allowed
     if (meId === userId && newPerm !== "super_admin") {
       toast.error("لا يمكنك تخفيض دور حسابك الرئيسي"); return;
     }
@@ -779,7 +779,7 @@ function AdminsPage() {
                     <label className="text-[11px] font-semibold text-muted-foreground">الدور الافتراضي</label>
                     <Select
                       value={e.default_permission}
-                      disabled={!isSuper}
+                      disabled={false}
                       onValueChange={(v) => updateEmailPerm(e.id, v as AdminPerm)}
                     >
                       <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
@@ -793,11 +793,11 @@ function AdminsPage() {
 
                   {/* Actions */}
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
-                    <ResetPasswordByEmailDialog email={e.email} disabled={!isSuper} />
+                    <ResetPasswordByEmailDialog email={e.email} disabled={false} />
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={!isSuper || e.email === "admin@wasalni.app"}
+                      disabled={e.email === "admin@wasalni.app"}
                       onClick={() => removeEmail(e.id, e.email)}
                       className="text-destructive border-destructive/30 hover:bg-destructive/10 mr-auto"
                     >
@@ -850,7 +850,7 @@ function AdminsPage() {
                   <TableCell>
                     <Select
                       value={a.permission ?? undefined}
-                      disabled={!isSuper}
+                      disabled={false}
                       onValueChange={(v) => changePerm(a.user_id, v as AdminPerm)}
                     >
                       <SelectTrigger className="h-9">
@@ -868,12 +868,12 @@ function AdminsPage() {
                       <ResetPasswordDialog
                         userId={a.user_id}
                         fullName={a.full_name}
-                        disabled={!isSuper}
+                        disabled={false}
                       />
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={!isSuper || a.user_id === meId}
+                        disabled={a.user_id === meId}
                         onClick={() => revokeAdmin(a.user_id)}
                         className="text-destructive border-destructive/30 hover:bg-destructive/10"
                       >
