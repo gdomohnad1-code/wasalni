@@ -40,12 +40,12 @@ function ProfilePage() {
       <div className="px-4 mt-3 space-y-3">
         {/* القائمة الرئيسية */}
         <Section>
-          <Item to="/home" icon={Home} label="الرئيسية" emoji="🏠" />
-          <Item to="/trips" icon={History} label="رحلاتي السابقة" emoji="🚗" />
-          <Item to="/wallet" icon={Wallet} label="المحفظة" emoji="💰" />
-          <Item to="/referral" icon={Gift} label="كود الدعوة" emoji="🎁" badge="اربح 50 ج.م" />
-          <Item to="/support" icon={Headphones} label="الدعم والشكاوى" emoji="🛠️" badge="AI" />
-          <Item to="/settings" icon={SettingsIcon} label="الإعدادات" emoji="⚙️" />
+          <Item to="/home" icon={Home} label={t("profile.home")} emoji="🏠" />
+          <Item to="/trips" icon={History} label={t("profile.trips")} emoji="🚗" />
+          <Item to="/wallet" icon={Wallet} label={t("profile.wallet")} emoji="💰" />
+          <Item to="/referral" icon={Gift} label={t("profile.referral")} emoji="🎁" badge={t("profile.referral_badge")} />
+          <Item to="/support" icon={Headphones} label={t("profile.support")} emoji="🛠️" badge="AI" />
+          <Item to="/settings" icon={SettingsIcon} label={t("profile.settings")} emoji="⚙️" />
         </Section>
 
         {/* انضم كسائق */}
@@ -55,10 +55,10 @@ function ProfilePage() {
               <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-2xl">🚕</div>
               <div className="flex-1">
                 <div className="font-bold flex items-center gap-2">
-                  انضم كسائق مع وصلني
-                  <span className="text-[10px] bg-white text-primary font-black px-1.5 py-0.5 rounded">جديد</span>
+                  {t("profile.join_driver")}
+                  <span className="text-[10px] bg-white text-primary font-black px-1.5 py-0.5 rounded">{t("profile.new_badge")}</span>
                 </div>
-                <div className="text-xs opacity-90">سجّل دلوقتي وابدأ تكسب من رحلاتك</div>
+                <div className="text-xs opacity-90">{t("profile.join_driver_sub")}</div>
               </div>
               <ChevronLeft className="h-5 w-5 opacity-80 group-hover:-translate-x-1 transition" />
             </div>
@@ -69,16 +69,16 @@ function ProfilePage() {
         {isAdmin && (
           <Link to="/admin">
             <Button className="w-full gap-2 bg-gradient-primary">
-              <ShieldCheck className="h-4 w-4" /> فتح لوحة الإدارة
+              <ShieldCheck className="h-4 w-4" /> {t("profile.admin_panel")}
             </Button>
           </Link>
         )}
 
         <Button onClick={signOut} variant="outline" className="w-full text-destructive border-destructive/30 mt-2">
-          <LogOut className="h-4 w-4 ml-2" /> تسجيل الخروج
+          <LogOut className="h-4 w-4 ml-2" /> {t("profile.signout")}
         </Button>
 
-        <p className="text-center text-[11px] text-muted-foreground pt-2">وصلني • الإصدار 1.0</p>
+        <p className="text-center text-[11px] text-muted-foreground pt-2">{t("profile.version")}</p>
       </div>
     </div>
   );
