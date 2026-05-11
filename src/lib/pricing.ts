@@ -72,14 +72,15 @@ const DEFAULT_CONFIG: PricingConfig = {
 };
 
 let CONFIG: PricingConfig = { ...DEFAULT_CONFIG };
+export let PLATFORM_COMMISSION_RATE = CONFIG.commission_rate;
 
 export function setPricingConfig(cfg: Partial<PricingConfig>) {
   CONFIG = { ...CONFIG, ...cfg, multipliers: { ...DEFAULT_CONFIG.multipliers, ...(cfg.multipliers || {}) } };
+  PLATFORM_COMMISSION_RATE = CONFIG.commission_rate;
 }
 export function getPricingConfig(): PricingConfig {
   return CONFIG;
 }
-export const PLATFORM_COMMISSION_RATE = new Proxy({}, { get: () => CONFIG.commission_rate }) as unknown as number;
 
 // مسافة وزمن
 export function calcDuration(distanceKm: number): number {
