@@ -33,10 +33,10 @@ function AdminOverview() {
     const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const start7 = new Date(now); start7.setDate(start7.getDate() - 6); start7.setHours(0, 0, 0, 0);
 
-    const [today, month, revenue, drivers, complaints, riders, last7, liveR] = await Promise.all([
+    const [today, month, commissions, drivers, complaints, riders, last7, liveR] = await Promise.all([
       supabase.from("rides").select("id", { count: "exact", head: true }).gte("created_at", startToday.toISOString()),
       supabase.from("rides").select("id", { count: "exact", head: true }).gte("created_at", startMonth.toISOString()),
-      supabase.from("rides").select("price").eq("status", "completed").gte("created_at", startMonth.toISOString()),
+      supabase.from("driver_commissions").select("amount").gte("created_at", startMonth.toISOString()),
       supabase.from("driver_documents").select("driver_id", { count: "exact", head: true }).eq("approved", true).eq("account_status", "active"),
       supabase.from("complaints").select("id", { count: "exact", head: true }).in("status", ["new", "in_progress"]),
       supabase.from("user_roles").select("user_id", { count: "exact", head: true }).eq("role", "rider"),
@@ -46,7 +46,7 @@ function AdminOverview() {
         .order("created_at", { ascending: false }).limit(5),
     ]);
 
-    const totalRev = (revenue.data ?? []).reduce((s: number, r: any) => s + Number(r.price || 0), 0);
+    const totalRev = (commissions.data ?? []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
     const buckets: Record<string, number> = {};
     for (let i = 6; i >= 0; i--) {
