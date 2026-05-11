@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RideMap } from "@/components/RideMap";
+import { RiderSafetyPanel } from "@/components/RiderSafetyPanel";
 import { AdSlot } from "@/components/AdSlot";
 import { toast } from "sonner";
 import { RIDE_TYPES } from "@/lib/pricing";
