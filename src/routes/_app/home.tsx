@@ -43,51 +43,48 @@ function HomePage() {
 
   return (
     <div className="max-w-md mx-auto pb-8 relative">
-      {/* Minimal header */}
-      <div className="relative overflow-hidden rounded-b-[2rem]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0c1a14] via-[#0e2b1f] to-[#06120c]" />
-        <div className="relative px-5 pt-6 pb-7 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[12px] text-white/60">أهلاً</p>
-              <h2 className="text-xl font-black mt-0.5">{profile?.full_name || "ضيفنا الكريم"}</h2>
-            </div>
-            <button className="relative h-10 w-10 rounded-full bg-white/10 grid place-items-center ring-1 ring-white/15">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 left-1.5 h-2 w-2 rounded-full bg-amber-400" />
-            </button>
+      {/* Header — Uber Light */}
+      <div className="px-5 pt-6 pb-4 bg-background border-b border-border">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[12px] text-muted-foreground">أهلاً</p>
+            <h2 className="text-xl font-black mt-0.5 text-foreground">{profile?.full_name || "ضيفنا الكريم"}</h2>
           </div>
-
-          {/* wallet */}
-          <button onClick={() => navigate({ to: "/wallet" })}
-            className="mt-5 w-full rounded-2xl bg-white/10 ring-1 ring-white/15 p-3.5 flex items-center gap-3 text-right">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-300 to-amber-500 grid place-items-center text-[#0e2b1f]">
-              <Wallet className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <div className="text-[11px] text-white/60">المحفظة</div>
-              <div className="text-xl font-black leading-tight">
-                {Number(profile?.wallet_balance ?? 0).toFixed(0)}
-                <span className="text-xs font-bold text-white/70 mr-1">ج.م</span>
-              </div>
-            </div>
-            <span className="text-[11px] font-bold bg-white/15 px-2.5 py-1.5 rounded-lg">شحن</span>
+          <button className="relative h-10 w-10 rounded-full bg-muted grid place-items-center">
+            <Bell className="h-5 w-5 text-foreground" />
+            <span className="absolute top-1.5 left-1.5 h-2 w-2 rounded-full bg-accent" />
           </button>
         </div>
+
+        {/* wallet */}
+        <button onClick={() => navigate({ to: "/wallet" })}
+          className="mt-4 w-full rounded-lg bg-muted p-3.5 flex items-center gap-3 text-right">
+          <div className="h-10 w-10 rounded-md bg-foreground grid place-items-center text-background">
+            <Wallet className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <div className="text-[11px] text-muted-foreground">المحفظة</div>
+            <div className="text-xl font-black leading-tight text-foreground">
+              {Number(profile?.wallet_balance ?? 0).toFixed(0)}
+              <span className="text-xs font-bold text-muted-foreground mr-1">ج.م</span>
+            </div>
+          </div>
+          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+        </button>
       </div>
 
-      {/* Primary CTA */}
-      <div className="px-5 -mt-5 relative z-10">
+      {/* Primary CTA — flat black */}
+      <div className="px-5 mt-4">
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => navigate({ to: "/book", search: { type: "private" } })}
-          className="w-full rounded-2xl bg-gradient-to-l from-primary to-primary-glow text-primary-foreground p-4 shadow-elevated flex items-center justify-between"
+          className="w-full rounded-lg bg-primary text-primary-foreground p-4 flex items-center justify-between"
         >
           <div className="text-right">
-            <div className="text-[11px] opacity-90">احجز الآن</div>
-            <div className="text-base font-black">وصلني فوراً 🚕</div>
+            <div className="text-[11px] opacity-80">احجز الآن</div>
+            <div className="text-base font-black">وصلني فوراً</div>
           </div>
-          <div className="h-10 w-10 rounded-xl bg-white/15 grid place-items-center">
+          <div className="h-10 w-10 rounded-md bg-white/10 grid place-items-center">
             <ChevronLeft className="h-5 w-5" />
           </div>
         </motion.button>
