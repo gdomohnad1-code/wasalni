@@ -24,10 +24,11 @@ function AdminOverview() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [chart, setChart] = useState<{ date: string; rides: number }[]>([]);
   const [live, setLive] = useState<any[]>([]);
+  const loadedRef = useRef(false);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    if (!stats) setLoading(true);
+    if (!loadedRef.current) setLoading(true);
     const now = new Date();
     const startToday = new Date(now); startToday.setHours(0, 0, 0, 0);
     const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
