@@ -480,14 +480,19 @@ function AdminsPage() {
                 </TableCell>
                 <TableCell>{new Date(e.created_at).toLocaleDateString("ar-EG")}</TableCell>
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeEmail(e.id, e.email)}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <ResetPasswordByEmailDialog email={e.email} disabled={!isSuper} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled={!isSuper || e.email === "admin@wasalni.app"}
+                      onClick={() => removeEmail(e.id, e.email)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      title="حذف البريد"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
