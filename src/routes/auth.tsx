@@ -208,6 +208,17 @@ function AuthPage() {
                     <Label>كود المؤثر (اختياري)</Label>
                     <Input value={influencerCode} onChange={(e) => setInfluencerCode(e.target.value.toUpperCase())} placeholder="مثال: SARA10" />
                   </div>
+                  <div>
+                    <Label>{`${t("captcha.label")} ${captcha.a} + ${captcha.b}؟`}</Label>
+                    <Input
+                      required
+                      type="number"
+                      inputMode="numeric"
+                      value={captchaInput}
+                      onChange={(e) => setCaptchaInput(e.target.value)}
+                      placeholder={t("captcha.placeholder")}
+                    />
+                  </div>
                 </>
               )}
 
