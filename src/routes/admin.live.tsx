@@ -162,9 +162,14 @@ function LiveTrackingPage() {
         </motion.div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr_380px] gap-4 min-h-[600px]">
+      <div className="space-y-5">
         {/* Drivers list */}
-        <Card className="p-3 flex flex-col gap-3 max-h-[720px] overflow-hidden border-border/60 bg-card/60 backdrop-blur">
+        <Card className="p-4 flex flex-col gap-3 border-border/60 bg-card/60 backdrop-blur">
+          <div className="flex items-center gap-2 pb-1">
+            <Users2 className="h-4 w-4 text-primary" />
+            <h2 className="font-extrabold text-sm">قائمة السائقين</h2>
+            <Badge variant="secondary" className="h-5 mr-auto">{filtered.length}</Badge>
+          </div>
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
