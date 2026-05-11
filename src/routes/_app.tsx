@@ -25,8 +25,8 @@ function AppLayout() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <Outlet />
-      <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border shadow-elevated z-40">
-        <div className="max-w-md mx-auto grid grid-cols-4">
+      <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border z-40">
+        <div className="max-w-md mx-auto grid grid-cols-2">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = loc.pathname.startsWith(t.to);
