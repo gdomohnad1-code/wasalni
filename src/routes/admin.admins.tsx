@@ -325,13 +325,24 @@ function ResetPasswordByEmailDialog({
 }
 
 function AdminsPage() {
+  const createAdmin = useServerFn(createAdminAccount);
   const [emails, setEmails] = useState<AdminEmail[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [newEmail, setNewEmail] = useState("");
   const [newPerm, setNewPerm] = useState<AdminPerm>("viewer");
+  const [newName, setNewName] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [createdInfo, setCreatedInfo] = useState<{ email: string; password: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
   const [isSuper, setIsSuper] = useState(false);
+
+  const generateNewPw = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
+    let p = "";
+    for (let i = 0; i < 12; i++) p += chars[Math.floor(Math.random() * chars.length)];
+    setNewPw(p);
+  };
 
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
