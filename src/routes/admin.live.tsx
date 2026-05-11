@@ -15,8 +15,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search, Phone, Star, Car, AlertTriangle, Siren, BellRing, Power, RefreshCw, MapPin } from "lucide-react";
+import { Loader2, Search, Phone, Star, Car, AlertTriangle, Siren, BellRing, Power, RefreshCw, MapPin, Activity, Users2, CircleDot, WifiOff, Navigation } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/admin/live")({
   component: LiveTrackingPage,
