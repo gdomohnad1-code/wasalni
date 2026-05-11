@@ -347,6 +347,7 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
 
   // Live location broadcast (every 8s while online)
   useDriverLocationBroadcast({ enabled: isOnline, presence, rideId: currentRide });
+  const battery = useBatteryStatus();
 
   const load = async () => {
     if (!user) return;
