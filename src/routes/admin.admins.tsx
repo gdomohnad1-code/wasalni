@@ -178,16 +178,32 @@ function ResetPasswordDialog({
   disabled,
 }: { userId: string; fullName: string; disabled?: boolean }) {
   const reset = useServerFn(resetAdminPassword);
+  const getPw = useServerFn(getAdminPasswordById);
   const [open, setOpen] = useState(false);
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
+  const [current, setCurrent] = useState<{ password: string; updated_at: string } | null>(null);
+  const [revealing, setRevealing] = useState(false);
 
   const generate = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
     let p = "";
     for (let i = 0; i < 12; i++) p += chars[Math.floor(Math.random() * chars.length)];
     setPw(p); setPw2(p);
+  };
+
+  const reveal = async () => {
+    setRevealing(true);
+    try {
+      const res: any = await getPw({ data: { user_id: userId } });
+      if (!res?.ok) toast.info("لا توجد كلمة مرور محفوظة لهذا الحساب بعد");
+      else setCurrent({ password: res.password, updated_at: res.updated_at });
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذّر العرض");
+    } finally {
+      setRevealing(false);
+    }
   };
 
   const submit = async () => {
@@ -197,7 +213,7 @@ function ResetPasswordDialog({
     try {
       await reset({ data: { user_id: userId, password: pw } });
       toast.success("تم تعيين كلمة المرور الجديدة ✅");
-      setOpen(false); setPw(""); setPw2("");
+      setOpen(false); setPw(""); setPw2(""); setCurrent(null);
     } catch (e: any) {
       toast.error(e?.message ?? "تعذّر التحديث");
     } finally {
@@ -206,7 +222,7 @@ function ResetPasswordDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setCurrent(null); }}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" disabled={disabled}>
           <Lock className="h-3.5 w-3.5 ml-1" /> إعادة تعيين كلمة المرور
@@ -219,28 +235,43 @@ function ResetPasswordDialog({
             تعيين كلمة مرور جديدة للمسؤول: <span className="font-semibold">{fullName}</span>
           </DialogDescription>
         </DialogHeader>
+
+        {!disabled && (
+          <div className="rounded-lg border border-border/60 bg-muted/40 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-muted-foreground">كلمة المرور الحالية</span>
+              {!current ? (
+                <Button type="button" size="sm" variant="outline" onClick={reveal} disabled={revealing}>
+                  {revealing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Eye className="h-3.5 w-3.5 ml-1" /> عرض</>}
+                </Button>
+              ) : (
+                <Button type="button" size="sm" variant="ghost" onClick={() => setCurrent(null)}>إخفاء</Button>
+              )}
+            </div>
+            {current && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2" dir="ltr">
+                  <code className="bg-card px-2 py-1 rounded font-mono text-xs flex-1 border">{current.password}</code>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { navigator.clipboard.writeText(current.password); toast.success("تم النسخ"); }}>
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <div className="text-[11px] text-muted-foreground">
+                  آخر تحديث: {new Date(current.updated_at).toLocaleString("ar-EG")}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="space-y-3">
           <div>
             <label className="text-xs font-semibold mb-1 block">كلمة المرور الجديدة</label>
-            <Input
-              type="text"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
-              placeholder="6 أحرف على الأقل"
-              dir="ltr"
-              className="text-left"
-            />
+            <Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="6 أحرف على الأقل" dir="ltr" className="text-left" />
           </div>
           <div>
             <label className="text-xs font-semibold mb-1 block">تأكيد كلمة المرور</label>
-            <Input
-              type="text"
-              value={pw2}
-              onChange={(e) => setPw2(e.target.value)}
-              placeholder="أعد كتابة كلمة المرور"
-              dir="ltr"
-              className="text-left"
-            />
+            <Input type="text" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="أعد كتابة كلمة المرور" dir="ltr" className="text-left" />
           </div>
           <Button type="button" variant="outline" size="sm" onClick={generate}>
             توليد كلمة مرور قوية
