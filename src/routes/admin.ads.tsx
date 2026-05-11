@@ -349,6 +349,9 @@ function AdEditor({
         sponsor_name: form.sponsor_name || null,
         status: form.status,
         auto_rotate: form.auto_rotate,
+        target_area_lat: form.target_area_lat,
+        target_area_lng: form.target_area_lng,
+        target_area_radius_m: form.target_area_lat != null ? form.target_area_radius_m : null,
       };
       const { error } = editing
         ? await supabase.from("ads").update(payload).eq("id", editing.id)
