@@ -113,24 +113,53 @@ function LiveTrackingPage() {
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-5" dir="rtl">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+            <Activity className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-xl font-extrabold tracking-tight">التتبع المباشر</h1>
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+              </span>
+              تحديث لحظي للسائقين والتنبيهات
+            </p>
+          </div>
+        </div>
+        <Button size="sm" variant="outline" onClick={load} className="gap-1.5 rounded-full">
+          <RefreshCw className="h-3.5 w-3.5" /> تحديث
+        </Button>
+      </div>
+
       {/* KPI bar */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Kpi label="إجمالي" value={counts.total} color="bg-primary/10 text-primary" />
-        <Kpi label="متاح" value={counts.available} color="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" />
-        <Kpi label="مشغول" value={counts.busy} color="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" />
-        <Kpi label="أوفلاين" value={counts.offline} color="bg-muted text-muted-foreground" />
-        <Kpi label="خارج النطاق" value={counts.out_of_zone} color="bg-destructive/10 text-destructive" />
+        <Kpi label="إجمالي" value={counts.total} icon={Users2} tone="primary" />
+        <Kpi label="متاح" value={counts.available} icon={CircleDot} tone="green" />
+        <Kpi label="مشغول" value={counts.busy} icon={Navigation} tone="amber" />
+        <Kpi label="أوفلاين" value={counts.offline} icon={WifiOff} tone="muted" />
+        <Kpi label="خارج النطاق" value={counts.out_of_zone} icon={MapPin} tone="destructive" />
       </div>
 
       {/* Active SOS banner */}
       {alerts.filter((a) => a.type === "sos").length > 0 && (
-        <Card className="p-3 border-destructive bg-destructive/10 flex items-center gap-3">
-          <Siren className="h-5 w-5 text-destructive animate-pulse" />
-          <div className="flex-1 text-sm font-bold text-destructive">
-            {alerts.filter((a) => a.type === "sos").length} حالة طوارئ نشطة الآن
-          </div>
-        </Card>
+        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="p-4 border-destructive/40 bg-gradient-to-l from-destructive/15 to-destructive/5 flex items-center gap-3 shadow-lg shadow-destructive/10">
+            <div className="h-10 w-10 rounded-xl bg-destructive/20 flex items-center justify-center shrink-0">
+              <Siren className="h-5 w-5 text-destructive animate-pulse" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-extrabold text-destructive">
+                {alerts.filter((a) => a.type === "sos").length} حالة طوارئ نشطة الآن
+              </div>
+              <div className="text-[11px] text-destructive/80">يحتاج تدخّل فوري</div>
+            </div>
+          </Card>
+        </motion.div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_360px] gap-4 min-h-[600px]">
