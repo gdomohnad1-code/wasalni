@@ -6,7 +6,7 @@ import { ArrowRight, MapPin, Navigation, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RIDE_TYPES, type RideTypeKey, calcPrice, calcDuration, fakeDistance } from "@/lib/pricing";
+import { RIDE_TYPES, type RideTypeKey, type TripMode, calcPrice, calcDuration, fakeDistance, calcCommission, PLATFORM_COMMISSION_RATE } from "@/lib/pricing";
 import { FakeMap } from "@/components/FakeMap";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,7 +27,7 @@ function BookPage() {
   const [rideType, setRideType] = useState<RideTypeKey>(type);
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
-  const [tripMode, setTripMode] = useState<"oneway" | "roundtrip">("oneway");
+  const [tripMode, setTripMode] = useState<TripMode>("oneway");
   const [gpsLoading, setGpsLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -55,9 +55,11 @@ function BookPage() {
     );
   };
 
-  const distance = pickup && destination ? fakeDistance(pickup, destination) * (tripMode === "roundtrip" ? 2 : 1) : 0;
-  const price = distance ? calcPrice(distance, rideType) : 0;
+  const oneWayDistance = pickup && destination ? fakeDistance(pickup, destination) : 0;
+  const distance = tripMode === "roundtrip" ? oneWayDistance * 2 : oneWayDistance;
   const duration = distance ? calcDuration(distance) : 0;
+  const price = oneWayDistance ? calcPrice(oneWayDistance, rideType, tripMode, duration) : 0;
+  const commission = price ? calcCommission(price) : 0;
 
   const handleConfirm = async () => {
     setCreating(true);
@@ -127,10 +129,11 @@ function BookPage() {
           </div>
         </div>
 
-        <Tabs value={tripMode} onValueChange={(v) => setTripMode(v as any)}>
-          <TabsList className="grid grid-cols-2 w-full">
+        <Tabs value={tripMode} onValueChange={(v) => setTripMode(v as TripMode)}>
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="oneway">ذهاب فقط</TabsTrigger>
             <TabsTrigger value="roundtrip">ذهاب وعودة</TabsTrigger>
+            <TabsTrigger value="multistop">عدة وجهات</TabsTrigger>
           </TabsList>
         </Tabs>
 
