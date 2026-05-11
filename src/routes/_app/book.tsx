@@ -1,12 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { z } from "zod";
 import { ArrowRight, MapPin, Navigation, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RIDE_TYPES, type RideTypeKey, type TripMode, calcPrice, calcDuration, fakeDistance, calcCommission, PLATFORM_COMMISSION_RATE } from "@/lib/pricing";
+import {
+  RIDE_TYPES, type RideTypeKey, type TripMode,
+  calcPrice, calcDuration, haversineKm, calcCommission, PLATFORM_COMMISSION_RATE,
+} from "@/lib/pricing";
+import { geocodeAddress, reverseGeocode, type LatLng } from "@/lib/geocode";
 import { FakeMap } from "@/components/FakeMap";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,10 +31,14 @@ function BookPage() {
   const [rideType, setRideType] = useState<RideTypeKey>(type);
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
+  const [pickupCoords, setPickupCoords] = useState<LatLng | null>(null);
+  const [destCoords, setDestCoords] = useState<LatLng | null>(null);
   const [tripMode, setTripMode] = useState<TripMode>("oneway");
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [creating, setCreating] = useState(false);
+  const destDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     detectLocation();
@@ -39,29 +47,52 @@ function BookPage() {
   const detectLocation = () => {
     if (!navigator.geolocation) {
       setPickup("القاهرة");
+      setPickupCoords({ lat: 30.0444, lng: 31.2357 });
       return;
     }
     setGpsLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setPickup(`موقعك الحالي (${pos.coords.latitude.toFixed(3)}, ${pos.coords.longitude.toFixed(3)})`);
+      async (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setPickupCoords(coords);
+        const name = await reverseGeocode(coords);
+        setPickup(name ?? `موقعك (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
         setGpsLoading(false);
       },
       () => {
         setPickup("القاهرة، مصر");
+        setPickupCoords({ lat: 30.0444, lng: 31.2357 });
         setGpsLoading(false);
       },
-      { timeout: 5000 }
+      { timeout: 8000, enableHighAccuracy: true }
     );
   };
 
-  const oneWayDistance = pickup && destination ? fakeDistance(pickup, destination) : 0;
+  // Geocode الوجهة عند الكتابة (debounce)
+  useEffect(() => {
+    if (destDebounce.current) clearTimeout(destDebounce.current);
+    if (!destination.trim()) { setDestCoords(null); return; }
+    setGeoLoading(true);
+    destDebounce.current = setTimeout(async () => {
+      const c = await geocodeAddress(destination);
+      setDestCoords(c);
+      setGeoLoading(false);
+    }, 600);
+    return () => { if (destDebounce.current) clearTimeout(destDebounce.current); };
+  }, [destination]);
+
+  const oneWayDistance =
+    pickupCoords && destCoords ? haversineKm(pickupCoords, destCoords) : 0;
   const distance = tripMode === "roundtrip" ? oneWayDistance * 2 : oneWayDistance;
   const duration = distance ? calcDuration(distance) : 0;
   const price = oneWayDistance ? calcPrice(oneWayDistance, rideType, tripMode, duration) : 0;
   const commission = price ? calcCommission(price) : 0;
 
   const handleConfirm = async () => {
+    if (!pickupCoords || !destCoords) {
+      toast.error("لم نتمكن من تحديد الإحداثيات — جرّب مكان أوضح");
+      return;
+    }
     setCreating(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -119,8 +150,14 @@ function BookPage() {
           <Label className="text-xs">الوجهة</Label>
           <div className="relative">
             <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
-            <Input value={destination} onChange={(e) => setDestination(e.target.value)} className="pr-10" placeholder="رايح فين؟" />
+            <Input value={destination} onChange={(e) => setDestination(e.target.value)} className="pr-10 pl-10" placeholder="رايح فين؟" />
+            {geoLoading && (
+              <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            )}
           </div>
+          {destination && !geoLoading && !destCoords && (
+            <p className="text-[11px] text-destructive mt-1">لم نعثر على هذا المكان — جرّب اسم أوضح</p>
+          )}
           <div className="flex gap-2 mt-2 flex-wrap">
             {SUGGEST.map((s) => (
               <button key={s} onClick={() => setDestination(s)}
