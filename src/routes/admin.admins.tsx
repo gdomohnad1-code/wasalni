@@ -497,7 +497,7 @@ function AdminsPage() {
     );
 
     if (user?.id) {
-      setIsSuper(permMap.get(user.id) === "super_admin");
+      setIsSuper(user.email?.toLowerCase() === "admin@wasalni.app");
     }
   };
 
@@ -552,7 +552,7 @@ function AdminsPage() {
   };
 
   const updateEmailPerm = async (id: string, perm: AdminPerm) => {
-    // any admin allowed
+    if (!isSuper) { toast.error("المسؤول الرئيسي فقط"); return; }
     const { error } = await supabase
       .from("admin_emails")
       .update({ default_permission: perm })
@@ -583,7 +583,7 @@ function AdminsPage() {
   };
 
   const changePerm = async (userId: string, newPerm: AdminPerm) => {
-    // any admin allowed
+    if (!isSuper) { toast.error("المسؤول الرئيسي فقط يمكنه تغيير الأدوار"); return; }
     if (meId === userId && newPerm !== "super_admin") {
       toast.error("لا يمكنك تخفيض دور حسابك الرئيسي"); return;
     }
@@ -779,7 +779,7 @@ function AdminsPage() {
                     <label className="text-[11px] font-semibold text-muted-foreground">الدور الافتراضي</label>
                     <Select
                       value={e.default_permission}
-                      disabled={false}
+                      disabled={!isSuper}
                       onValueChange={(v) => updateEmailPerm(e.id, v as AdminPerm)}
                     >
                       <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
@@ -793,11 +793,11 @@ function AdminsPage() {
 
                   {/* Actions */}
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
-                    <ResetPasswordByEmailDialog email={e.email} disabled={false} />
+                    <ResetPasswordByEmailDialog email={e.email} disabled={!isSuper} />
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={e.email === "admin@wasalni.app"}
+                      disabled={!isSuper || e.email === "admin@wasalni.app"}
                       onClick={() => removeEmail(e.id, e.email)}
                       className="text-destructive border-destructive/30 hover:bg-destructive/10 mr-auto"
                     >
@@ -850,7 +850,7 @@ function AdminsPage() {
                   <TableCell>
                     <Select
                       value={a.permission ?? undefined}
-                      disabled={false}
+                      disabled={!isSuper}
                       onValueChange={(v) => changePerm(a.user_id, v as AdminPerm)}
                     >
                       <SelectTrigger className="h-9">
@@ -868,12 +868,12 @@ function AdminsPage() {
                       <ResetPasswordDialog
                         userId={a.user_id}
                         fullName={a.full_name}
-                        disabled={false}
+                        disabled={!isSuper}
                       />
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={a.user_id === meId}
+                        disabled={!isSuper || a.user_id === meId}
                         onClick={() => revokeAdmin(a.user_id)}
                         className="text-destructive border-destructive/30 hover:bg-destructive/10"
                       >

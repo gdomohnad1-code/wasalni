@@ -18,13 +18,10 @@ const Schema = z.object({
 });
 
 async function ensureAdmin(userId: string) {
-  const { data } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (!data) throw new Response("Forbidden — admin only", { status: 403 });
+  const { data: u } = await supabaseAdmin.auth.admin.getUserById(userId);
+  if (u?.user?.email?.toLowerCase() !== "admin@wasalni.app") {
+    throw new Response("Forbidden — main admin only", { status: 403 });
+  }
 }
 
 export const createAdminAccount = createServerFn({ method: "POST" })
