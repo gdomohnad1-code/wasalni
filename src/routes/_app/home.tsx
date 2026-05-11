@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import {
   Bell, AlertTriangle, Sparkles, Wallet, ShieldCheck, ChevronLeft,
-  Clock, MapPin, Star,
+  Clock, MapPin, Star, Plus, Crown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RIDE_TYPES, type RideTypeKey, PLATFORM_COMMISSION_RATE } from "@/lib/pricing";
+import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
