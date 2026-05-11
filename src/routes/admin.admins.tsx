@@ -779,7 +779,7 @@ function AdminsPage() {
                     <label className="text-[11px] font-semibold text-muted-foreground">الدور الافتراضي</label>
                     <Select
                       value={e.default_permission}
-                      disabled={!isSuper}
+                      disabled={false}
                       onValueChange={(v) => updateEmailPerm(e.id, v as AdminPerm)}
                     >
                       <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
@@ -793,7 +793,7 @@ function AdminsPage() {
 
                   {/* Actions */}
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
-                    <ResetPasswordByEmailDialog email={e.email} disabled={!isSuper} />
+                    <ResetPasswordByEmailDialog email={e.email} disabled={false} />
                     <Button
                       variant="outline"
                       size="sm"
@@ -850,7 +850,7 @@ function AdminsPage() {
                   <TableCell>
                     <Select
                       value={a.permission ?? undefined}
-                      disabled={!isSuper}
+                      disabled={false}
                       onValueChange={(v) => changePerm(a.user_id, v as AdminPerm)}
                     >
                       <SelectTrigger className="h-9">
@@ -868,7 +868,7 @@ function AdminsPage() {
                       <ResetPasswordDialog
                         userId={a.user_id}
                         fullName={a.full_name}
-                        disabled={!isSuper}
+                        disabled={false}
                       />
                       <Button
                         variant="outline"
