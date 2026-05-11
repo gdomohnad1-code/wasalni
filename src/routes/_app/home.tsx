@@ -23,11 +23,6 @@ const offers = [
   { title: "ادعو صديق واكسب 30 ج.م", sub: "نظام الإحالة", glyph: "🤝" },
 ];
 
-const PRICING_TILES = [
-  { title: "عادي", value: "30 ج.م", sub: "أول 3 كم + 3 ج.م/كم" },
-  { title: "ذهاب وعودة", value: "60 ج.م", sub: "أول 6 كم + 3 ج.م/كم" },
-  { title: "متعدد الوجهات", value: "200/س", sub: "حد أدنى 75 ج.م" },
-];
 
 function HomePage() {
   const { profile } = useAuth();
