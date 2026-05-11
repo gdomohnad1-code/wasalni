@@ -19,7 +19,6 @@ import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppBookRouteImport } from './routes/_app/book'
 import { Route as AppRideIdRouteImport } from './routes/_app/ride.$id'
-import { Route as AppAdminComplaintsRouteImport } from './routes/_app/admin.complaints'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -70,11 +69,6 @@ const AppRideIdRoute = AppRideIdRouteImport.update({
   path: '/ride/$id',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminComplaintsRoute = AppAdminComplaintsRouteImport.update({
-  id: '/admin/complaints',
-  path: '/admin/complaints',
-  getParentRoute: () => AppRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -85,7 +79,6 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProfileRoute
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
-  '/admin/complaints': typeof AppAdminComplaintsRoute
   '/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRoutesByTo {
@@ -97,7 +90,6 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProfileRoute
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
-  '/admin/complaints': typeof AppAdminComplaintsRoute
   '/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRoutesById {
@@ -111,7 +103,6 @@ export interface FileRoutesById {
   '/_app/profile': typeof AppProfileRoute
   '/_app/trips': typeof AppTripsRoute
   '/_app/wallet': typeof AppWalletRoute
-  '/_app/admin/complaints': typeof AppAdminComplaintsRoute
   '/_app/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRouteTypes {
@@ -125,7 +116,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/trips'
     | '/wallet'
-    | '/admin/complaints'
     | '/ride/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,7 +127,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/trips'
     | '/wallet'
-    | '/admin/complaints'
     | '/ride/$id'
   id:
     | '__root__'
@@ -150,7 +139,6 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/_app/trips'
     | '/_app/wallet'
-    | '/_app/admin/complaints'
     | '/_app/ride/$id'
   fileRoutesById: FileRoutesById
 }
@@ -232,13 +220,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRideIdRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/admin/complaints': {
-      id: '/_app/admin/complaints'
-      path: '/admin/complaints'
-      fullPath: '/admin/complaints'
-      preLoaderRoute: typeof AppAdminComplaintsRouteImport
-      parentRoute: typeof AppRoute
-    }
   }
 }
 
@@ -249,7 +230,6 @@ interface AppRouteChildren {
   AppProfileRoute: typeof AppProfileRoute
   AppTripsRoute: typeof AppTripsRoute
   AppWalletRoute: typeof AppWalletRoute
-  AppAdminComplaintsRoute: typeof AppAdminComplaintsRoute
   AppRideIdRoute: typeof AppRideIdRoute
 }
 
@@ -260,7 +240,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppProfileRoute: AppProfileRoute,
   AppTripsRoute: AppTripsRoute,
   AppWalletRoute: AppWalletRoute,
-  AppAdminComplaintsRoute: AppAdminComplaintsRoute,
   AppRideIdRoute: AppRideIdRoute,
 }
 
@@ -274,3 +253,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
