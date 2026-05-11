@@ -96,6 +96,7 @@ export type Database = {
       }
       driver_documents: {
         Row: {
+          account_status: Database["public"]["Enums"]["driver_account_status"]
           approved: boolean
           car_license_url: string | null
           car_model: string | null
@@ -106,8 +107,11 @@ export type Database = {
           driver_license_url: string | null
           id: string
           is_online: boolean
+          rejection_reason: string | null
+          suspension_reason: string | null
         }
         Insert: {
+          account_status?: Database["public"]["Enums"]["driver_account_status"]
           approved?: boolean
           car_license_url?: string | null
           car_model?: string | null
@@ -118,8 +122,11 @@ export type Database = {
           driver_license_url?: string | null
           id?: string
           is_online?: boolean
+          rejection_reason?: string | null
+          suspension_reason?: string | null
         }
         Update: {
+          account_status?: Database["public"]["Enums"]["driver_account_status"]
           approved?: boolean
           car_license_url?: string | null
           car_model?: string | null
@@ -130,6 +137,8 @@ export type Database = {
           driver_license_url?: string | null
           id?: string
           is_online?: boolean
+          rejection_reason?: string | null
+          suspension_reason?: string | null
         }
         Relationships: []
       }
@@ -338,6 +347,42 @@ export type Database = {
           },
         ]
       }
+      withdrawal_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          driver_id: string
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          status: Database["public"]["Enums"]["withdrawal_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          driver_id: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          status?: Database["public"]["Enums"]["withdrawal_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          driver_id?: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          status?: Database["public"]["Enums"]["withdrawal_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -355,6 +400,7 @@ export type Database = {
       app_role: "rider" | "driver" | "admin"
       complaint_priority: "low" | "medium" | "high" | "urgent"
       complaint_status: "new" | "in_progress" | "resolved" | "closed"
+      driver_account_status: "active" | "suspended" | "banned"
       ride_status:
         | "searching"
         | "accepted"
@@ -363,6 +409,7 @@ export type Database = {
         | "cancelled"
       ride_type: "private" | "shared" | "package" | "female" | "vip"
       tx_type: "topup" | "ride_payment" | "refund" | "referral_bonus"
+      withdrawal_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -493,6 +540,7 @@ export const Constants = {
       app_role: ["rider", "driver", "admin"],
       complaint_priority: ["low", "medium", "high", "urgent"],
       complaint_status: ["new", "in_progress", "resolved", "closed"],
+      driver_account_status: ["active", "suspended", "banned"],
       ride_status: [
         "searching",
         "accepted",
@@ -502,6 +550,7 @@ export const Constants = {
       ],
       ride_type: ["private", "shared", "package", "female", "vip"],
       tx_type: ["topup", "ride_payment", "refund", "referral_bonus"],
+      withdrawal_status: ["pending", "approved", "rejected"],
     },
   },
 } as const
