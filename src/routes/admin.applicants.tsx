@@ -107,6 +107,129 @@ function ApplicantsPage() {
           onChanged={() => { setSelected(null); load(); }}
         />
       )}
+
+      {showAdd && isMainAdmin && (
+        <ManualAddDriverDialog onClose={() => setShowAdd(false)} onCreated={() => { setShowAdd(false); load(); }} />
+      )}
+    </div>
+  );
+}
+
+function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const create = useServerFn(manuallyCreateDriver);
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    full_name: "",
+    phone: "",
+    car_type: "",
+    car_model: "",
+    car_plate: "",
+  });
+  const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
+  const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }));
+
+  const genPw = () => {
+    const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
+    let s = "";
+    for (let i = 0; i < 12; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    set("password", s);
+  };
+
+  const submit = async () => {
+    if (!form.email || !form.password || !form.full_name) {
+      return toast.error("البريد وكلمة المرور والاسم مطلوبون");
+    }
+    setBusy(true);
+    try {
+      await create({
+        data: {
+          email: form.email.trim(),
+          password: form.password,
+          full_name: form.full_name.trim(),
+          phone: form.phone.trim() || null,
+          car_type: form.car_type.trim() || null,
+          car_model: form.car_model.trim() || null,
+          car_plate: form.car_plate.trim() || null,
+        } as any,
+      });
+      toast.success("تم إنشاء حساب السائق ✅");
+      setCreated({ email: form.email.trim(), password: form.password });
+      onCreated();
+    } catch (e: any) {
+      toast.error(e?.message ?? "فشل الإنشاء");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
+        <DialogHeader><DialogTitle>إضافة سائق يدوياً</DialogTitle></DialogHeader>
+        {created ? (
+          <div className="space-y-3">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm">
+              تم إنشاء الحساب. يمكن للسائق تسجيل الدخول الآن.
+            </div>
+            <CredRow label="البريد" value={created.email} />
+            <CredRow label="كلمة المرور" value={created.password} />
+            <DialogFooter>
+              <Button onClick={onClose}>إغلاق</Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              يمكنك إنشاء حساب سائق جاهز للعمل حتى لو الأوراق غير مكتملة. الحقول الإجبارية فقط: البريد، كلمة المرور، الاسم.
+            </p>
+            <div className="grid grid-cols-1 gap-2">
+              <Field label="البريد الإلكتروني *"><Input value={form.email} onChange={(e) => set("email", e.target.value)} type="email" /></Field>
+              <Field label="كلمة المرور *">
+                <div className="flex gap-2">
+                  <Input value={form.password} onChange={(e) => set("password", e.target.value)} />
+                  <Button type="button" variant="outline" size="sm" onClick={genPw}>توليد</Button>
+                </div>
+              </Field>
+              <Field label="الاسم الكامل *"><Input value={form.full_name} onChange={(e) => set("full_name", e.target.value)} /></Field>
+              <Field label="الهاتف"><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></Field>
+              <div className="grid grid-cols-3 gap-2">
+                <Field label="نوع السيارة"><Input value={form.car_type} onChange={(e) => set("car_type", e.target.value)} /></Field>
+                <Field label="الموديل"><Input value={form.car_model} onChange={(e) => set("car_model", e.target.value)} /></Field>
+                <Field label="اللوحة"><Input value={form.car_plate} onChange={(e) => set("car_plate", e.target.value)} /></Field>
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={onClose}>إلغاء</Button>
+              <Button onClick={submit} disabled={busy} className="bg-gradient-primary">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء الحساب"}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs">{label}</Label>
+      {children}
+    </div>
+  );
+}
+
+function CredRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2 bg-muted rounded-lg p-2">
+      <div className="text-xs text-muted-foreground w-24 shrink-0">{label}</div>
+      <div className="flex-1 font-mono text-sm break-all">{value}</div>
+      <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(value); toast.success("تم النسخ"); }}>
+        <Copy className="h-4 w-4" />
+      </Button>
     </div>
   );
 }
