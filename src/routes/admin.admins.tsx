@@ -2,19 +2,22 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { createAdminAccount } from "@/lib/admin-create.functions";
+import { createAdminAccount, resetAdminPassword } from "@/lib/admin-create.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Shield, UserPlus, Mail, Crown, Eye, Bell, Wallet, UserCog, KeyRound, Loader2, Copy } from "lucide-react";
+import { Trash2, Shield, UserPlus, Mail, Crown, Eye, Bell, Wallet, UserCog, KeyRound, Loader2, Copy, Lock } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/admin/admins")({
   component: AdminsPage,
@@ -166,6 +169,91 @@ interface AdminUser {
   user_id: string;
   full_name: string;
   permission: AdminPerm | null;
+}
+
+function ResetPasswordDialog({
+  userId,
+  fullName,
+  disabled,
+}: { userId: string; fullName: string; disabled?: boolean }) {
+  const reset = useServerFn(resetAdminPassword);
+  const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const generate = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
+    let p = "";
+    for (let i = 0; i < 12; i++) p += chars[Math.floor(Math.random() * chars.length)];
+    setPw(p); setPw2(p);
+  };
+
+  const submit = async () => {
+    if (pw.length < 6) { toast.error("كلمة المرور 6 أحرف على الأقل"); return; }
+    if (pw !== pw2) { toast.error("كلمتا المرور غير متطابقتين"); return; }
+    setBusy(true);
+    try {
+      await reset({ data: { user_id: userId, password: pw } });
+      toast.success("تم تعيين كلمة المرور الجديدة ✅");
+      setOpen(false); setPw(""); setPw2("");
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذّر التحديث");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" disabled={disabled}>
+          <Lock className="h-3.5 w-3.5 ml-1" /> إعادة تعيين كلمة المرور
+        </Button>
+      </DialogTrigger>
+      <DialogContent dir="rtl">
+        <DialogHeader>
+          <DialogTitle>إعادة تعيين كلمة المرور</DialogTitle>
+          <DialogDescription>
+            تعيين كلمة مرور جديدة للمسؤول: <span className="font-semibold">{fullName}</span>
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-semibold mb-1 block">كلمة المرور الجديدة</label>
+            <Input
+              type="text"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              placeholder="6 أحرف على الأقل"
+              dir="ltr"
+              className="text-left"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold mb-1 block">تأكيد كلمة المرور</label>
+            <Input
+              type="text"
+              value={pw2}
+              onChange={(e) => setPw2(e.target.value)}
+              placeholder="أعد كتابة كلمة المرور"
+              dir="ltr"
+              className="text-left"
+            />
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={generate}>
+            توليد كلمة مرور قوية
+          </Button>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>إلغاء</Button>
+          <Button onClick={submit} disabled={busy}>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function AdminsPage() {
@@ -417,7 +505,7 @@ function AdminsPage() {
               <TableHead className="text-right">الاسم</TableHead>
               <TableHead className="text-right">الدور الحالي</TableHead>
               <TableHead className="text-right w-56">تغيير الدور</TableHead>
-              <TableHead className="text-right w-32">إجراء</TableHead>
+              <TableHead className="text-right w-56">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -460,15 +548,22 @@ function AdminsPage() {
                     </Select>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!isSuper || a.user_id === meId}
-                      onClick={() => revokeAdmin(a.user_id)}
-                      className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                    >
-                      سحب الصلاحية
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <ResetPasswordDialog
+                        userId={a.user_id}
+                        fullName={a.full_name}
+                        disabled={!isSuper}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!isSuper || a.user_id === meId}
+                        onClick={() => revokeAdmin(a.user_id)}
+                        className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                      >
+                        سحب الصلاحية
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );

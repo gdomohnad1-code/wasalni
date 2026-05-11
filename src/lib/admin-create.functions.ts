@@ -81,3 +81,31 @@ export const createAdminAccount = createServerFn({ method: "POST" })
       is_synthetic_email: !isEmail,
     };
   });
+
+const ResetSchema = z.object({
+  user_id: z.string().uuid(),
+  password: z.string().min(6).max(72),
+});
+
+export const resetAdminPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => ResetSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await ensureSuperAdmin(context.userId);
+
+    // Confirm target is actually an admin
+    const { data: role } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.user_id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!role) throw new Response("المستخدم ليس مسؤولًا", { status: 400 });
+
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
+      password: data.password,
+    });
+    if (error) throw new Response(error.message, { status: 400 });
+
+    return { ok: true };
+  });
