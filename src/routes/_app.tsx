@@ -9,11 +9,20 @@ export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw redirect({ to: "/auth" });
+    const uid = data.session.user.id;
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", data.session.user.id);
+      .eq("user_id", uid);
     if (roles?.some((r) => r.role === "admin")) throw redirect({ to: "/admin" });
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("phone")
+      .eq("id", uid)
+      .maybeSingle();
+    if (!profile?.phone || profile.phone.trim().length === 0) {
+      throw redirect({ to: "/complete-profile" });
+    }
   },
   component: AppLayout,
 });
