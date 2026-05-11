@@ -136,8 +136,10 @@ function AdsManagerPage() {
     const ch = supabase
       .channel("admin-ads")
       .on("postgres_changes", { event: "*", schema: "public", table: "ads" }, load)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "ad_events" }, load)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const iv = setInterval(load, 1000);
+    return () => { supabase.removeChannel(ch); clearInterval(iv); };
   }, []);
 
   const filtered = useMemo(() => {
