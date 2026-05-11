@@ -6,24 +6,42 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Shield, UserPlus, Mail } from "lucide-react";
+import { Trash2, Shield, UserPlus, Mail, Crown, Eye, Bell, Wallet, UserCog, KeyRound } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/admin/admins")({
   component: AdminsPage,
 });
 
-interface AdminEmail {
-  id: string;
-  email: string;
-  created_at: string;
-}
+type AdminPerm =
+  | "super_admin"
+  | "assigner"
+  | "full_control"
+  | "viewer"
+  | "notifications"
+  | "collections";
+
+const PERM_META: Record<AdminPerm, { label: string; desc: string; icon: any; color: string }> = {
+  super_admin:    { label: "مسؤول رئيسي",  desc: "كل الصلاحيات + إدارة المسؤولين",     icon: Crown,    color: "text-amber-500" },
+  full_control:   { label: "تحكم كامل",    desc: "كل شيء عدا تعيين/إزالة المسؤولين",  icon: KeyRound, color: "text-primary" },
+  assigner:       { label: "مسؤول تعيين",  desc: "الموافقة على السائقين والوثائق",     icon: UserCog,  color: "text-blue-500" },
+  collections:    { label: "مسؤول التحصيل", desc: "إدارة المستحقات والمدفوعات",          icon: Wallet,   color: "text-emerald-500" },
+  notifications:  { label: "إشعارات",      desc: "إرسال الإشعارات والإعلانات",          icon: Bell,     color: "text-fuchsia-500" },
+  viewer:         { label: "معاينة فقط",   desc: "قراءة لوحات البيانات بدون تعديل",     icon: Eye,      color: "text-muted-foreground" },
+};
+
+const ALL_PERMS: AdminPerm[] = ["super_admin", "full_control", "assigner", "collections", "notifications", "viewer"];
+
+interface AdminEmail { id: string; email: string; created_at: string; }
 interface AdminUser {
   user_id: string;
-  email: string | null;
   full_name: string;
+  permission: AdminPerm | null;
 }
 
 function AdminsPage() {
@@ -31,8 +49,13 @@ function AdminsPage() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [newEmail, setNewEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [meId, setMeId] = useState<string | null>(null);
+  const [isSuper, setIsSuper] = useState(false);
 
   const load = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setMeId(user?.id ?? null);
+
     const { data: e } = await supabase
       .from("admin_emails")
       .select("*")
@@ -43,13 +66,27 @@ function AdminsPage() {
       .from("user_roles")
       .select("user_id, profiles:user_id(full_name)")
       .eq("role", "admin");
+
+    const ids = (r ?? []).map((x: any) => x.user_id);
+    const { data: perms } = await supabase
+      .from("admin_permissions")
+      .select("user_id, permission")
+      .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+
+    const permMap = new Map<string, AdminPerm>();
+    (perms ?? []).forEach((p: any) => permMap.set(p.user_id, p.permission));
+
     setAdmins(
       (r ?? []).map((x: any) => ({
         user_id: x.user_id,
-        email: null,
         full_name: x.profiles?.full_name ?? "—",
+        permission: permMap.get(x.user_id) ?? null,
       }))
     );
+
+    if (user?.id) {
+      setIsSuper(permMap.get(user.id) === "super_admin");
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -73,14 +110,6 @@ function AdminsPage() {
     toast.success("تمت الإضافة. أي حساب جديد بهذا البريد سيصبح أدمن تلقائيًا.");
     setNewEmail("");
     load();
-
-    // If user already exists, promote now
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("id")
-      .ilike("full_name", "%")
-      .limit(0); // placeholder; actual lookup needs auth.users (admin only via service role)
-    void existing;
   };
 
   const removeEmail = async (id: string, email: string) => {
@@ -95,18 +124,26 @@ function AdminsPage() {
   };
 
   const revokeAdmin = async (userId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.id === userId) {
-      toast.error("لا يمكنك إزالة صلاحياتك الخاصة");
-      return;
-    }
-    const { error } = await supabase
-      .from("user_roles")
-      .delete()
-      .eq("user_id", userId)
-      .eq("role", "admin");
+    if (meId === userId) { toast.error("لا يمكنك إزالة صلاحياتك الخاصة"); return; }
+    const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
     if (error) return toast.error("تعذّر الإلغاء");
+    await supabase.from("admin_permissions").delete().eq("user_id", userId);
     toast.success("تم سحب صلاحية الأدمن");
+    load();
+  };
+
+  const changePerm = async (userId: string, newPerm: AdminPerm) => {
+    if (!isSuper) { toast.error("المسؤول الرئيسي فقط يمكنه تغيير الأدوار"); return; }
+    if (meId === userId && newPerm !== "super_admin") {
+      toast.error("لا يمكنك تخفيض دور حسابك الرئيسي"); return;
+    }
+    // Upsert by deleting then inserting (table has unique on user_id+permission)
+    await supabase.from("admin_permissions").delete().eq("user_id", userId);
+    const { error } = await supabase
+      .from("admin_permissions")
+      .insert({ user_id: userId, permission: newPerm, granted_by: meId });
+    if (error) return toast.error("تعذّر تحديث الدور");
+    toast.success(`تم تعيين الدور: ${PERM_META[newPerm].label}`);
     load();
   };
 
@@ -115,12 +152,34 @@ function AdminsPage() {
       <div>
         <h2 className="text-2xl font-extrabold flex items-center gap-2">
           <Shield className="h-6 w-6 text-primary" />
-          إدارة المسؤولين
+          إدارة المسؤولين والأدوار
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          أي حساب جديد يُسجَّل بأحد البُرد التالية سيحصل على صلاحية أدمن تلقائيًا.
+          {isSuper
+            ? "بصفتك المسؤول الرئيسي، يمكنك تعيين دور لكل مسؤول."
+            : "العرض فقط — المسؤول الرئيسي وحده يستطيع تعديل الأدوار."}
         </p>
       </div>
+
+      {/* Roles legend */}
+      <Card className="p-5">
+        <h3 className="font-bold mb-3">الأدوار المتاحة</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {ALL_PERMS.map((p) => {
+            const m = PERM_META[p];
+            const Icon = m.icon;
+            return (
+              <div key={p} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                <Icon className={`h-5 w-5 mt-0.5 ${m.color}`} />
+                <div>
+                  <div className="font-semibold">{m.label}</div>
+                  <div className="text-xs text-muted-foreground">{m.desc}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
 
       <Card className="p-5">
         <h3 className="font-bold mb-3 flex items-center gap-2">
@@ -138,6 +197,9 @@ function AdminsPage() {
           />
           <Button onClick={addEmail} disabled={loading}>إضافة</Button>
         </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          الحساب الجديد يبدأ بدور «معاينة فقط» — يمكن للمسؤول الرئيسي ترقيته لاحقًا.
+        </p>
       </Card>
 
       <Card className="overflow-hidden">
@@ -190,36 +252,67 @@ function AdminsPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="text-right">الاسم</TableHead>
-              <TableHead className="text-right">معرف الحساب</TableHead>
+              <TableHead className="text-right">الدور الحالي</TableHead>
+              <TableHead className="text-right w-56">تغيير الدور</TableHead>
               <TableHead className="text-right w-32">إجراء</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {admins.map((a) => (
-              <TableRow key={a.user_id}>
-                <TableCell className="font-semibold">{a.full_name}</TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground" dir="ltr">
-                  {a.user_id.slice(0, 8)}…
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => revokeAdmin(a.user_id)}
-                    className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                  >
-                    سحب الصلاحية
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {admins.map((a) => {
+              const meta = a.permission ? PERM_META[a.permission] : null;
+              const Icon = meta?.icon ?? Eye;
+              const isMainAdmin = a.user_id === meId && isSuper;
+              return (
+                <TableRow key={a.user_id}>
+                  <TableCell className="font-semibold">
+                    {a.full_name}
+                    {isMainAdmin && (
+                      <Badge variant="secondary" className="mr-2 text-[10px]">أنت</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {meta ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <Icon className={`h-4 w-4 ${meta.color}`} />
+                        <span className="font-medium">{meta.label}</span>
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">— لم يُعيَّن</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={a.permission ?? undefined}
+                      disabled={!isSuper}
+                      onValueChange={(v) => changePerm(a.user_id, v as AdminPerm)}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="اختر دورًا" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ALL_PERMS.map((p) => (
+                          <SelectItem key={p} value={p}>{PERM_META[p].label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!isSuper || a.user_id === meId}
+                      onClick={() => revokeAdmin(a.user_id)}
+                      className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                    >
+                      سحب الصلاحية
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </Card>
-
-      <Badge variant="secondary" className="text-xs">
-        ملاحظة: ترقية حساب موجود مسبقًا تتم عبر "سحب/منح" يدويًا. الإضافة هنا تنطبق على التسجيلات الجديدة.
-      </Badge>
     </div>
   );
 }
