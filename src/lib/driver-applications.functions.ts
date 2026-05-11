@@ -283,6 +283,89 @@ export const rejectApplication = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ============= Super-admin: manually create driver =============
+
+const ManualCreateSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(6).max(72),
+  full_name: z.string().trim().min(1).max(80),
+  phone: z.string().trim().max(40).optional().nullable(),
+  car_type: z.string().trim().max(60).optional().nullable(),
+  car_model: z.string().trim().max(80).optional().nullable(),
+  car_plate: z.string().trim().max(40).optional().nullable(),
+  id_card_front_url: z.string().url().optional().nullable(),
+  id_card_back_url: z.string().url().optional().nullable(),
+  selfie_url: z.string().url().optional().nullable(),
+  driver_license_url: z.string().url().optional().nullable(),
+  car_photo_url: z.string().url().optional().nullable(),
+  car_license_url: z.string().url().optional().nullable(),
+});
+
+async function ensureMainSuperAdmin(userId: string) {
+  const { data: u } = await supabaseAdmin.auth.admin.getUserById(userId);
+  const email = u?.user?.email?.toLowerCase();
+  if (email !== "admin@wasalni.app") {
+    throw new Response("Forbidden — main super admin only", { status: 403 });
+  }
+}
+
+export const manuallyCreateDriver = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => ManualCreateSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await ensureMainSuperAdmin(context.userId);
+
+    const { data: created, error: createErr } =
+      await supabaseAdmin.auth.admin.createUser({
+        email: data.email,
+        password: data.password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: data.full_name,
+          phone: data.phone ?? undefined,
+        },
+      });
+    if (createErr || !created.user) {
+      throw new Response(createErr?.message ?? "فشل إنشاء الحساب", { status: 400 });
+    }
+    const newId = created.user.id;
+
+    await supabaseAdmin
+      .from("profiles")
+      .update({ full_name: data.full_name, phone: data.phone ?? null })
+      .eq("id", newId);
+
+    // Force driver role
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", newId);
+    await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: newId, role: "driver" as any });
+
+    // Create activated driver_documents (allow incomplete)
+    await supabaseAdmin.from("driver_documents").upsert(
+      {
+        driver_id: newId,
+        car_type: data.car_type ?? null,
+        car_model: data.car_model ?? null,
+        car_plate: data.car_plate ?? null,
+        id_card_front_url: data.id_card_front_url ?? null,
+        id_card_back_url: data.id_card_back_url ?? null,
+        selfie_url: data.selfie_url ?? null,
+        driver_license_url: data.driver_license_url ?? null,
+        car_photo_url: data.car_photo_url ?? null,
+        car_license_url: data.car_license_url ?? null,
+        account_status: "active" as any,
+        approved: true,
+        submitted_at: new Date().toISOString(),
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: context.userId,
+      },
+      { onConflict: "driver_id" },
+    );
+
+    return { ok: true, user_id: newId, email: data.email };
+  });
+
 // ============= Admin: request changes =============
 
 const ChangeFieldsEnum = z.enum([
