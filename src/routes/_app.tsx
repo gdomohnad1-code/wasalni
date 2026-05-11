@@ -3,6 +3,7 @@ import { Home, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useRideNotifications } from "@/hooks/use-ride-notifications";
+import { usePricingSync } from "@/hooks/use-pricing-sync";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
