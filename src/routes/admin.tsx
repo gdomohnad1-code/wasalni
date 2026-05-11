@@ -43,6 +43,7 @@ const NAV = [
   { to: "/admin/geofences", label: "مناطق التوصيل", icon: Map },
   { to: "/admin/applicants", label: "المقدّمون", icon: ShieldQuestion },
   { to: "/admin/drivers", label: "السائقون", icon: Users },
+  { to: "/admin/riders", label: "العملاء", icon: Users },
   { to: "/admin/dues", label: "مستحقات الشركة", icon: Wallet },
   { to: "/admin/payouts", label: "سحوبات السائقين", icon: CreditCard },
   { to: "/admin/complaints", label: "الشكاوى", icon: MessageSquareWarning },
