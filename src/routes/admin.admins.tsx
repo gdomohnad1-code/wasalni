@@ -463,15 +463,22 @@ function AdminsPage() {
                     </Select>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!isSuper || a.user_id === meId}
-                      onClick={() => revokeAdmin(a.user_id)}
-                      className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                    >
-                      سحب الصلاحية
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <ResetPasswordDialog
+                        userId={a.user_id}
+                        fullName={a.full_name}
+                        disabled={!isSuper}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!isSuper || a.user_id === meId}
+                        onClick={() => revokeAdmin(a.user_id)}
+                        className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                      >
+                        سحب الصلاحية
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
