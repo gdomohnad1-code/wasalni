@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Copy, Share2, LogOut, Star, Users } from "lucide-react";
+import { Copy, Share2, LogOut, Star, Users, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/profile")({
@@ -9,7 +9,8 @@ export const Route = createFileRoute("/_app/profile")({
 });
 
 function ProfilePage() {
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, roles, signOut } = useAuth();
+  const isAdmin = roles?.includes("admin");
 
   const copyCode = () => {
     if (!profile?.referral_code) return;
@@ -66,6 +67,14 @@ function ProfilePage() {
           <Row label="رقم التليفون" value={profile?.phone || "—"} />
           <Row label="رصيد المحفظة" value={`${profile?.wallet_balance || 0} ج.م`} />
         </div>
+
+        {isAdmin && (
+          <Link to="/admin">
+            <Button className="w-full gap-2 bg-gradient-primary">
+              <ShieldCheck className="h-4 w-4" /> فتح لوحة الإدارة
+            </Button>
+          </Link>
+        )}
 
         <Button onClick={signOut} variant="outline" className="w-full text-destructive border-destructive/30">
           <LogOut className="h-4 w-4 ml-2" /> تسجيل الخروج
