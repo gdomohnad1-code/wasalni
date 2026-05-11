@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useI18n } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
 
@@ -29,6 +31,16 @@ function AuthPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [influencerCode, setInfluencerCode] = useState("");
+
+  // captcha (simple math)
+  const [captchaSeed, setCaptchaSeed] = useState(0);
+  const captcha = useMemo(() => {
+    const a = Math.floor(Math.random() * 8) + 2;
+    const b = Math.floor(Math.random() * 8) + 1;
+    return { a, b, answer: a + b };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [captchaSeed]);
+  const [captchaInput, setCaptchaInput] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -53,6 +65,13 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        if (Number(captchaInput) !== captcha.answer) {
+          toast.error(t("captcha.wrong"));
+          setCaptchaSeed((s) => s + 1);
+          setCaptchaInput("");
+          setLoading(false);
+          return;
+        }
         if (!avatarFile) {
           toast.error("الصورة الشخصية مطلوبة");
           setLoading(false);
