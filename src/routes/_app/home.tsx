@@ -2,9 +2,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import {
-  Bell, AlertTriangle, Sparkles, Wallet, ChevronLeft,
+  AlertTriangle, Sparkles, Wallet, ChevronLeft,
   Clock, MapPin, Crown,
 } from "lucide-react";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
