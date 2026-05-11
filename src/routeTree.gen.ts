@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppBookRouteImport } from './routes/_app/book'
+import { Route as AppRideIdRouteImport } from './routes/_app/ride.$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -39,18 +40,25 @@ const AppBookRoute = AppBookRouteImport.update({
   path: '/book',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRideIdRoute = AppRideIdRouteImport.update({
+  id: '/ride/$id',
+  path: '/ride/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/book': typeof AppBookRoute
   '/home': typeof AppHomeRoute
+  '/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/book': typeof AppBookRoute
   '/home': typeof AppHomeRoute
+  '/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,13 +67,21 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_app/book': typeof AppBookRoute
   '/_app/home': typeof AppHomeRoute
+  '/_app/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/book' | '/home'
+  fullPaths: '/' | '/auth' | '/book' | '/home' | '/ride/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/book' | '/home'
-  id: '__root__' | '/' | '/_app' | '/auth' | '/_app/book' | '/_app/home'
+  to: '/' | '/auth' | '/book' | '/home' | '/ride/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/auth'
+    | '/_app/book'
+    | '/_app/home'
+    | '/_app/ride/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -111,17 +127,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBookRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/ride/$id': {
+      id: '/_app/ride/$id'
+      path: '/ride/$id'
+      fullPath: '/ride/$id'
+      preLoaderRoute: typeof AppRideIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppBookRoute: typeof AppBookRoute
   AppHomeRoute: typeof AppHomeRoute
+  AppRideIdRoute: typeof AppRideIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppBookRoute: AppBookRoute,
   AppHomeRoute: AppHomeRoute,
+  AppRideIdRoute: AppRideIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

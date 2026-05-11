@@ -1,0 +1,259 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, Phone, MessageCircle, Star, Send, X, ArrowRight, Car } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FakeMap } from "@/components/FakeMap";
+import { toast } from "sonner";
+import { RIDE_TYPES } from "@/lib/pricing";
+
+export const Route = createFileRoute("/_app/ride/$id")({
+  component: RidePage,
+});
+
+interface Ride {
+  id: string;
+  status: string;
+  pickup_address: string;
+  destination_address: string;
+  ride_type: string;
+  distance_km: number;
+  duration_min: number;
+  price: number;
+  driver_id: string | null;
+  rider_id: string;
+  rating: number | null;
+}
+
+function RidePage() {
+  const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const [ride, setRide] = useState<Ride | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [rated, setRated] = useState(false);
+  const [stars, setStars] = useState(5);
+  const [countdown, setCountdown] = useState(0);
+
+  // Auto-simulate driver acceptance after 4s if no real driver
+  useEffect(() => {
+    let cancel = false;
+    const load = async () => {
+      const { data } = await supabase.from("rides").select("*").eq("id", id).maybeSingle();
+      if (data && !cancel) setRide(data as Ride);
+    };
+    load();
+
+    const ch = supabase.channel(`ride-${id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "rides", filter: `id=eq.${id}` },
+        (payload) => setRide(payload.new as Ride))
+      .subscribe();
+
+    // Demo: auto-accept after 5s
+    const timer = setTimeout(async () => {
+      const { data: cur } = await supabase.from("rides").select("*").eq("id", id).maybeSingle();
+      if (cur && cur.status === "searching") {
+        // create a fake driver association (rider's own user as demo driver if no driver assigned)
+        const { data: { user } } = await supabase.auth.getUser();
+        await supabase.from("rides").update({
+          status: "accepted",
+          driver_id: user!.id,
+          accepted_at: new Date().toISOString(),
+        }).eq("id", id);
+      }
+    }, 5000);
+
+    return () => { cancel = true; supabase.removeChannel(ch); clearTimeout(timer); };
+  }, [id]);
+
+  // countdown for in_progress
+  useEffect(() => {
+    if (ride?.status !== "in_progress") return;
+    setCountdown(ride.duration_min * 60);
+    const i = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(i);
+  }, [ride?.status, ride?.duration_min]);
+
+  const startRide = async () => {
+    await supabase.from("rides").update({ status: "in_progress", started_at: new Date().toISOString() }).eq("id", id);
+  };
+  const endRide = async () => {
+    await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
+  };
+  const submitRating = async () => {
+    await supabase.from("rides").update({ rating: stars }).eq("id", id);
+    setRated(true);
+    toast.success("شكراً لتقييمك! ⭐");
+    setTimeout(() => navigate({ to: "/home" }), 1200);
+  };
+
+  if (!ride) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+  return (
+    <div className="max-w-md mx-auto min-h-screen flex flex-col bg-background">
+      <div className="flex items-center gap-3 p-4 bg-card border-b sticky top-0 z-30">
+        <button onClick={() => navigate({ to: "/home" })}><ArrowRight className="h-5 w-5" /></button>
+        <h1 className="font-bold flex-1">رحلتك</h1>
+        <span className="text-xs px-2 py-1 rounded-full bg-primary/15 text-primary font-bold">
+          {RIDE_TYPES[ride.ride_type as keyof typeof RIDE_TYPES]?.label}
+        </span>
+      </div>
+
+      <div className="h-72 m-4">
+        <FakeMap pickup={ride.pickup_address} destination={ride.destination_address} animate={ride.status === "in_progress"} />
+      </div>
+
+      <div className="px-4 flex-1">
+        <AnimatePresence mode="wait">
+          {ride.status === "searching" && <Searching key="s" />}
+          {ride.status === "accepted" && <Accepted key="a" onStart={startRide} onChat={() => setChatOpen(true)} />}
+          {ride.status === "in_progress" && <InProgress key="i" countdown={fmtTime(countdown)} onEnd={endRide} onChat={() => setChatOpen(true)} />}
+          {ride.status === "completed" && !rated && <RateBox key="r" stars={stars} setStars={setStars} onSubmit={submitRating} />}
+          {ride.status === "completed" && rated && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
+              <div className="text-6xl mb-3">✅</div>
+              <p className="font-bold text-lg">تم الإنهاء بنجاح</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <ChatSheet rideId={id} open={chatOpen} onClose={() => setChatOpen(false)} />
+    </div>
+  );
+}
+
+function Searching() {
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+      className="bg-card rounded-2xl p-6 shadow-card text-center">
+      <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        className="h-16 w-16 mx-auto rounded-full border-4 border-primary/20 border-t-primary mb-4" />
+      <h3 className="font-bold text-lg">جاري البحث عن سائق...</h3>
+      <p className="text-sm text-muted-foreground mt-1">السائقين القريبين بيستلموا طلبك</p>
+    </motion.div>
+  );
+}
+
+function Accepted({ onStart, onChat }: { onStart: () => void; onChat: () => void }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+      className="bg-card rounded-2xl p-5 shadow-card space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="h-14 w-14 rounded-full bg-gradient-primary flex items-center justify-center text-2xl">🧑‍✈️</div>
+        <div className="flex-1">
+          <div className="font-bold">أحمد المصري</div>
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <Star className="h-3 w-3 fill-warning text-warning" /> 4.8 · هيونداي اكسنت · أ ب ج 1234
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" className="flex-1" onClick={onChat}><MessageCircle className="h-4 w-4 ml-1" /> شات</Button>
+        <Button variant="outline" className="flex-1"><Phone className="h-4 w-4 ml-1" /> اتصال</Button>
+      </div>
+      <Button onClick={onStart} className="w-full h-12 bg-gradient-primary font-bold">
+        <Car className="h-5 w-5 ml-2" /> ابدأ الرحلة
+      </Button>
+    </motion.div>
+  );
+}
+
+function InProgress({ countdown, onEnd, onChat }: { countdown: string; onEnd: () => void; onChat: () => void }) {
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="bg-card rounded-2xl p-5 shadow-card space-y-4">
+      <div className="text-center">
+        <p className="text-sm text-muted-foreground">الوقت المتبقي</p>
+        <div className="text-4xl font-black text-primary tracking-wider">{countdown}</div>
+      </div>
+      <Button variant="outline" className="w-full" onClick={onChat}>
+        <MessageCircle className="h-4 w-4 ml-1" /> راسل السائق
+      </Button>
+      <Button onClick={onEnd} variant="destructive" className="w-full h-12 font-bold">إنهاء الرحلة</Button>
+    </motion.div>
+  );
+}
+
+function RateBox({ stars, setStars, onSubmit }: { stars: number; setStars: (n: number) => void; onSubmit: () => void }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+      className="bg-card rounded-2xl p-6 shadow-card text-center">
+      <div className="text-5xl mb-2">🎉</div>
+      <h3 className="font-bold text-lg mb-1">قيّم رحلتك</h3>
+      <p className="text-sm text-muted-foreground mb-4">رأيك يساعدنا نتحسن</p>
+      <div className="flex justify-center gap-2 mb-5">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} onClick={() => setStars(n)}>
+            <Star className={`h-9 w-9 ${n <= stars ? "fill-warning text-warning" : "text-muted-foreground"}`} />
+          </button>
+        ))}
+      </div>
+      <Button onClick={onSubmit} className="w-full h-12 bg-gradient-primary font-bold">إرسال التقييم</Button>
+    </motion.div>
+  );
+}
+
+function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; onClose: () => void }) {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [text, setText] = useState("");
+  const [me, setMe] = useState<string>("");
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setMe(data.user?.id || ""));
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    supabase.from("chat_messages").select("*").eq("ride_id", rideId).order("created_at").then(({ data }) => {
+      if (data) setMessages(data);
+    });
+    const ch = supabase.channel(`chat-${rideId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `ride_id=eq.${rideId}` },
+        (p) => setMessages((m) => [...m, p.new]))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [open, rideId]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  const send = async () => {
+    if (!text.trim()) return;
+    await supabase.from("chat_messages").insert({ ride_id: rideId, sender_id: me, content: text });
+    setText("");
+  };
+
+  if (!open) return null;
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-foreground/40 z-50 flex items-end">
+      <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} className="bg-card w-full max-w-md mx-auto rounded-t-3xl flex flex-col h-[80vh]">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="font-bold">شات الرحلة</h3>
+          <button onClick={onClose}><X className="h-5 w-5" /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          {messages.length === 0 && <p className="text-center text-sm text-muted-foreground mt-10">ابدأ المحادثة 💬</p>}
+          {messages.map((m) => (
+            <div key={m.id} className={`flex ${m.sender_id === me ? "justify-start" : "justify-end"}`}>
+              <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${m.sender_id === me ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                {m.content}
+              </div>
+            </div>
+          ))}
+          <div ref={endRef} />
+        </div>
+        <div className="flex gap-2 p-3 border-t">
+          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب رسالتك..."
+            onKeyDown={(e) => e.key === "Enter" && send()} />
+          <Button onClick={send} size="icon" className="bg-gradient-primary"><Send className="h-4 w-4" /></Button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
