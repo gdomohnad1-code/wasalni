@@ -28,8 +28,11 @@ function AuthPage() {
   const [avatarPreview, setAvatarPreview] = useState<string>("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/home" });
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) {
+        const to = await destinationForUser(data.session.user.id);
+        navigate({ to });
+      }
     });
   }, [navigate]);
 
