@@ -257,14 +257,14 @@ function DriverApplicationForm({ docs, onDone }: { docs: any; onDone: () => void
       <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
         {step === 0 && (
           <>
-            <FileField label="صورة البطاقة (وجه)" k="id_card_front_url" url={urls.id_card_front_url} onPick={onPickFile("id_card_front_url")} highlight={needsFix("id_card_front_url")} />
-            <FileField label="صورة البطاقة (ظهر)" k="id_card_back_url" url={urls.id_card_back_url} onPick={onPickFile("id_card_back_url")} highlight={needsFix("id_card_back_url")} />
-            <FileField label="سيلفي شخصي" k="selfie_url" url={urls.selfie_url} onPick={onPickFile("selfie_url")} highlight={needsFix("selfie_url")} icon={Camera} />
+            <CameraField label="صورة البطاقة (وجه)" k="id_card_front_url" url={urls.id_card_front_url} preview={previews.id_card_front_url} uploading={uploadingKey === "id_card_front_url"} onCapture={onCapture("id_card_front_url")} onRetake={() => retake("id_card_front_url")} highlight={needsFix("id_card_front_url")} />
+            <CameraField label="صورة البطاقة (ظهر)" k="id_card_back_url" url={urls.id_card_back_url} preview={previews.id_card_back_url} uploading={uploadingKey === "id_card_back_url"} onCapture={onCapture("id_card_back_url")} onRetake={() => retake("id_card_back_url")} highlight={needsFix("id_card_back_url")} />
+            <CameraField label="سيلفي شخصي" k="selfie_url" url={urls.selfie_url} preview={previews.selfie_url} uploading={uploadingKey === "selfie_url"} onCapture={onCapture("selfie_url")} onRetake={() => retake("selfie_url")} highlight={needsFix("selfie_url")} facing="user" />
           </>
         )}
         {step === 1 && (
           <>
-            <FileField label="صورة رخصة القيادة" k="driver_license_url" url={urls.driver_license_url} onPick={onPickFile("driver_license_url")} highlight={needsFix("driver_license_url")} />
+            <CameraField label="رخصة القيادة (وجه)" k="driver_license_url" url={urls.driver_license_url} preview={previews.driver_license_url} uploading={uploadingKey === "driver_license_url"} onCapture={onCapture("driver_license_url")} onRetake={() => retake("driver_license_url")} highlight={needsFix("driver_license_url")} />
           </>
         )}
         {step === 2 && (
@@ -272,8 +272,8 @@ function DriverApplicationForm({ docs, onDone }: { docs: any; onDone: () => void
             <Field label="نوع السيارة" v={carType} setV={setCarType} placeholder="سيدان / SUV / هاتشباك" highlight={needsFix("car_type")} />
             <Field label="موديل السيارة" v={carModel} setV={setCarModel} placeholder="هيونداي اكسنت 2020" highlight={needsFix("car_model")} />
             <Field label="رقم اللوحة" v={carPlate} setV={setCarPlate} placeholder="أ ب ج 1234" highlight={needsFix("car_plate")} />
-            <FileField label="صورة السيارة" k="car_photo_url" url={urls.car_photo_url} onPick={onPickFile("car_photo_url")} highlight={needsFix("car_photo_url")} />
-            <FileField label="صورة رخصة السيارة" k="car_license_url" url={urls.car_license_url} onPick={onPickFile("car_license_url")} highlight={needsFix("car_license_url")} />
+            <CameraField label="صورة السيارة" k="car_photo_url" url={urls.car_photo_url} preview={previews.car_photo_url} uploading={uploadingKey === "car_photo_url"} onCapture={onCapture("car_photo_url")} onRetake={() => retake("car_photo_url")} highlight={needsFix("car_photo_url")} />
+            <CameraField label="رخصة السيارة" k="car_license_url" url={urls.car_license_url} preview={previews.car_license_url} uploading={uploadingKey === "car_license_url"} onCapture={onCapture("car_license_url")} onRetake={() => retake("car_license_url")} highlight={needsFix("car_license_url")} />
           </>
         )}
         {step === 3 && (
