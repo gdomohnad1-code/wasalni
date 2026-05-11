@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Shield, UserPlus, Mail, Crown, Eye, Bell, Wallet, UserCog, KeyRound, Loader2, Copy, Lock } from "lucide-react";
+import { Trash2, Shield, UserPlus, Mail, Crown, Eye, Bell, Wallet, UserCog, KeyRound, Loader2, Copy, Lock, FileDown, Printer, FileText } from "lucide-react";
+import jsPDF from "jspdf";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
