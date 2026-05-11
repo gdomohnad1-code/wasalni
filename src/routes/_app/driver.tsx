@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { submitDriverApplication } from "@/lib/driver-applications.functions";
 import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
-import { useDriverLocationBroadcast, triggerSOS } from "@/hooks/use-driver-location";
+import { useDriverLocationBroadcast, triggerSOS, useBatteryStatus } from "@/hooks/use-driver-location";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
