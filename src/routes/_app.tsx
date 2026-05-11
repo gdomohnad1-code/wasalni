@@ -3,6 +3,7 @@ import { Home, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useRideNotifications } from "@/hooks/use-ride-notifications";
+import { usePricingSync } from "@/hooks/use-pricing-sync";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
@@ -21,6 +22,7 @@ function AppLayout() {
   const loc = useLocation();
   const { t } = useI18n();
   useRideNotifications();
+  usePricingSync();
   const tabs = [
     { to: "/home", label: t("nav.home"), icon: Home },
     { to: "/profile", label: t("nav.account"), icon: User },

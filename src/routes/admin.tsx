@@ -20,6 +20,7 @@ import {
   Activity,
   Megaphone,
   UserPlus,
+  DollarSign,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ const NAV = [
   { to: "/admin/reports", label: "التقارير", icon: TrendingUp },
   { to: "/admin/ads", label: "الإعلانات", icon: Megaphone },
   { to: "/admin/influencers", label: "المؤثرون", icon: UserPlus },
+  { to: "/admin/pricing", label: "التسعير", icon: DollarSign },
   { to: "/admin/notifications", label: "الإشعارات", icon: Bell },
   { to: "/admin/admins", label: "المسؤولون", icon: Shield },
   { to: "/admin/permissions", label: "صلاحياتي", icon: ShieldQuestion },

@@ -17,6 +17,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminRidesRouteImport } from './routes/admin.rides'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminPricingRouteImport } from './routes/admin.pricing'
 import { Route as AdminPermissionsRouteImport } from './routes/admin.permissions'
 import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
@@ -82,6 +83,11 @@ const AdminRidersRoute = AdminRidersRouteImport.update({
 const AdminReportsRoute = AdminReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPricingRoute = AdminPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPermissionsRoute = AdminPermissionsRouteImport.update({
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/pricing': typeof AdminPricingRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rides': typeof AdminRidesRoute
@@ -283,6 +290,7 @@ export interface FileRoutesByTo {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/pricing': typeof AdminPricingRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rides': typeof AdminRidesRoute
@@ -321,6 +329,7 @@ export interface FileRoutesById {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
+  '/admin/pricing': typeof AdminPricingRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rides': typeof AdminRidesRoute
@@ -359,6 +368,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
+    | '/admin/pricing'
     | '/admin/reports'
     | '/admin/riders'
     | '/admin/rides'
@@ -394,6 +404,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
+    | '/admin/pricing'
     | '/admin/reports'
     | '/admin/riders'
     | '/admin/rides'
@@ -431,6 +442,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
+    | '/admin/pricing'
     | '/admin/reports'
     | '/admin/riders'
     | '/admin/rides'
@@ -505,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/admin/reports'
       preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pricing': {
+      id: '/admin/pricing'
+      path: '/pricing'
+      fullPath: '/admin/pricing'
+      preLoaderRoute: typeof AdminPricingRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/permissions': {
@@ -745,6 +764,7 @@ interface AdminRouteChildren {
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPayoutsRoute: typeof AdminPayoutsRoute
   AdminPermissionsRoute: typeof AdminPermissionsRoute
+  AdminPricingRoute: typeof AdminPricingRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminRidersRoute: typeof AdminRidersRoute
   AdminRidesRoute: typeof AdminRidesRoute
@@ -765,6 +785,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPayoutsRoute: AdminPayoutsRoute,
   AdminPermissionsRoute: AdminPermissionsRoute,
+  AdminPricingRoute: AdminPricingRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminRidersRoute: AdminRidersRoute,
   AdminRidesRoute: AdminRidesRoute,
