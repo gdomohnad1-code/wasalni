@@ -8,6 +8,7 @@ import {
   MessageSquareWarning,
   Car,
   TrendingUp,
+  Shield,
   LogOut,
   Bell,
   Menu,
@@ -37,6 +38,7 @@ const NAV = [
   { to: "/admin/complaints", label: "الشكاوى", icon: MessageSquareWarning },
   { to: "/admin/rides", label: "الرحلات", icon: Car },
   { to: "/admin/reports", label: "التقارير", icon: TrendingUp },
+  { to: "/admin/admins", label: "المسؤولون", icon: Shield },
 ] as const;
 
 function AdminLayout() {
