@@ -27,7 +27,7 @@ function AdminOverview() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    setLoading(true);
+    if (!stats) setLoading(true);
     const now = new Date();
     const startToday = new Date(now); startToday.setHours(0, 0, 0, 0);
     const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -81,7 +81,8 @@ function AdminOverview() {
       .channel("admin-overview")
       .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, load)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const iv = setInterval(load, 1000);
+    return () => { supabase.removeChannel(ch); clearInterval(iv); };
   }, []);
 
   if (loading || !stats) {
