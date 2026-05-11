@@ -420,7 +420,7 @@ function AdminsPage() {
               <TableHead className="text-right">الاسم</TableHead>
               <TableHead className="text-right">الدور الحالي</TableHead>
               <TableHead className="text-right w-56">تغيير الدور</TableHead>
-              <TableHead className="text-right w-32">إجراء</TableHead>
+              <TableHead className="text-right w-56">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
