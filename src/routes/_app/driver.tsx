@@ -17,6 +17,7 @@ import { useI18n } from "@/lib/i18n";
 import { DriverLiveMap, type LL } from "@/components/driver/DriverLiveMap";
 import { IncomingRideModal } from "@/components/driver/IncomingRideModal";
 import { DriverReadyScreen } from "@/components/driver/DriverReadyScreen";
+import { ArrivalConfirmModal } from "@/components/driver/ArrivalConfirmModal";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
@@ -434,6 +435,8 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const [earnings, setEarnings] = useState({ today: 0, total: 0, rides: 0 });
   const [incoming, setIncoming] = useState<any | null>(null);
   const [sosLoading, setSosLoading] = useState(false);
+  const [arrivalPrompt, setArrivalPrompt] = useState<null | "pickup" | "destination">(null);
+  const arrivalFiredRef = useRef<Set<string>>(new Set());
   const declinedRef = useRef<Set<string>>(loadDeclined());
 
   const isOnline = !!docs.is_online;
@@ -565,6 +568,28 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const distToTarget = pos && routeTo ? distKm(pos, routeTo) : 0;
   const etaMin = Math.max(1, Math.ceil((distToTarget / 35) * 60));
 
+  // Auto-detect arrival within ~120m and prompt the driver to confirm
+  useEffect(() => {
+    if (!activeRide || !routeTo || !pos) return;
+    if (phase !== "to_pickup" && phase !== "in_progress") return;
+    const key = `${activeRide.id}:${phase}`;
+    if (arrivalFiredRef.current.has(key)) return;
+    if (distToTarget <= 0.12) {
+      arrivalFiredRef.current.add(key);
+      setArrivalPrompt(phase === "to_pickup" ? "pickup" : "destination");
+      try {
+        new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=").play().catch(() => {});
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      } catch { /* ignore */ }
+    }
+  }, [distToTarget, phase, activeRide?.id, routeTo, pos]);
+
+  const confirmArrival = async () => {
+    if (arrivalPrompt === "pickup") await startTrip();
+    else if (arrivalPrompt === "destination") await endTrip();
+    setArrivalPrompt(null);
+  };
+
   return (
     <div className="fixed inset-0 bg-black overflow-hidden" dir="rtl">
       <DriverLiveMap
@@ -668,6 +693,14 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
         rideDistanceKm={Number(incoming?.distance_km || 0)}
         onAccept={acceptIncoming}
         onDismiss={dismissIncoming}
+      />
+
+      <ArrivalConfirmModal
+        open={!!arrivalPrompt}
+        kind={arrivalPrompt ?? "pickup"}
+        address={arrivalPrompt === "pickup" ? activeRide?.pickup_address ?? "" : activeRide?.destination_address ?? ""}
+        onConfirm={confirmArrival}
+        onDismiss={() => setArrivalPrompt(null)}
       />
 
       {showReady && <DriverReadyScreen onStart={closeReady} name={user?.user_metadata?.full_name?.split(" ")[0]} />}
