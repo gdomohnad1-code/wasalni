@@ -263,6 +263,10 @@ const dict = {
     "notif.ride_completed": "اكتملت الرحلة",
     "notif.ride_cancelled": "تم إلغاء الرحلة",
     "notif.new_ride_request": "طلب رحلة جديد",
+    "notif.center": "الإشعارات",
+    "notif.mark_all": "تعليم الكل كمقروء",
+    "notif.clear": "مسح الكل",
+    "notif.empty": "لا توجد إشعارات بعد",
   },
   en: {
     // nav
