@@ -357,3 +357,126 @@ function AdminsPage() {
     </div>
   );
 }
+
+const ALL_PERMS_FOR_CREATE: AdminPerm[] = ["super_admin", "full_control", "assigner", "collections", "notifications", "viewer"];
+
+function DirectCreateAdmin({ onCreated }: { onCreated: () => void }) {
+  const create = useServerFn(createAdminAccount);
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [perm, setPerm] = useState<AdminPerm>("viewer");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ login_email: string; is_synthetic_email: boolean } | null>(null);
+
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
+    let p = "";
+    for (let i = 0; i < 12; i++) p += chars[Math.floor(Math.random() * chars.length)];
+    setPassword(p);
+  };
+
+  const submit = async () => {
+    if (!identifier.trim() || !password.trim() || !name.trim()) {
+      toast.error("املأ كل الحقول");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("كلمة المرور 6 أحرف على الأقل");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res: any = await create({
+        data: {
+          identifier: identifier.trim(),
+          password,
+          full_name: name.trim(),
+          permission: perm,
+        },
+      });
+      setResult({ login_email: res.login_email, is_synthetic_email: res.is_synthetic_email });
+      toast.success("تم إنشاء حساب المسؤول ✅");
+      setIdentifier(""); setPassword(""); setName(""); setPerm("viewer");
+      onCreated();
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذّر الإنشاء");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="p-5 border-primary/30 bg-primary/5">
+      <h3 className="font-bold mb-1 flex items-center gap-2">
+        <KeyRound className="h-4 w-4 text-primary" /> إنشاء حساب مسؤول مباشرة
+      </h3>
+      <p className="text-xs text-muted-foreground mb-4">
+        أنشئ حساب أدمن فورًا بكلمة مرور — يمكن استخدام بريد إلكتروني أو اسم مستخدم عادي (هيتحول داخليًا إلى بريد).
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs font-semibold mb-1 block">الاسم الكامل</label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="أحمد محمد" />
+        </div>
+        <div>
+          <label className="text-xs font-semibold mb-1 block">البريد أو اسم المستخدم</label>
+          <Input
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="ahmed أو ahmed@example.com"
+            dir="ltr"
+            className="text-left"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-semibold mb-1 block">كلمة المرور</label>
+          <div className="flex gap-2">
+            <Input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="كلمة مرور قوية"
+              dir="ltr"
+              className="text-left flex-1"
+            />
+            <Button type="button" variant="outline" size="sm" onClick={generatePassword}>توليد</Button>
+          </div>
+        </div>
+        <div>
+          <label className="text-xs font-semibold mb-1 block">الدور</label>
+          <Select value={perm} onValueChange={(v) => setPerm(v as AdminPerm)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ALL_PERMS_FOR_CREATE.map((p) => (
+                <SelectItem key={p} value={p}>{PERM_META[p].label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <Button onClick={submit} disabled={busy} className="mt-4 w-full md:w-auto">
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4 ml-1" /> إنشاء الحساب</>}
+      </Button>
+
+      {result && (
+        <div className="mt-4 p-3 rounded-lg bg-card border border-primary/30 text-sm space-y-1">
+          <p className="font-bold text-primary">✅ تم الإنشاء — معلومات الدخول:</p>
+          <div className="flex items-center gap-2" dir="ltr">
+            <span className="text-muted-foreground">Email:</span>
+            <code className="bg-muted px-2 py-0.5 rounded font-mono text-xs">{result.login_email}</code>
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { navigator.clipboard.writeText(result.login_email); toast.success("تم النسخ"); }}>
+              <Copy className="h-3 w-3" />
+            </Button>
+          </div>
+          {result.is_synthetic_email && (
+            <p className="text-[11px] text-muted-foreground">
+              ℹ️ يستخدم اسم المستخدم — يجب على المسؤول الجديد الدخول بهذا البريد بالكامل.
+            </p>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
