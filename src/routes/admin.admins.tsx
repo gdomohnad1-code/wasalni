@@ -389,19 +389,45 @@ function AdminsPage() {
       toast.error("بريد إلكتروني غير صالح");
       return;
     }
+    if (newPw && newPw.length < 6) {
+      toast.error("كلمة المرور 6 أحرف على الأقل");
+      return;
+    }
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
+
+    // Always register the email + default permission
     const { error } = await supabase
       .from("admin_emails")
-      .insert({ email, default_permission: newPerm, created_by: user?.id });
-    setLoading(false);
+      .upsert({ email, default_permission: newPerm, created_by: user?.id }, { onConflict: "email" });
     if (error) {
+      setLoading(false);
       toast.error(error.message.includes("duplicate") ? "هذا البريد مضاف مسبقًا" : "تعذّر الإضافة");
       return;
     }
-    toast.success(`تمت الإضافة بدور: ${PERM_META[newPerm].label}`);
-    setNewEmail("");
-    setNewPerm("viewer");
+
+    // If a password was supplied, create the actual auth account immediately
+    if (newPw) {
+      try {
+        await createAdmin({
+          data: {
+            identifier: email,
+            password: newPw,
+            full_name: newName.trim() || email.split("@")[0],
+            permission: newPerm,
+          },
+        });
+        setCreatedInfo({ email, password: newPw });
+        toast.success("تم إنشاء الحساب وكلمة المرور جاهزة ✅");
+      } catch (e: any) {
+        toast.error(e?.message ?? "تم تسجيل البريد لكن تعذّر إنشاء الحساب");
+      }
+    } else {
+      toast.success(`تمت الإضافة بدور: ${PERM_META[newPerm].label}`);
+    }
+
+    setLoading(false);
+    setNewEmail(""); setNewPerm("viewer"); setNewName(""); setNewPw("");
     load();
   };
 
