@@ -105,18 +105,20 @@ export function RideMap({
   const [tripPath, setTripPath] = useState<LL[]>([]);
   const [approachPath, setApproachPath] = useState<LL[]>([]);
   const [realDriver, setRealDriver] = useState<LL | null>(null);
+  const [mapStyle, setMapStyle] = useState<"streets" | "satellite">(
+    () => (typeof window !== "undefined" && (localStorage.getItem("map_style") as any)) || "streets"
+  );
+  const baseLayerRef = useRef<L.TileLayer | null>(null);
+  const labelsLayerRef = useRef<L.TileLayer | null>(null);
 
   // Init map
   useEffect(() => {
     if (!elRef.current || mapRef.current) return;
     const map = L.map(elRef.current, { zoomControl: false, attributionControl: false })
       .setView([pickup.lat, pickup.lng], 13);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 19, subdomains: "abcd",
-    }).addTo(map);
     L.control.zoom({ position: "bottomright" }).addTo(map);
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; layersRef.current = {}; };
+    return () => { map.remove(); mapRef.current = null; layersRef.current = {}; baseLayerRef.current = null; labelsLayerRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
