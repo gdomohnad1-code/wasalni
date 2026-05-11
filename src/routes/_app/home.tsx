@@ -26,12 +26,6 @@ const offers = [
   { title: "ادعو صديق واكسب 30 ج.م", sub: "نظام الإحالة", glyph: "🤝" },
 ];
 
-      {/* Ads */}
-      <div className="px-5 mt-4">
-        <AdSlot placement="home" />
-      </div>
-
-
 function HomePage() {
   const { profile } = useAuth();
   const { t } = useI18n();
