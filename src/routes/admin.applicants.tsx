@@ -160,9 +160,22 @@ function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; on
     car_plate: "",
   });
   const [docs, setDocs] = useState<Record<string, string>>({});
+  const [previews, setPreviews] = useState<
+    Record<string, { url: string; name: string; type: string; size: number }>
+  >({});
   const [uploadingKind, setUploadingKind] = useState<DocKind | null>(null);
   const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
   const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }));
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(previews).forEach((p) => {
+        try { URL.revokeObjectURL(p.url); } catch {}
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const genPw = () => {
     const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
@@ -185,12 +198,41 @@ function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; on
         },
       });
       setDocs((p) => ({ ...p, [urlField]: res.path }));
+      setPreviews((p) => {
+        if (p[urlField]) {
+          try { URL.revokeObjectURL(p[urlField].url); } catch {}
+        }
+        return {
+          ...p,
+          [urlField]: {
+            url: URL.createObjectURL(file),
+            name: file.name,
+            type: file.type || "application/octet-stream",
+            size: file.size,
+          },
+        };
+      });
       toast.success("تم رفع الملف ✅");
     } catch (e: any) {
       toast.error(e?.message ?? "فشل الرفع");
     } finally {
       setUploadingKind(null);
     }
+  };
+
+  const removeDoc = (urlField: string) => {
+    setDocs((p) => {
+      const n = { ...p };
+      delete n[urlField];
+      return n;
+    });
+    setPreviews((p) => {
+      const cur = p[urlField];
+      if (cur) { try { URL.revokeObjectURL(cur.url); } catch {} }
+      const n = { ...p };
+      delete n[urlField];
+      return n;
+    });
   };
 
   const submit = async () => {
