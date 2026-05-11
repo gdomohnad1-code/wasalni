@@ -8,6 +8,7 @@ import {
   rejectApplication,
   requestApplicationChanges,
   manuallyCreateDriver,
+  adminUploadDriverDoc,
 } from "@/lib/driver-applications.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
