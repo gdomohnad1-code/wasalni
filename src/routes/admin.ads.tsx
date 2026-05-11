@@ -259,7 +259,7 @@ function AdsManagerPage() {
 function AdEditor({
   open, onOpenChange, editing, onSaved,
 }: { open: boolean; onOpenChange: (v: boolean) => void; editing: AdRow | null; onSaved: () => void }) {
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<AdForm>(makeEmptyForm());
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -290,7 +290,7 @@ function AdEditor({
         auto_rotate: editing.auto_rotate ?? true,
       });
     } else {
-      setForm(emptyForm);
+      setForm(makeEmptyForm());
     }
   }, [editing, open]);
 
@@ -537,7 +537,7 @@ function AdEditor({
   );
 }
 
-function PreviewCard({ form }: { form: typeof emptyForm }) {
+function PreviewCard({ form }: { form: AdForm }) {
   return (
     <div className="max-w-sm mx-auto">
       <Card className="overflow-hidden">
