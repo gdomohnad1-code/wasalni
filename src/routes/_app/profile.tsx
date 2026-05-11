@@ -14,28 +14,28 @@ function ProfilePage() {
 
   return (
     <div className="max-w-md mx-auto pb-8">
-      {/* بطاقة المستخدم */}
-      <div className="bg-gradient-hero text-primary-foreground p-6 pb-12 rounded-b-3xl shadow-soft">
+      {/* بطاقة المستخدم — Uber Light */}
+      <div className="bg-background border-b border-border p-6">
         <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur overflow-hidden border-2 border-white/40 shrink-0">
+          <div className="h-16 w-16 rounded-full bg-muted overflow-hidden border border-border shrink-0">
             {profile?.avatar_url
               ? <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
               : <div className="h-full w-full flex items-center justify-center text-2xl">👤</div>}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-bold text-lg truncate">{profile?.full_name || "—"}</h2>
-            <p className="text-xs opacity-80 truncate">{user?.email}</p>
+            <h2 className="font-bold text-lg truncate text-foreground">{profile?.full_name || "—"}</h2>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             <div className="flex items-center gap-1 mt-1">
-              <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+              <Star className="h-3.5 w-3.5 fill-foreground text-foreground" />
               <span className="text-xs font-bold">{profile?.rating?.toFixed(1) || "5.0"}</span>
-              <span className="text-xs opacity-70 mx-1">•</span>
+              <span className="text-xs text-muted-foreground mx-1">•</span>
               <span className="text-xs">{profile?.wallet_balance?.toFixed(0) || 0} ج.م</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="px-4 -mt-8 space-y-3">
+      <div className="px-4 mt-3 space-y-3">
         {/* القائمة الرئيسية */}
         <Section>
           <Item to="/home" icon={Home} label="الرئيسية" emoji="🏠" />
