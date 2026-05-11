@@ -293,13 +293,44 @@ const ManualCreateSchema = z.object({
   car_type: z.string().trim().max(60).optional().nullable(),
   car_model: z.string().trim().max(80).optional().nullable(),
   car_plate: z.string().trim().max(40).optional().nullable(),
-  id_card_front_url: z.string().url().optional().nullable(),
-  id_card_back_url: z.string().url().optional().nullable(),
-  selfie_url: z.string().url().optional().nullable(),
-  driver_license_url: z.string().url().optional().nullable(),
-  car_photo_url: z.string().url().optional().nullable(),
-  car_license_url: z.string().url().optional().nullable(),
+  id_card_front_url: z.string().min(1).optional().nullable(),
+  id_card_back_url: z.string().min(1).optional().nullable(),
+  selfie_url: z.string().min(1).optional().nullable(),
+  driver_license_url: z.string().min(1).optional().nullable(),
+  car_photo_url: z.string().min(1).optional().nullable(),
+  car_license_url: z.string().min(1).optional().nullable(),
 });
+
+// Super-admin upload helper: accepts base64 file, stores in driver-applications bucket
+const UploadSchema = z.object({
+  kind: z.enum([
+    "id_card_front",
+    "id_card_back",
+    "selfie",
+    "driver_license",
+    "car_photo",
+    "car_license",
+  ]),
+  filename: z.string().min(1).max(200),
+  content_type: z.string().min(1).max(120),
+  base64: z.string().min(10).max(15_000_000),
+});
+
+export const adminUploadDriverDoc = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => UploadSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await ensureMainSuperAdmin(context.userId);
+    const ext = (data.filename.split(".").pop() || "bin").toLowerCase().slice(0, 8);
+    const folder = `manual/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const path = `${folder}/${data.kind}.${ext}`;
+    const buf = Buffer.from(data.base64, "base64");
+    const { error } = await supabaseAdmin.storage
+      .from("driver-applications")
+      .upload(path, buf, { contentType: data.content_type, upsert: true });
+    if (error) throw new Response(error.message, { status: 500 });
+    return { path: `driver-applications/${path}` };
+  });
 
 async function ensureMainSuperAdmin(userId: string) {
   const { data: u } = await supabaseAdmin.auth.admin.getUserById(userId);
