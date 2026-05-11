@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Upload, Siren, Activity } from "lucide-react";
+import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Upload, Siren, Activity, BatteryFull, BatteryLow, BatteryCharging } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { submitDriverApplication } from "@/lib/driver-applications.functions";
 import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
-import { useDriverLocationBroadcast, triggerSOS } from "@/hooks/use-driver-location";
+import { useDriverLocationBroadcast, triggerSOS, useBatteryStatus } from "@/hooks/use-driver-location";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
@@ -347,6 +347,7 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
 
   // Live location broadcast (every 8s while online)
   useDriverLocationBroadcast({ enabled: isOnline, presence, rideId: currentRide });
+  const battery = useBatteryStatus();
 
   const load = async () => {
     if (!user) return;
@@ -403,6 +404,19 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
               <div className="flex items-center gap-1.5 mt-2 text-xs opacity-90">
                 <Activity className="h-3 w-3 animate-pulse" />
                 <span>يتم بث الموقع</span>
+              </div>
+            )}
+            {battery && (
+              <div className="flex items-center gap-1.5 mt-1 text-xs opacity-90">
+                {battery.charging
+                  ? <BatteryCharging className="h-3 w-3" />
+                  : battery.level <= 0.2
+                    ? <BatteryLow className="h-3 w-3 text-red-200" />
+                    : <BatteryFull className="h-3 w-3" />}
+                <span>
+                  {Math.round(battery.level * 100)}%
+                  {!battery.charging && battery.level <= 0.2 && " · وضع توفير الطاقة"}
+                </span>
               </div>
             )}
           </div>
