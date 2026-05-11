@@ -79,6 +79,17 @@ function ProfilePage() {
         </Button>
 
         <p className="text-center text-[11px] text-muted-foreground pt-2">{t("profile.version")}</p>
+        <p className="text-center text-[11px] text-muted-foreground pb-4">
+          تم التطوير بواسطة{" "}
+          <a
+            href="https://www.rivatalent.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-primary hover:underline"
+          >
+            Riva Talent
+          </a>
+        </p>
       </div>
     </div>
   );
