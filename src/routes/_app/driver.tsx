@@ -380,56 +380,164 @@ function SummaryRow({ label, v }: { label: string; v: string }) {
 }
 
 
+// ============= Driver Dashboard (Uber-style) =============
+
+const READY_KEY = (uid: string) => `wsl_driver_ready_seen_${uid}`;
+const DECLINED_KEY = "wsl_declined_rides";
+
+function loadDeclined(): Set<string> {
+  try {
+    const raw = sessionStorage.getItem(DECLINED_KEY);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch { return new Set(); }
+}
+function saveDeclined(s: Set<string>) {
+  try { sessionStorage.setItem(DECLINED_KEY, JSON.stringify([...s])); } catch {}
+}
+
+function distKm(a: LL, b: LL) {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const la1 = (a.lat * Math.PI) / 180;
+  const la2 = (b.lat * Math.PI) / 180;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+function aggregateHotspots(rides: any[], cellSize = 0.01) {
+  const cells = new Map<string, { lat: number; lng: number; count: number }>();
+  rides.forEach((r) => {
+    if (!r.pickup_lat || !r.pickup_lng) return;
+    const key = `${Math.round(r.pickup_lat / cellSize)},${Math.round(r.pickup_lng / cellSize)}`;
+    const cur = cells.get(key);
+    if (cur) {
+      cur.count++;
+      cur.lat = (cur.lat * (cur.count - 1) + Number(r.pickup_lat)) / cur.count;
+      cur.lng = (cur.lng * (cur.count - 1) + Number(r.pickup_lng)) / cur.count;
+    } else {
+      cells.set(key, { lat: Number(r.pickup_lat), lng: Number(r.pickup_lng), count: 1 });
+    }
+  });
+  return [...cells.values()]
+    .filter((c) => c.count >= 2)
+    .map((c) => ({ lat: c.lat, lng: c.lng, weight: Math.min(c.count - 1, 5) }));
+}
+
 function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => void }) {
   const { user } = useAuth();
-  const [available, setAvailable] = useState<any[]>([]);
-  const [active, setActive] = useState<any[]>([]);
-  const [earnings, setEarnings] = useState(0);
-  const [tab, setTab] = useState("available");
+  const [showReady, setShowReady] = useState(false);
+  const [pos, setPos] = useState<LL | null>(null);
+  const [heading, setHeading] = useState<number | null>(null);
+  const [searchingRides, setSearchingRides] = useState<any[]>([]);
+  const [activeRide, setActiveRide] = useState<any>(null);
+  const [earnings, setEarnings] = useState({ today: 0, total: 0, rides: 0 });
+  const [incoming, setIncoming] = useState<any | null>(null);
   const [sosLoading, setSosLoading] = useState(false);
+  const declinedRef = useRef<Set<string>>(loadDeclined());
 
   const isOnline = !!docs.is_online;
-  const currentRide = active[0]?.id ?? null;
   const presence: "available" | "busy" | "offline" =
-    !isOnline ? "offline" : currentRide ? "busy" : "available";
+    !isOnline ? "offline" : activeRide ? "busy" : "available";
 
-  // Live location broadcast (every 8s while online)
-  useDriverLocationBroadcast({ enabled: isOnline, presence, rideId: currentRide });
+  useEffect(() => {
+    if (!user) return;
+    if (docs.approved && docs.account_status === "active" && !localStorage.getItem(READY_KEY(user.id))) {
+      setShowReady(true);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setPos({ lat: 30.0444, lng: 31.2357 });
+      return;
+    }
+    const id = navigator.geolocation.watchPosition(
+      (p) => {
+        setPos({ lat: p.coords.latitude, lng: p.coords.longitude });
+        if (p.coords.heading != null && !isNaN(p.coords.heading)) setHeading(p.coords.heading);
+      },
+      () => setPos((cur) => cur ?? { lat: 30.0444, lng: 31.2357 }),
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
+    );
+    return () => navigator.geolocation.clearWatch(id);
+  }, []);
+
+  useDriverLocationBroadcast({ enabled: isOnline, presence, rideId: activeRide?.id ?? null });
   const battery = useBatteryStatus();
 
   const load = async () => {
     if (!user) return;
-    const [av, ac, comp] = await Promise.all([
-      supabase.from("rides").select("*").eq("status", "searching").order("created_at", { ascending: false }).limit(20),
-      supabase.from("rides").select("*").eq("driver_id", user.id).in("status", ["accepted", "in_progress"]).order("created_at", { ascending: false }),
+    const [av, ac, comp, today] = await Promise.all([
+      supabase.from("rides").select("*").eq("status", "searching").order("created_at", { ascending: false }).limit(50),
+      supabase.from("rides").select("*").eq("driver_id", user.id).in("status", ["accepted", "in_progress"]).maybeSingle(),
       supabase.from("rides").select("price").eq("driver_id", user.id).eq("status", "completed"),
+      supabase.from("rides").select("price, completed_at").eq("driver_id", user.id).eq("status", "completed").gte("completed_at", new Date(new Date().setHours(0,0,0,0)).toISOString()),
     ]);
-    setAvailable(av.data || []);
-    setActive(ac.data || []);
-    setEarnings((comp.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8);
+    setSearchingRides(av.data || []);
+    setActiveRide(ac.data || null);
+    const totalE = (comp.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8;
+    const todayE = (today.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8;
+    setEarnings({ today: todayE, total: totalE, rides: (today.data || []).length });
   };
 
   useEffect(() => {
     load();
-    const ch = supabase.channel("driver-rides")
+    const ch = supabase.channel("driver-rides-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
-  const accept = async (r: any) => {
-    if (!user) return;
+  const hotspots = useMemo(() => aggregateHotspots(searchingRides), [searchingRides]);
+
+  useEffect(() => {
+    if (!isOnline || activeRide || incoming || !pos) return;
+    const candidates = searchingRides
+      .filter((r) => !declinedRef.current.has(r.id) && r.pickup_lat && r.pickup_lng && r.rider_id !== user?.id)
+      .map((r) => ({ r, d: distKm(pos, { lat: Number(r.pickup_lat), lng: Number(r.pickup_lng) }) }))
+      .filter((x) => x.d < 15)
+      .sort((a, b) => a.d - b.d);
+    if (candidates.length) setIncoming(candidates[0].r);
+  }, [searchingRides, isOnline, activeRide, incoming, pos, user?.id]);
+
+  const acceptIncoming = async () => {
+    if (!incoming || !user) return;
+    const ride = incoming;
+    setIncoming(null);
     const { error } = await supabase.from("rides").update({
       driver_id: user.id, status: "accepted", accepted_at: new Date().toISOString(),
-    }).eq("id", r.id).eq("status", "searching");
-    if (error) return toast.error(error.message);
-    toast.success("قبلت الرحلة");
+    }).eq("id", ride.id).eq("status", "searching");
+    if (error) { toast.error("الرحلة تم أخذها بالفعل"); return; }
+    toast.success("قبلت الرحلة ✅");
+    load();
+  };
+
+  const dismissIncoming = () => {
+    if (incoming) {
+      declinedRef.current.add(incoming.id);
+      saveDeclined(declinedRef.current);
+    }
+    setIncoming(null);
+  };
+
+  const startTrip = async () => {
+    if (!activeRide) return;
+    await supabase.from("rides").update({ status: "in_progress", started_at: new Date().toISOString() }).eq("id", activeRide.id);
+    toast.success("بدأت الرحلة");
+  };
+  const endTrip = async () => {
+    if (!activeRide) return;
+    await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", activeRide.id);
+    toast.success("تم إنهاء الرحلة 💰");
   };
 
   const toggleOnline = async (v: boolean) => {
     if (!user) return;
     await supabase.from("driver_documents").update({ is_online: v }).eq("driver_id", user.id);
     setDocs({ ...docs, is_online: v });
+    toast.success(v ? "أنت الآن متاح للعمل" : "تم إيقاف الاستقبال");
   };
 
   const sendSOS = async () => {
@@ -441,112 +549,247 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
     toast.success("تم إرسال إشارة الطوارئ");
   };
 
+  const closeReady = () => {
+    if (user) localStorage.setItem(READY_KEY(user.id), "1");
+    setShowReady(false);
+    if (!isOnline) toggleOnline(true);
+  };
+
+  const phase: "idle" | "to_pickup" | "in_progress" = !activeRide
+    ? "idle"
+    : activeRide.status === "accepted" ? "to_pickup" : "in_progress";
+
+  const pickup: LL | null = activeRide?.pickup_lat ? { lat: Number(activeRide.pickup_lat), lng: Number(activeRide.pickup_lng) } : null;
+  const destination: LL | null = activeRide?.destination_lat ? { lat: Number(activeRide.destination_lat), lng: Number(activeRide.destination_lng) } : null;
+  const routeTo: LL | null = phase === "to_pickup" ? pickup : phase === "in_progress" ? destination : null;
+  const distToTarget = pos && routeTo ? distKm(pos, routeTo) : 0;
+  const etaMin = Math.max(1, Math.ceil((distToTarget / 35) * 60));
+
   return (
-    <div className="max-w-md mx-auto">
-      <div className="bg-gradient-hero text-primary-foreground p-6 rounded-b-3xl">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="font-bold text-xl">واجهة السائق</h1>
-            <p className="text-sm opacity-90">{docs.car_model} · {docs.car_plate}</p>
-            {isOnline && (
-              <div className="flex items-center gap-1.5 mt-2 text-xs opacity-90">
-                <Activity className="h-3 w-3 animate-pulse" />
-                <span>يتم بث الموقع</span>
+    <div className="fixed inset-0 bg-black overflow-hidden" dir="rtl">
+      <DriverLiveMap
+        driver={pos}
+        heading={heading}
+        hotspots={isOnline && !activeRide ? hotspots : []}
+        pickup={pickup}
+        destination={phase === "in_progress" ? destination : null}
+        routeTo={routeTo}
+        className="absolute inset-0"
+      />
+
+      <div className="absolute top-0 inset-x-0 z-20 p-4 pointer-events-none">
+        <div className="flex justify-between items-start gap-3 pointer-events-auto">
+          <div className="bg-black/80 backdrop-blur-md text-white rounded-2xl px-4 py-3 shadow-xl flex items-center gap-3">
+            <button
+              onClick={() => toggleOnline(!isOnline)}
+              className={`h-11 w-11 rounded-full grid place-items-center transition ${isOnline ? "bg-emerald-500" : "bg-gray-700"}`}
+              aria-label="toggle online"
+            >
+              <Power className="h-5 w-5" />
+            </button>
+            <div>
+              <div className="text-[10px] uppercase opacity-60 tracking-widest">الحالة</div>
+              <div className="font-black text-sm flex items-center gap-1.5">
+                {isOnline ? (
+                  <><span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> متاح</>
+                ) : "غير متاح"}
               </div>
-            )}
-            {battery && (
-              <div className="flex items-center gap-1.5 mt-1 text-xs opacity-90">
-                {battery.charging
-                  ? <BatteryCharging className="h-3 w-3" />
-                  : battery.level <= 0.2
-                    ? <BatteryLow className="h-3 w-3 text-red-200" />
-                    : <BatteryFull className="h-3 w-3" />}
-                <span>
-                  {Math.round(battery.level * 100)}%
-                  {!battery.charging && battery.level <= 0.2 && " · وضع توفير الطاقة"}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col gap-2 items-end">
-            <div className="flex items-center gap-2 bg-white/15 backdrop-blur px-3 py-2 rounded-full">
-              <span className="text-xs font-bold">{isOnline ? "متاح" : "غير متاح"}</span>
-              <Switch checked={isOnline} onCheckedChange={toggleOnline} />
             </div>
-            <Button onClick={sendSOS} disabled={sosLoading} size="sm" className="bg-destructive hover:bg-destructive/90 gap-1.5 h-8">
-              <Siren className="h-3.5 w-3.5" /> SOS
-            </Button>
+          </div>
+
+          <div className="flex flex-col gap-2 items-end">
+            <div className="bg-black/80 backdrop-blur-md text-white rounded-2xl px-4 py-2 shadow-xl text-end">
+              <div className="text-[10px] uppercase opacity-60 tracking-widest">أرباح اليوم</div>
+              <div className="font-black text-lg leading-tight">{earnings.today.toFixed(0)} ج.م</div>
+              <div className="text-[10px] opacity-70">{earnings.rides} رحلة</div>
+            </div>
+            <button
+              onClick={sendSOS}
+              disabled={sosLoading}
+              className="h-10 w-10 rounded-full bg-red-500 hover:bg-red-600 grid place-items-center shadow-xl text-white"
+              aria-label="SOS"
+            >
+              <Siren className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-5">
-          <Stat icon={DollarSign} label="الأرباح" value={`${earnings.toFixed(0)} ج.م`} />
-          <Stat icon={Car} label="نشطة" value={String(active.length)} />
-        </div>
-      </div>
-
-      <div className="px-4 mt-4">
-        <AdSlot placement="driver_app" />
-      </div>
-
-      <Tabs value={tab} onValueChange={setTab} className="p-4">
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="available">متاحة ({available.length})</TabsTrigger>
-          <TabsTrigger value="active">نشطة ({active.length})</TabsTrigger>
-          <TabsTrigger value="earnings">الأرباح</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="available" className="space-y-2 mt-4">
-          {available.length === 0 && <Empty msg="لا يوجد رحلات متاحة حالياً" />}
-          {available.map((r) => <RideCard key={r.id} r={r} action={() => accept(r)} actionLabel="قبول" />)}
-        </TabsContent>
-        <TabsContent value="active" className="space-y-2 mt-4">
-          {active.length === 0 && <Empty msg="لا يوجد رحلات نشطة" />}
-          {active.map((r) => <RideCard key={r.id} r={r} action={() => window.location.assign(`/ride/${r.id}`)} actionLabel="فتح" />)}
-        </TabsContent>
-        <TabsContent value="earnings" className="mt-4">
-          <div className="bg-card rounded-2xl p-6 shadow-card text-center">
-            <DollarSign className="h-10 w-10 text-primary mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">إجمالي الأرباح</p>
-            <p className="text-4xl font-black text-primary mt-1">{earnings.toFixed(0)} ج.م</p>
-            <p className="text-xs text-muted-foreground mt-2">عمولة وصلني 20%</p>
+        {battery && !battery.charging && battery.level <= 0.2 && (
+          <div className="mt-2 mx-auto w-fit bg-red-500/90 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1.5 pointer-events-auto">
+            <BatteryLow className="h-3.5 w-3.5" /> بطارية {Math.round(battery.level * 100)}% — وضع توفير
           </div>
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
+
+      <div className="absolute bottom-0 inset-x-0 z-20">
+        {!activeRide && (
+          <IdlePanel
+            isOnline={isOnline}
+            searchingCount={searchingRides.filter((r) => r.rider_id !== user?.id).length}
+            hotspotCount={hotspots.length}
+            todayEarnings={earnings.today}
+            totalRides={earnings.rides}
+            car={`${docs.car_model || ""} · ${docs.car_plate || ""}`}
+          />
+        )}
+        {activeRide && phase === "to_pickup" && (
+          <ToPickupPanel
+            address={activeRide.pickup_address}
+            distanceKm={distToTarget}
+            etaMin={etaMin}
+            onArrived={startTrip}
+          />
+        )}
+        {activeRide && phase === "in_progress" && (
+          <InTripPanel
+            address={activeRide.destination_address}
+            distanceKm={distToTarget}
+            etaMin={etaMin}
+            price={activeRide.price}
+            onEnd={endTrip}
+          />
+        )}
+      </div>
+
+      <IncomingRideModal
+        open={!!incoming}
+        etaToPickupSec={
+          incoming && pos
+            ? (distKm(pos, { lat: Number(incoming.pickup_lat), lng: Number(incoming.pickup_lng) }) / 35) * 3600
+            : 0
+        }
+        distanceToPickupKm={
+          incoming && pos
+            ? distKm(pos, { lat: Number(incoming.pickup_lat), lng: Number(incoming.pickup_lng) })
+            : 0
+        }
+        rideDistanceKm={Number(incoming?.distance_km || 0)}
+        onAccept={acceptIncoming}
+        onDismiss={dismissIncoming}
+      />
+
+      {showReady && <DriverReadyScreen onStart={closeReady} name={user?.user_metadata?.full_name?.split(" ")[0]} />}
     </div>
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car }: {
+  isOnline: boolean; searchingCount: number; hotspotCount: number;
+  todayEarnings: number; totalRides: number; car: string;
+}) {
   return (
-    <div className="bg-white/15 backdrop-blur rounded-xl p-3">
-      <Icon className="h-4 w-4 mb-1" />
-      <div className="text-xs opacity-90">{label}</div>
-      <div className="font-bold text-lg">{value}</div>
-    </div>
-  );
-}
-
-function RideCard({ r, action, actionLabel }: { r: any; action: () => void; actionLabel: string }) {
-  const type = RIDE_TYPES[r.ride_type as RideTypeKey];
-  return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl p-4 shadow-card">
-      <div className="flex justify-between items-start mb-2">
-        <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-bold">{type?.icon} {type?.label}</span>
-        <span className="font-bold text-primary text-lg">{r.price} ج.م</span>
-      </div>
-      <div className="text-sm space-y-1 mb-3">
-        <div className="flex items-center gap-2"><MapPin className="h-3 w-3 text-primary" /> {r.pickup_address}</div>
-        <div className="flex items-center gap-2"><MapPin className="h-3 w-3 text-destructive" /> {r.destination_address}</div>
-      </div>
-      <div className="flex justify-between items-center text-xs text-muted-foreground mb-3">
-        <span>{r.distance_km} كم · {r.duration_min} دقيقة</span>
-      </div>
-      <Button onClick={action} className="w-full bg-gradient-primary">{actionLabel}</Button>
+    <motion.div
+      initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+      className="bg-white rounded-t-3xl shadow-2xl p-5 pb-7"
+    >
+      <div className="h-1.5 w-12 bg-gray-200 rounded-full mx-auto mb-4" />
+      {!isOnline ? (
+        <div className="text-center py-2">
+          <p className="text-lg font-black">اضغط على زر التشغيل لاستقبال الرحلات</p>
+          <p className="text-sm text-gray-500 mt-1">{car}</p>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-3">
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="h-12 w-12 rounded-full bg-emerald-100 grid place-items-center"
+            >
+              <Activity className="h-6 w-6 text-emerald-600" />
+            </motion.div>
+            <div className="flex-1">
+              <p className="font-black text-base">في انتظار طلبات الرحلات...</p>
+              <p className="text-xs text-gray-500">{car}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            <Pill icon={<Clock className="h-3.5 w-3.5" />} label="طلبات قريبة" value={String(searchingCount)} />
+            <Pill icon={<MapPin className="h-3.5 w-3.5" />} label="مناطق مزدحمة" value={String(hotspotCount)} accent="red" />
+            <Pill icon={<DollarSign className="h-3.5 w-3.5" />} label="رحلات اليوم" value={String(totalRides)} />
+          </div>
+          {hotspotCount > 0 && (
+            <div className="mt-3 bg-red-50 border border-red-100 rounded-xl p-2.5 text-xs text-red-700 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              الدوائر الحمراء على الخريطة = مناطق فيها طلبات كتيرة الآن
+            </div>
+          )}
+        </>
+      )}
     </motion.div>
   );
 }
 
-function Empty({ msg }: { msg: string }) {
-  return <p className="text-center text-sm text-muted-foreground py-10">{msg}</p>;
+function Pill({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent?: "red" }) {
+  return (
+    <div className={`rounded-xl p-2.5 text-center ${accent === "red" ? "bg-red-50" : "bg-gray-50"}`}>
+      <div className={`flex items-center justify-center gap-1 text-[10px] ${accent === "red" ? "text-red-600" : "text-gray-500"}`}>{icon}{label}</div>
+      <div className={`font-black text-base mt-0.5 ${accent === "red" ? "text-red-700" : ""}`}>{value}</div>
+    </div>
+  );
+}
+
+function ToPickupPanel({ address, distanceKm, etaMin, onArrived }: {
+  address: string; distanceKm: number; etaMin: number; onArrived: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+      className="bg-white rounded-t-3xl shadow-2xl p-5 pb-7"
+    >
+      <div className="h-1.5 w-12 bg-gray-200 rounded-full mx-auto mb-4" />
+      <div className="flex items-center gap-3 mb-4">
+        <div className="h-12 w-12 rounded-full bg-emerald-500 grid place-items-center">
+          <Navigation2 className="h-6 w-6 text-white" />
+        </div>
+        <div className="flex-1">
+          <p className="text-[10px] uppercase tracking-widest text-gray-500">في الطريق إلى الراكب</p>
+          <p className="font-black text-base line-clamp-1">{address}</p>
+        </div>
+        <button className="h-11 w-11 rounded-full bg-emerald-100 text-emerald-700 grid place-items-center" aria-label="call">
+          <PhoneCall className="h-5 w-5" />
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <Pill icon={<Clock className="h-3.5 w-3.5" />} label="الوصول" value={`${etaMin} د`} />
+        <Pill icon={<MapPin className="h-3.5 w-3.5" />} label="المسافة" value={`${distanceKm.toFixed(1)} كم`} />
+      </div>
+      <Button onClick={onArrived} className="w-full h-14 text-base font-black bg-black hover:bg-gray-900 text-white rounded-2xl">
+        <Car className="h-5 w-5 ml-2" /> الراكب ركب — بدء الرحلة
+      </Button>
+    </motion.div>
+  );
+}
+
+function InTripPanel({ address, distanceKm, etaMin, price, onEnd }: {
+  address: string; distanceKm: number; etaMin: number; price: number; onEnd: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+      className="bg-white rounded-t-3xl shadow-2xl p-5 pb-7"
+    >
+      <div className="h-1.5 w-12 bg-gray-200 rounded-full mx-auto mb-4" />
+      <div className="flex items-center gap-3 mb-4">
+        <div className="h-12 w-12 rounded-full bg-blue-500 grid place-items-center">
+          <Flag className="h-6 w-6 text-white" />
+        </div>
+        <div className="flex-1">
+          <p className="text-[10px] uppercase tracking-widest text-gray-500">رحلة جارية</p>
+          <p className="font-black text-base line-clamp-1">{address}</p>
+        </div>
+        <div className="text-end">
+          <p className="text-[10px] text-gray-500">السعر</p>
+          <p className="font-black text-emerald-600">{Number(price || 0).toFixed(0)} ج.م</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <Pill icon={<Clock className="h-3.5 w-3.5" />} label="الوصول" value={`${etaMin} د`} />
+        <Pill icon={<MapPin className="h-3.5 w-3.5" />} label="المسافة" value={`${distanceKm.toFixed(1)} كم`} />
+      </div>
+      <Button onClick={onEnd} className="w-full h-14 text-base font-black bg-red-500 hover:bg-red-600 text-white rounded-2xl">
+        <Flag className="h-5 w-5 ml-2" /> إنهاء الرحلة
+      </Button>
+    </motion.div>
+  );
 }
