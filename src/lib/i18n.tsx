@@ -135,6 +135,11 @@ const dict = {
     "ride.chat_title": "شات الرحلة",
     "ride.chat_start": "ابدأ المحادثة 💬",
     "ride.chat_ph": "اكتب رسالتك...",
+    "ride.driver_eta": "السائق يصل خلال",
+    "ride.arrival_eta": "الوصول خلال",
+    "ride.min": "دقيقة",
+    "ride.on_the_way": "في الطريق إليك",
+    "ride.in_route": "نحو وجهتك",
 
     // wallet
     "wallet.title": "المحفظة",
