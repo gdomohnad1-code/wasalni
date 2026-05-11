@@ -30,7 +30,12 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAdminsRouteImport } from './routes/admin.admins'
 import { Route as AppWalletRouteImport } from './routes/_app/wallet'
 import { Route as AppTripsRouteImport } from './routes/_app/trips'
+import { Route as AppTermsRouteImport } from './routes/_app/terms'
+import { Route as AppSupportRouteImport } from './routes/_app/support'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppReferralRouteImport } from './routes/_app/referral'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
+import { Route as AppPrivacyRouteImport } from './routes/_app/privacy'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppBookRouteImport } from './routes/_app/book'
@@ -141,9 +146,34 @@ const AppTripsRoute = AppTripsRouteImport.update({
   path: '/trips',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTermsRoute = AppTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSupportRoute = AppSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReferralRoute = AppReferralRouteImport.update({
+  id: '/referral',
+  path: '/referral',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPrivacyRoute = AppPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => AppRoute,
 } as any)
 const AppHomeRoute = AppHomeRouteImport.update({
@@ -179,7 +209,12 @@ export interface FileRoutesByFullPath {
   '/book': typeof AppBookRoute
   '/driver': typeof AppDriverRoute
   '/home': typeof AppHomeRoute
+  '/privacy': typeof AppPrivacyRoute
   '/profile': typeof AppProfileRoute
+  '/referral': typeof AppReferralRoute
+  '/settings': typeof AppSettingsRoute
+  '/support': typeof AppSupportRoute
+  '/terms': typeof AppTermsRoute
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
@@ -206,7 +241,12 @@ export interface FileRoutesByTo {
   '/book': typeof AppBookRoute
   '/driver': typeof AppDriverRoute
   '/home': typeof AppHomeRoute
+  '/privacy': typeof AppPrivacyRoute
   '/profile': typeof AppProfileRoute
+  '/referral': typeof AppReferralRoute
+  '/settings': typeof AppSettingsRoute
+  '/support': typeof AppSupportRoute
+  '/terms': typeof AppTermsRoute
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
@@ -236,7 +276,12 @@ export interface FileRoutesById {
   '/_app/book': typeof AppBookRoute
   '/_app/driver': typeof AppDriverRoute
   '/_app/home': typeof AppHomeRoute
+  '/_app/privacy': typeof AppPrivacyRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/referral': typeof AppReferralRoute
+  '/_app/settings': typeof AppSettingsRoute
+  '/_app/support': typeof AppSupportRoute
+  '/_app/terms': typeof AppTermsRoute
   '/_app/trips': typeof AppTripsRoute
   '/_app/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
@@ -266,7 +311,12 @@ export interface FileRouteTypes {
     | '/book'
     | '/driver'
     | '/home'
+    | '/privacy'
     | '/profile'
+    | '/referral'
+    | '/settings'
+    | '/support'
+    | '/terms'
     | '/trips'
     | '/wallet'
     | '/admin/admins'
@@ -293,7 +343,12 @@ export interface FileRouteTypes {
     | '/book'
     | '/driver'
     | '/home'
+    | '/privacy'
     | '/profile'
+    | '/referral'
+    | '/settings'
+    | '/support'
+    | '/terms'
     | '/trips'
     | '/wallet'
     | '/admin/admins'
@@ -322,7 +377,12 @@ export interface FileRouteTypes {
     | '/_app/book'
     | '/_app/driver'
     | '/_app/home'
+    | '/_app/privacy'
     | '/_app/profile'
+    | '/_app/referral'
+    | '/_app/settings'
+    | '/_app/support'
+    | '/_app/terms'
     | '/_app/trips'
     | '/_app/wallet'
     | '/admin/admins'
@@ -501,11 +561,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTripsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/terms': {
+      id: '/_app/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof AppTermsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/support': {
+      id: '/_app/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AppSupportRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/referral': {
+      id: '/_app/referral'
+      path: '/referral'
+      fullPath: '/referral'
+      preLoaderRoute: typeof AppReferralRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/profile': {
       id: '/_app/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/privacy': {
+      id: '/_app/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof AppPrivacyRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/home': {
@@ -550,7 +645,12 @@ interface AppRouteChildren {
   AppBookRoute: typeof AppBookRoute
   AppDriverRoute: typeof AppDriverRoute
   AppHomeRoute: typeof AppHomeRoute
+  AppPrivacyRoute: typeof AppPrivacyRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppReferralRoute: typeof AppReferralRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppSupportRoute: typeof AppSupportRoute
+  AppTermsRoute: typeof AppTermsRoute
   AppTripsRoute: typeof AppTripsRoute
   AppWalletRoute: typeof AppWalletRoute
   AppRideIdRoute: typeof AppRideIdRoute
@@ -560,7 +660,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppBookRoute: AppBookRoute,
   AppDriverRoute: AppDriverRoute,
   AppHomeRoute: AppHomeRoute,
+  AppPrivacyRoute: AppPrivacyRoute,
   AppProfileRoute: AppProfileRoute,
+  AppReferralRoute: AppReferralRoute,
+  AppSettingsRoute: AppSettingsRoute,
+  AppSupportRoute: AppSupportRoute,
+  AppTermsRoute: AppTermsRoute,
   AppTripsRoute: AppTripsRoute,
   AppWalletRoute: AppWalletRoute,
   AppRideIdRoute: AppRideIdRoute,

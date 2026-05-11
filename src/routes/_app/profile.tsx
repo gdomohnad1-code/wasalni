@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Copy, Share2, LogOut, Star, Users, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronLeft, Gift, Headphones, Home, Settings as SettingsIcon, Star, Wallet, History, Car, ShieldCheck, LogOut } from "lucide-react";
 
 export const Route = createFileRoute("/_app/profile")({
   component: ProfilePage,
@@ -11,63 +10,60 @@ export const Route = createFileRoute("/_app/profile")({
 function ProfilePage() {
   const { profile, user, roles, signOut } = useAuth();
   const isAdmin = roles?.includes("admin");
-
-  const copyCode = () => {
-    if (!profile?.referral_code) return;
-    navigator.clipboard.writeText(profile.referral_code);
-    toast.success("تم نسخ الكود");
-  };
-
-  const share = async () => {
-    if (!profile?.referral_code) return;
-    const text = `حمّل تطبيق وصلني واستخدم كود الدعوة: ${profile.referral_code} واكسب 30 جنيه! 🚕`;
-    if (navigator.share) {
-      try { await navigator.share({ text }); } catch {}
-    } else {
-      navigator.clipboard.writeText(text);
-      toast.success("تم نسخ رسالة الدعوة");
-    }
-  };
+  const isDriver = roles?.includes("driver");
 
   return (
-    <div className="max-w-md mx-auto">
-      <div className="bg-gradient-hero text-primary-foreground p-6 pb-16 rounded-b-3xl">
-        <div className="flex flex-col items-center">
-          <div className="h-24 w-24 rounded-full bg-white/20 backdrop-blur overflow-hidden border-4 border-white/40">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center text-3xl">👤</div>
-            )}
+    <div className="max-w-md mx-auto pb-8">
+      {/* بطاقة المستخدم */}
+      <div className="bg-gradient-hero text-primary-foreground p-6 pb-12 rounded-b-3xl shadow-soft">
+        <div className="flex items-center gap-4">
+          <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur overflow-hidden border-2 border-white/40 shrink-0">
+            {profile?.avatar_url
+              ? <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+              : <div className="h-full w-full flex items-center justify-center text-2xl">👤</div>}
           </div>
-          <h2 className="font-bold text-xl mt-3">{profile?.full_name}</h2>
-          <p className="text-sm opacity-90">{user?.email}</p>
-          <div className="flex items-center gap-1 mt-2">
-            <Star className="h-4 w-4 fill-warning text-warning" />
-            <span className="font-bold">{profile?.rating?.toFixed(1) || "5.0"}</span>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-bold text-lg truncate">{profile?.full_name || "—"}</h2>
+            <p className="text-xs opacity-80 truncate">{user?.email}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+              <span className="text-xs font-bold">{profile?.rating?.toFixed(1) || "5.0"}</span>
+              <span className="text-xs opacity-70 mx-1">•</span>
+              <span className="text-xs">{profile?.wallet_balance?.toFixed(0) || 0} ج.م</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="p-4 -mt-10 space-y-3">
-        <div className="bg-card rounded-2xl p-4 shadow-card">
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="h-4 w-4 text-primary" />
-            <span className="font-bold text-sm">كود الدعوة</span>
-          </div>
-          <p className="text-xs text-muted-foreground mb-3">شارك الكود واكسب 30 ج.م لكل صديق ينضم</p>
-          <div className="flex items-center gap-2 bg-muted p-3 rounded-xl">
-            <span className="font-black text-lg flex-1 tracking-wider text-primary">{profile?.referral_code}</span>
-            <Button size="icon" variant="ghost" onClick={copyCode}><Copy className="h-4 w-4" /></Button>
-            <Button size="icon" onClick={share} className="bg-gradient-primary"><Share2 className="h-4 w-4" /></Button>
-          </div>
-        </div>
+      <div className="px-4 -mt-8 space-y-3">
+        {/* القائمة الرئيسية */}
+        <Section>
+          <Item to="/home" icon={Home} label="الرئيسية" emoji="🏠" />
+          <Item to="/trips" icon={History} label="رحلاتي السابقة" emoji="🚗" />
+          <Item to="/wallet" icon={Wallet} label="المحفظة" emoji="💰" />
+          <Item to="/referral" icon={Gift} label="كود الدعوة" emoji="🎁" badge="اربح 50 ج.م" />
+          <Item to="/support" icon={Headphones} label="الدعم والشكاوى" emoji="🛠️" badge="AI" />
+          <Item to="/settings" icon={SettingsIcon} label="الإعدادات" emoji="⚙️" />
+        </Section>
 
-        <div className="bg-card rounded-2xl shadow-card divide-y divide-border">
-          <Row label="رقم التليفون" value={profile?.phone || "—"} />
-          <Row label="رصيد المحفظة" value={`${profile?.wallet_balance || 0} ج.م`} />
-        </div>
+        {/* انضم كسائق */}
+        {!isDriver && (
+          <Link to="/driver" className="block">
+            <div className="rounded-2xl bg-gradient-to-l from-primary to-primary/70 text-primary-foreground p-4 shadow-elevated flex items-center gap-3 group">
+              <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-2xl">🚕</div>
+              <div className="flex-1">
+                <div className="font-bold flex items-center gap-2">
+                  انضم كسائق مع وصلني
+                  <span className="text-[10px] bg-white text-primary font-black px-1.5 py-0.5 rounded">جديد</span>
+                </div>
+                <div className="text-xs opacity-90">سجّل دلوقتي وابدأ تكسب من رحلاتك</div>
+              </div>
+              <ChevronLeft className="h-5 w-5 opacity-80 group-hover:-translate-x-1 transition" />
+            </div>
+          </Link>
+        )}
 
+        {/* لوحة الإدارة */}
         {isAdmin && (
           <Link to="/admin">
             <Button className="w-full gap-2 bg-gradient-primary">
@@ -76,19 +72,27 @@ function ProfilePage() {
           </Link>
         )}
 
-        <Button onClick={signOut} variant="outline" className="w-full text-destructive border-destructive/30">
+        <Button onClick={signOut} variant="outline" className="w-full text-destructive border-destructive/30 mt-2">
           <LogOut className="h-4 w-4 ml-2" /> تسجيل الخروج
         </Button>
+
+        <p className="text-center text-[11px] text-muted-foreground pt-2">وصلني • الإصدار 1.0</p>
       </div>
     </div>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Section({ children }: { children: React.ReactNode }) {
+  return <div className="bg-card rounded-2xl shadow-card divide-y divide-border overflow-hidden">{children}</div>;
+}
+
+function Item({ to, icon: Icon, label, emoji, badge }: { to: string; icon: any; label: string; emoji: string; badge?: string }) {
   return (
-    <div className="flex justify-between p-4 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold">{value}</span>
-    </div>
+    <Link to={to} className="flex items-center gap-3 p-3.5 hover:bg-muted/40 transition">
+      <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-lg">{emoji}</div>
+      <span className="flex-1 font-semibold text-sm">{label}</span>
+      {badge && <span className="text-[10px] bg-primary/15 text-primary font-bold px-2 py-0.5 rounded-full">{badge}</span>}
+      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+    </Link>
   );
 }

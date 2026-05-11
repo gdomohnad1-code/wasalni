@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect, Link, useLocation } from "@tanstack/react-router";
-import { Home, Wallet, History, User, Car } from "lucide-react";
+import { Home, Wallet, History, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app")({
@@ -19,7 +19,6 @@ const tabs = [
   { to: "/home", label: "الرئيسية", icon: Home },
   { to: "/trips", label: "رحلاتي", icon: History },
   { to: "/wallet", label: "المحفظة", icon: Wallet },
-  { to: "/driver", label: "السائق", icon: Car },
   { to: "/profile", label: "حسابي", icon: User },
 ] as const;
 
@@ -29,7 +28,7 @@ function AppLayout() {
     <div className="min-h-screen bg-background pb-20">
       <Outlet />
       <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border shadow-elevated z-40">
-        <div className="max-w-md mx-auto grid grid-cols-5">
+        <div className="max-w-md mx-auto grid grid-cols-4">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = loc.pathname.startsWith(t.to);
