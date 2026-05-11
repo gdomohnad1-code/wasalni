@@ -108,6 +108,9 @@ function SettingsPage() {
           <Button onClick={save} disabled={saving} className="w-full mt-3 bg-gradient-primary">حفظ التغييرات</Button>
         </section>
 
+        {/* تغيير كلمة المرور */}
+        <ChangePasswordSection />
+
         {/* الإشعارات */}
         <section className="bg-card rounded-2xl p-4 shadow-card flex items-center justify-between">
           <div className="flex items-center gap-3">
