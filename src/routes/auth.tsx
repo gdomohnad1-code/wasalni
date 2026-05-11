@@ -74,6 +74,11 @@ function AuthPage() {
             const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
             await supabase.from("profiles").update({ avatar_url: pub.publicUrl, full_name: fullName, phone }).eq("id", data.user.id);
           }
+          if (influencerCode.trim()) {
+            const { data: r } = await supabase.rpc("apply_influencer_code", { p_code: influencerCode.trim() });
+            if ((r as any)?.ok) toast.success("تم تفعيل كود المؤثر ✨");
+            else if ((r as any)?.error === "invalid_code") toast.error("كود المؤثر غير صالح");
+          }
           toast.success("تم إنشاء حسابك بنجاح! 🎉");
           const to = await destinationForUser(data.user.id);
           navigate({ to });
