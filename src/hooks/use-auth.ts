@@ -25,6 +25,12 @@ export function useAuth() {
       setUser(sess?.user ?? null);
       if (sess?.user) {
         setTimeout(() => loadProfile(sess.user.id), 0);
+        // Register FCM web token (no-op if not configured / unsupported)
+        setTimeout(() => {
+          import("@/lib/fcm-web")
+            .then((m) => m.registerFcmTokenForCurrentUser())
+            .catch(() => {});
+        }, 0);
       } else {
         setProfile(null);
         setRoles([]);
@@ -34,7 +40,12 @@ export function useAuth() {
     supabase.auth.getSession().then(({ data: { session: sess } }) => {
       setSession(sess);
       setUser(sess?.user ?? null);
-      if (sess?.user) loadProfile(sess.user.id);
+      if (sess?.user) {
+        loadProfile(sess.user.id);
+        import("@/lib/fcm-web")
+          .then((m) => m.registerFcmTokenForCurrentUser())
+          .catch(() => {});
+      }
       setLoading(false);
     });
 
