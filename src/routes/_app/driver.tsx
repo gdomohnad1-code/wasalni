@@ -155,25 +155,41 @@ function DriverApplicationForm({ docs, onDone }: { docs: any; onDone: () => void
 
   const needsFix = (key: string) => isResubmit && fieldsToFix.includes(key);
 
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+
   const upload = async (key: string, file: File) => {
     if (!user) throw new Error("not authenticated");
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const path = `${user.id}/${key}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("driver-applications").upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from("driver-applications").upload(path, file, { upsert: true, contentType: file.type || "image/jpeg" });
     if (error) throw error;
-    // store the bucket-prefixed path so backend knows to sign it
     setUrls((p) => ({ ...p, [key]: `driver-applications/${path}` }));
   };
 
-  const onPickFile = (key: string) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onCapture = (key: string) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking same file
     if (!f) return;
+    if (!f.type.startsWith("image/")) { toast.error("صورة فقط"); return; }
+    // Local preview
+    const localUrl = URL.createObjectURL(f);
+    setPreviews((p) => { if (p[key]) URL.revokeObjectURL(p[key]); return { ...p, [key]: localUrl }; });
+    setUploadingKey(key);
     try {
       await upload(key, f);
-      toast.success("تم رفع الملف");
+      toast.success("تم التقاط الصورة ✅");
     } catch (err: any) {
       toast.error(err.message ?? "فشل الرفع");
+      setPreviews((p) => { URL.revokeObjectURL(p[key]); const n = { ...p }; delete n[key]; return n; });
+    } finally {
+      setUploadingKey(null);
     }
+  };
+
+  const retake = (key: string) => {
+    setPreviews((p) => { if (p[key]) URL.revokeObjectURL(p[key]); const n = { ...p }; delete n[key]; return n; });
+    setUrls((p) => ({ ...p, [key]: "" }));
   };
 
   const allFilled = useMemo(() => {
