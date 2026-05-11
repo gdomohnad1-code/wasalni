@@ -17,6 +17,7 @@ import { useI18n } from "@/lib/i18n";
 import { DriverLiveMap, type LL } from "@/components/driver/DriverLiveMap";
 import { IncomingRideModal } from "@/components/driver/IncomingRideModal";
 import { DriverReadyScreen } from "@/components/driver/DriverReadyScreen";
+import { ArrivalConfirmModal } from "@/components/driver/ArrivalConfirmModal";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
