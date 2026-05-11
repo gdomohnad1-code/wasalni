@@ -137,7 +137,7 @@ function BookPage() {
       </div>
 
       <div className="h-56 mx-4 mt-4">
-        <FakeMap pickup={pickup} destination={destination} />
+        <BookMap pickup={pickupCoords} destination={destCoords} />
       </div>
 
       <div className="p-4 space-y-4 flex-1">
