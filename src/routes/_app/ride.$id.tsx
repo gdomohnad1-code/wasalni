@@ -59,15 +59,13 @@ function RidePage() {
         (payload) => setRide(payload.new as Ride))
       .subscribe();
 
+    // Auto-accept simulation: only triggers for users that are actually approved drivers.
+    // The RPC verifies role + active driver_documents server-side and rejects rider self-accept.
     const timer = setTimeout(async () => {
-      const { data: cur } = await supabase.from("rides").select("*").eq("id", id).maybeSingle();
-      if (cur && cur.status === "searching") {
-        const { data: { user } } = await supabase.auth.getUser();
-        await supabase.from("rides").update({
-          status: "accepted",
-          driver_id: user!.id,
-          accepted_at: new Date().toISOString(),
-        }).eq("id", id);
+      try {
+        await supabase.rpc("driver_accept_ride" as any, { p_ride_id: id });
+      } catch {
+        /* not a driver or already accepted — ignore */
       }
     }, 5000);
 
