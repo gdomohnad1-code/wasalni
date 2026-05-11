@@ -528,6 +528,10 @@ const dict = {
     "notif.ride_completed": "Ride completed",
     "notif.ride_cancelled": "Ride cancelled",
     "notif.new_ride_request": "New ride request",
+    "notif.center": "Notifications",
+    "notif.mark_all": "Mark all as read",
+    "notif.clear": "Clear all",
+    "notif.empty": "No notifications yet",
   },
 } as const;
 
