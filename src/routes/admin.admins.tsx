@@ -102,14 +102,26 @@ function AdminsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase
       .from("admin_emails")
-      .insert({ email, created_by: user?.id });
+      .insert({ email, default_permission: newPerm, created_by: user?.id });
     setLoading(false);
     if (error) {
       toast.error(error.message.includes("duplicate") ? "هذا البريد مضاف مسبقًا" : "تعذّر الإضافة");
       return;
     }
-    toast.success("تمت الإضافة. أي حساب جديد بهذا البريد سيصبح أدمن تلقائيًا.");
+    toast.success(`تمت الإضافة بدور: ${PERM_META[newPerm].label}`);
     setNewEmail("");
+    setNewPerm("viewer");
+    load();
+  };
+
+  const updateEmailPerm = async (id: string, perm: AdminPerm) => {
+    if (!isSuper) { toast.error("المسؤول الرئيسي فقط"); return; }
+    const { error } = await supabase
+      .from("admin_emails")
+      .update({ default_permission: perm })
+      .eq("id", id);
+    if (error) return toast.error("تعذّر التحديث");
+    toast.success("تم تحديث الدور الافتراضي");
     load();
   };
 
