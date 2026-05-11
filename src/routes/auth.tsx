@@ -27,6 +27,7 @@ function AuthPage() {
   const [phone, setPhone] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [influencerCode, setInfluencerCode] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -72,6 +73,11 @@ function AuthPage() {
           if (!up.error) {
             const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
             await supabase.from("profiles").update({ avatar_url: pub.publicUrl, full_name: fullName, phone }).eq("id", data.user.id);
+          }
+          if (influencerCode.trim()) {
+            const { data: r } = await (supabase.rpc as any)("apply_influencer_code", { p_code: influencerCode.trim() });
+            if ((r as any)?.ok) toast.success("تم تفعيل كود المؤثر ✨");
+            else if ((r as any)?.error === "invalid_code") toast.error("كود المؤثر غير صالح");
           }
           toast.success("تم إنشاء حسابك بنجاح! 🎉");
           const to = await destinationForUser(data.user.id);
@@ -141,6 +147,10 @@ function AuthPage() {
                       <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" className="pr-10" />
                     </div>
+                  </div>
+                  <div>
+                    <Label>كود المؤثر (اختياري)</Label>
+                    <Input value={influencerCode} onChange={(e) => setInfluencerCode(e.target.value.toUpperCase())} placeholder="مثال: SARA10" />
                   </div>
                 </>
               )}
