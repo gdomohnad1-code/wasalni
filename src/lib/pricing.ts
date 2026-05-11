@@ -45,8 +45,41 @@ export const RIDE_TYPES = {
 export type RideTypeKey = keyof typeof RIDE_TYPES;
 export type TripMode = "oneway" | "roundtrip" | "multistop";
 
-// عمولة المنصة على كل رحلة
-export const PLATFORM_COMMISSION_RATE = 0.01; // 1%
+export type PricingConfig = {
+  oneway_base: number;
+  oneway_base_km: number;
+  oneway_per_km: number;
+  roundtrip_base: number;
+  roundtrip_base_km: number;
+  roundtrip_per_km: number;
+  multistop_hourly: number;
+  multistop_min: number;
+  commission_rate: number;
+  multipliers: Partial<Record<RideTypeKey, number>>;
+};
+
+const DEFAULT_CONFIG: PricingConfig = {
+  oneway_base: 30,
+  oneway_base_km: 3,
+  oneway_per_km: 3,
+  roundtrip_base: 60,
+  roundtrip_base_km: 6,
+  roundtrip_per_km: 3,
+  multistop_hourly: 200,
+  multistop_min: 75,
+  commission_rate: 0.01,
+  multipliers: { private: 1, vip: 1.5, package: 1, shared: 0.6, female: 1.4 },
+};
+
+let CONFIG: PricingConfig = { ...DEFAULT_CONFIG };
+
+export function setPricingConfig(cfg: Partial<PricingConfig>) {
+  CONFIG = { ...CONFIG, ...cfg, multipliers: { ...DEFAULT_CONFIG.multipliers, ...(cfg.multipliers || {}) } };
+}
+export function getPricingConfig(): PricingConfig {
+  return CONFIG;
+}
+export const PLATFORM_COMMISSION_RATE = new Proxy({}, { get: () => CONFIG.commission_rate }) as unknown as number;
 
 // مسافة وزمن
 export function calcDuration(distanceKm: number): number {
@@ -58,7 +91,6 @@ export function fakeDistance(from: string, to: string): number {
   return Math.round((3 + (seed % 18) + (seed % 7) * 0.3) * 10) / 10;
 }
 
-// المسافة الحقيقية بين نقطتين (Haversine) — كم
 export function haversineKm(
   a: { lat: number; lng: number },
   b: { lat: number; lng: number },
@@ -73,41 +105,33 @@ export function haversineKm(
     Math.sin(dLat / 2) ** 2 +
     Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
   const km = 2 * R * Math.asin(Math.sqrt(h));
-  // معامل تصحيح بسيط لمسارات الشوارع (≈1.25 من مسافة الطيران)
   return Math.round(km * 1.25 * 10) / 10;
 }
 
-/**
- * حساب السعر:
- *  - oneway:    30 ج.م أول 3 كم + 3 ج.م لكل كم زيادة
- *  - roundtrip: 60 ج.م أول 6 كم + 3 ج.م لكل كم زيادة (المسافة هنا = ذهاب فقط)
- *  - multistop: 200 ج.م لكل ساعة — أقل سعر 75 ج.م
- *  ثم يُضرب في معامل نوع الخدمة.
- */
 export function calcPrice(
   distanceKm: number,
   type: RideTypeKey,
   mode: TripMode = "oneway",
   durationMin?: number,
 ): number {
-  const m = RIDE_TYPES[type].multiplier;
+  const c = CONFIG;
+  const m = c.multipliers[type] ?? RIDE_TYPES[type].multiplier;
 
   if (mode === "multistop") {
     const mins = durationMin ?? calcDuration(distanceKm);
-    const hourly = (mins / 60) * 200;
-    return Math.max(75, Math.round(hourly * m));
+    const hourly = (mins / 60) * c.multistop_hourly;
+    return Math.max(c.multistop_min, Math.round(hourly * m));
   }
 
   if (mode === "roundtrip") {
-    const extra = Math.max(0, distanceKm * 2 - 6);
-    return Math.round((60 + extra * 3) * m);
+    const extra = Math.max(0, distanceKm * 2 - c.roundtrip_base_km);
+    return Math.round((c.roundtrip_base + extra * c.roundtrip_per_km) * m);
   }
 
-  // oneway
-  const extra = Math.max(0, distanceKm - 3);
-  return Math.round((30 + extra * 3) * m);
+  const extra = Math.max(0, distanceKm - c.oneway_base_km);
+  return Math.round((c.oneway_base + extra * c.oneway_per_km) * m);
 }
 
 export function calcCommission(price: number): number {
-  return Math.round(price * PLATFORM_COMMISSION_RATE * 100) / 100;
+  return Math.round(price * CONFIG.commission_rate * 100) / 100;
 }
