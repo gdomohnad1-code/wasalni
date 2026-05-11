@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_events: {
+        Row: {
+          ad_id: string
+          created_at: string
+          event_type: Database["public"]["Enums"]["ad_event_type"]
+          id: string
+          metadata: Json
+          user_id: string
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          event_type: Database["public"]["Enums"]["ad_event_type"]
+          id?: string
+          metadata?: Json
+          user_id: string
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["ad_event_type"]
+          id?: string
+          metadata?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_events_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_emails: {
         Row: {
           created_at: string
@@ -59,6 +94,93 @@ export type Database = {
           id?: string
           permission?: Database["public"]["Enums"]["admin_permission"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      ads: {
+        Row: {
+          auto_rotate: boolean
+          created_at: string
+          created_by: string | null
+          daily_end_hour: number | null
+          daily_start_hour: number | null
+          description: string | null
+          end_at: string | null
+          external_link: string | null
+          id: string
+          is_sponsored: boolean
+          max_impressions_per_user: number | null
+          media_type: Database["public"]["Enums"]["ad_media_type"]
+          media_url: string | null
+          placements: Database["public"]["Enums"]["ad_placement"][]
+          priority: number
+          qr_data: string | null
+          sponsor_name: string | null
+          start_at: string | null
+          status: Database["public"]["Enums"]["ad_status"]
+          target_audience: Database["public"]["Enums"]["ad_audience"]
+          target_cities: string[]
+          target_max_rides: number | null
+          target_min_rides: number | null
+          title: string
+          type: Database["public"]["Enums"]["ad_type"]
+          updated_at: string
+        }
+        Insert: {
+          auto_rotate?: boolean
+          created_at?: string
+          created_by?: string | null
+          daily_end_hour?: number | null
+          daily_start_hour?: number | null
+          description?: string | null
+          end_at?: string | null
+          external_link?: string | null
+          id?: string
+          is_sponsored?: boolean
+          max_impressions_per_user?: number | null
+          media_type?: Database["public"]["Enums"]["ad_media_type"]
+          media_url?: string | null
+          placements?: Database["public"]["Enums"]["ad_placement"][]
+          priority?: number
+          qr_data?: string | null
+          sponsor_name?: string | null
+          start_at?: string | null
+          status?: Database["public"]["Enums"]["ad_status"]
+          target_audience?: Database["public"]["Enums"]["ad_audience"]
+          target_cities?: string[]
+          target_max_rides?: number | null
+          target_min_rides?: number | null
+          title: string
+          type?: Database["public"]["Enums"]["ad_type"]
+          updated_at?: string
+        }
+        Update: {
+          auto_rotate?: boolean
+          created_at?: string
+          created_by?: string | null
+          daily_end_hour?: number | null
+          daily_start_hour?: number | null
+          description?: string | null
+          end_at?: string | null
+          external_link?: string | null
+          id?: string
+          is_sponsored?: boolean
+          max_impressions_per_user?: number | null
+          media_type?: Database["public"]["Enums"]["ad_media_type"]
+          media_url?: string | null
+          placements?: Database["public"]["Enums"]["ad_placement"][]
+          priority?: number
+          qr_data?: string | null
+          sponsor_name?: string | null
+          start_at?: string | null
+          status?: Database["public"]["Enums"]["ad_status"]
+          target_audience?: Database["public"]["Enums"]["ad_audience"]
+          target_cities?: string[]
+          target_max_rides?: number | null
+          target_min_rides?: number | null
+          title?: string
+          type?: Database["public"]["Enums"]["ad_type"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -685,6 +807,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ads_tick: { Args: never; Returns: Json }
       detect_idle_drivers: { Args: { p_minutes?: number }; Returns: number }
       has_admin_permission: {
         Args: {
@@ -728,6 +851,25 @@ export type Database = {
       }
     }
     Enums: {
+      ad_audience: "riders" | "drivers" | "both"
+      ad_event_type: "impression" | "click" | "conversion"
+      ad_media_type: "image" | "video" | "gif" | "link" | "qr"
+      ad_placement:
+        | "home"
+        | "book"
+        | "waiting_driver"
+        | "driver_app"
+        | "pre_confirm"
+        | "post_ride"
+      ad_status: "draft" | "scheduled" | "active" | "paused" | "ended"
+      ad_type:
+        | "banner"
+        | "popup"
+        | "video"
+        | "story"
+        | "notification"
+        | "fullscreen"
+        | "reward"
       admin_permission:
         | "super_admin"
         | "assigner"
@@ -884,6 +1026,27 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ad_audience: ["riders", "drivers", "both"],
+      ad_event_type: ["impression", "click", "conversion"],
+      ad_media_type: ["image", "video", "gif", "link", "qr"],
+      ad_placement: [
+        "home",
+        "book",
+        "waiting_driver",
+        "driver_app",
+        "pre_confirm",
+        "post_ride",
+      ],
+      ad_status: ["draft", "scheduled", "active", "paused", "ended"],
+      ad_type: [
+        "banner",
+        "popup",
+        "video",
+        "story",
+        "notification",
+        "fullscreen",
+        "reward",
+      ],
       admin_permission: [
         "super_admin",
         "assigner",

@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RideMap } from "@/components/RideMap";
+import { AdSlot } from "@/components/AdSlot";
 import { toast } from "sonner";
 import { RIDE_TYPES } from "@/lib/pricing";
 import { useI18n } from "@/lib/i18n";
@@ -158,6 +159,9 @@ function RidePage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {ride.status === "accepted" && <AdSlot placement="waiting_driver" className="mt-3" />}
+        {ride.status === "completed" && <AdSlot placement="post_ride" className="mt-3" />}
       </div>
 
       <ChatSheet rideId={id} open={chatOpen} onClose={() => setChatOpen(false)} />

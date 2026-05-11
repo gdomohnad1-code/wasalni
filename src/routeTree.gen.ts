@@ -27,6 +27,7 @@ import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as AdminComplaintsRouteImport } from './routes/admin.complaints'
 import { Route as AdminApplicantsRouteImport } from './routes/admin.applicants'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminAdsRouteImport } from './routes/admin.ads'
 import { Route as AdminAdminsRouteImport } from './routes/admin.admins'
 import { Route as AppWalletRouteImport } from './routes/_app/wallet'
 import { Route as AppTripsRouteImport } from './routes/_app/trips'
@@ -41,6 +42,7 @@ import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppBookRouteImport } from './routes/_app/book'
 import { Route as AppRideIdRouteImport } from './routes/_app/ride.$id'
 import { Route as ApiPublicHooksCheckDuesRouteImport } from './routes/api/public/hooks/check-dues'
+import { Route as ApiPublicHooksAdsTickRouteImport } from './routes/api/public/hooks/ads-tick'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -131,6 +133,11 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdsRoute = AdminAdsRouteImport.update({
+  id: '/ads',
+  path: '/ads',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAdminsRoute = AdminAdminsRouteImport.update({
   id: '/admins',
   path: '/admins',
@@ -201,6 +208,11 @@ const ApiPublicHooksCheckDuesRoute = ApiPublicHooksCheckDuesRouteImport.update({
   path: '/api/public/hooks/check-dues',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksAdsTickRoute = ApiPublicHooksAdsTickRouteImport.update({
+  id: '/api/public/hooks/ads-tick',
+  path: '/api/public/hooks/ads-tick',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -218,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/ads': typeof AdminAdsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
@@ -233,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/admin/rides': typeof AdminRidesRoute
   '/admin/': typeof AdminIndexRoute
   '/ride/$id': typeof AppRideIdRoute
+  '/api/public/hooks/ads-tick': typeof ApiPublicHooksAdsTickRoute
   '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
 }
 export interface FileRoutesByTo {
@@ -250,6 +264,7 @@ export interface FileRoutesByTo {
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/ads': typeof AdminAdsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
@@ -265,6 +280,7 @@ export interface FileRoutesByTo {
   '/admin/rides': typeof AdminRidesRoute
   '/admin': typeof AdminIndexRoute
   '/ride/$id': typeof AppRideIdRoute
+  '/api/public/hooks/ads-tick': typeof ApiPublicHooksAdsTickRoute
   '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
 }
 export interface FileRoutesById {
@@ -285,6 +301,7 @@ export interface FileRoutesById {
   '/_app/trips': typeof AppTripsRoute
   '/_app/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/ads': typeof AdminAdsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
@@ -300,6 +317,7 @@ export interface FileRoutesById {
   '/admin/rides': typeof AdminRidesRoute
   '/admin/': typeof AdminIndexRoute
   '/_app/ride/$id': typeof AppRideIdRoute
+  '/api/public/hooks/ads-tick': typeof ApiPublicHooksAdsTickRoute
   '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
 }
 export interface FileRouteTypes {
@@ -320,6 +338,7 @@ export interface FileRouteTypes {
     | '/trips'
     | '/wallet'
     | '/admin/admins'
+    | '/admin/ads'
     | '/admin/analytics'
     | '/admin/applicants'
     | '/admin/complaints'
@@ -335,6 +354,7 @@ export interface FileRouteTypes {
     | '/admin/rides'
     | '/admin/'
     | '/ride/$id'
+    | '/api/public/hooks/ads-tick'
     | '/api/public/hooks/check-dues'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -352,6 +372,7 @@ export interface FileRouteTypes {
     | '/trips'
     | '/wallet'
     | '/admin/admins'
+    | '/admin/ads'
     | '/admin/analytics'
     | '/admin/applicants'
     | '/admin/complaints'
@@ -367,6 +388,7 @@ export interface FileRouteTypes {
     | '/admin/rides'
     | '/admin'
     | '/ride/$id'
+    | '/api/public/hooks/ads-tick'
     | '/api/public/hooks/check-dues'
   id:
     | '__root__'
@@ -386,6 +408,7 @@ export interface FileRouteTypes {
     | '/_app/trips'
     | '/_app/wallet'
     | '/admin/admins'
+    | '/admin/ads'
     | '/admin/analytics'
     | '/admin/applicants'
     | '/admin/complaints'
@@ -401,6 +424,7 @@ export interface FileRouteTypes {
     | '/admin/rides'
     | '/admin/'
     | '/_app/ride/$id'
+    | '/api/public/hooks/ads-tick'
     | '/api/public/hooks/check-dues'
   fileRoutesById: FileRoutesById
 }
@@ -409,6 +433,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksAdsTickRoute: typeof ApiPublicHooksAdsTickRoute
   ApiPublicHooksCheckDuesRoute: typeof ApiPublicHooksCheckDuesRoute
 }
 
@@ -540,6 +565,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ads': {
+      id: '/admin/ads'
+      path: '/ads'
+      fullPath: '/admin/ads'
+      preLoaderRoute: typeof AdminAdsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/admins': {
       id: '/admin/admins'
       path: '/admins'
@@ -638,6 +670,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksCheckDuesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/ads-tick': {
+      id: '/api/public/hooks/ads-tick'
+      path: '/api/public/hooks/ads-tick'
+      fullPath: '/api/public/hooks/ads-tick'
+      preLoaderRoute: typeof ApiPublicHooksAdsTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -675,6 +714,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AdminRouteChildren {
   AdminAdminsRoute: typeof AdminAdminsRoute
+  AdminAdsRoute: typeof AdminAdsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminApplicantsRoute: typeof AdminApplicantsRoute
   AdminComplaintsRoute: typeof AdminComplaintsRoute
@@ -693,6 +733,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminsRoute: AdminAdminsRoute,
+  AdminAdsRoute: AdminAdsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminApplicantsRoute: AdminApplicantsRoute,
   AdminComplaintsRoute: AdminComplaintsRoute,
@@ -716,6 +757,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksAdsTickRoute: ApiPublicHooksAdsTickRoute,
   ApiPublicHooksCheckDuesRoute: ApiPublicHooksCheckDuesRoute,
 }
 export const routeTree = rootRouteImport

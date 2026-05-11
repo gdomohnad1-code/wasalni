@@ -12,6 +12,7 @@ import {
 } from "@/lib/pricing";
 import { geocodeAddress, reverseGeocode, type LatLng } from "@/lib/geocode";
 import { BookMap } from "@/components/BookMap";
+import { AdSlot } from "@/components/AdSlot";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -230,6 +231,7 @@ function BookPage() {
           <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} className="bg-card w-full max-w-md mx-auto rounded-t-3xl p-6 shadow-elevated">
             <div className="h-1.5 w-12 bg-border rounded-full mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-4">{t("book.confirm_title")}</h2>
+            <AdSlot placement="pre_confirm" className="mb-3" />
             <div className="space-y-2 text-sm">
               <Row k={t("book.from")} v={pickup} />
               <Row k={t("book.to")} v={destination} />

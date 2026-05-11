@@ -6,6 +6,7 @@ import {
   Clock, MapPin, Crown,
 } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { AdSlot } from "@/components/AdSlot";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,6 @@ const offers = [
   { title: "وصلني مميز بسعر العادي", sub: "لمدة محدودة", glyph: "🌟" },
   { title: "ادعو صديق واكسب 30 ج.م", sub: "نظام الإحالة", glyph: "🤝" },
 ];
-
 
 function HomePage() {
   const { profile } = useAuth();
@@ -89,6 +89,11 @@ function HomePage() {
             <ChevronLeft className="h-5 w-5" />
           </div>
         </motion.button>
+      </div>
+
+      {/* Ads */}
+      <div className="px-5 mt-4">
+        <AdSlot placement="home" />
       </div>
 
       {/* Services — clean uniform grid */}
