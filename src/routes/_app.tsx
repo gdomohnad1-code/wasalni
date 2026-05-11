@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect, Link, useLocation } from "@tanstack/react-router";
-import { Home, Wallet, History, User } from "lucide-react";
+import { Home, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app")({
@@ -17,8 +17,6 @@ export const Route = createFileRoute("/_app")({
 
 const tabs = [
   { to: "/home", label: "الرئيسية", icon: Home },
-  { to: "/trips", label: "رحلاتي", icon: History },
-  { to: "/wallet", label: "المحفظة", icon: Wallet },
   { to: "/profile", label: "حسابي", icon: User },
 ] as const;
 
