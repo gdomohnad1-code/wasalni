@@ -169,6 +169,48 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_alerts: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          lat: number | null
+          lng: number | null
+          message: string | null
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          ride_id: string | null
+          type: Database["public"]["Enums"]["driver_alert_type"]
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          message?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          ride_id?: string | null
+          type: Database["public"]["Enums"]["driver_alert_type"]
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          message?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          ride_id?: string | null
+          type?: Database["public"]["Enums"]["driver_alert_type"]
+        }
+        Relationships: []
+      }
       driver_commissions: {
         Row: {
           amount: number
@@ -289,6 +331,111 @@ export type Database = {
           selfie_url?: string | null
           submitted_at?: string | null
           suspension_reason?: string | null
+        }
+        Relationships: []
+      }
+      driver_location_history: {
+        Row: {
+          driver_id: string
+          id: number
+          lat: number
+          lng: number
+          recorded_at: string
+          ride_id: string | null
+          speed: number | null
+        }
+        Insert: {
+          driver_id: string
+          id?: number
+          lat: number
+          lng: number
+          recorded_at?: string
+          ride_id?: string | null
+          speed?: number | null
+        }
+        Update: {
+          driver_id?: string
+          id?: number
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          ride_id?: string | null
+          speed?: number | null
+        }
+        Relationships: []
+      }
+      driver_locations: {
+        Row: {
+          accuracy: number | null
+          current_ride_id: string | null
+          driver_id: string
+          heading: number | null
+          in_zone: boolean
+          last_geofence_id: string | null
+          lat: number
+          lng: number
+          presence: Database["public"]["Enums"]["driver_presence"]
+          speed: number | null
+          updated_at: string
+        }
+        Insert: {
+          accuracy?: number | null
+          current_ride_id?: string | null
+          driver_id: string
+          heading?: number | null
+          in_zone?: boolean
+          last_geofence_id?: string | null
+          lat: number
+          lng: number
+          presence?: Database["public"]["Enums"]["driver_presence"]
+          speed?: number | null
+          updated_at?: string
+        }
+        Update: {
+          accuracy?: number | null
+          current_ride_id?: string | null
+          driver_id?: string
+          heading?: number | null
+          in_zone?: boolean
+          last_geofence_id?: string | null
+          lat?: number
+          lng?: number
+          presence?: Database["public"]["Enums"]["driver_presence"]
+          speed?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      geofences: {
+        Row: {
+          active: boolean
+          color: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          polygon: Json
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          polygon: Json
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          polygon?: Json
+          updated_at?: string
         }
         Relationships: []
       }
@@ -538,6 +685,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      detect_idle_drivers: { Args: { p_minutes?: number }; Returns: number }
       has_admin_permission: {
         Args: {
           _perm: Database["public"]["Enums"]["admin_permission"]
@@ -558,6 +706,26 @@ export type Database = {
         Returns: number
       }
       mark_driver_paid: { Args: { p_driver_id: string }; Returns: number }
+      point_in_polygon: {
+        Args: { p_lat: number; p_lng: number; p_polygon: Json }
+        Returns: boolean
+      }
+      trigger_driver_sos: {
+        Args: { p_lat?: number; p_lng?: number; p_message?: string }
+        Returns: string
+      }
+      update_driver_location: {
+        Args: {
+          p_accuracy?: number
+          p_heading?: number
+          p_lat: number
+          p_lng: number
+          p_presence?: Database["public"]["Enums"]["driver_presence"]
+          p_ride_id?: string
+          p_speed?: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       admin_permission:
@@ -578,6 +746,8 @@ export type Database = {
         | "pending"
         | "rejected"
         | "changes_requested"
+      driver_alert_type: "sos" | "idle" | "out_of_zone" | "speeding"
+      driver_presence: "available" | "busy" | "offline"
       ride_status:
         | "searching"
         | "accepted"
@@ -734,6 +904,8 @@ export const Constants = {
         "rejected",
         "changes_requested",
       ],
+      driver_alert_type: ["sos", "idle", "out_of_zone", "speeding"],
+      driver_presence: ["available", "busy", "offline"],
       ride_status: [
         "searching",
         "accepted",
