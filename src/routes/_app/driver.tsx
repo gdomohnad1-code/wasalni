@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Upload } from "lucide-react";
+import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Upload, Siren, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { submitDriverApplication } from "@/lib/driver-applications.functions";
 import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
+import { useDriverLocationBroadcast, triggerSOS } from "@/hooks/use-driver-location";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
@@ -337,6 +338,15 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const [active, setActive] = useState<any[]>([]);
   const [earnings, setEarnings] = useState(0);
   const [tab, setTab] = useState("available");
+  const [sosLoading, setSosLoading] = useState(false);
+
+  const isOnline = !!docs.is_online;
+  const currentRide = active[0]?.id ?? null;
+  const presence: "available" | "busy" | "offline" =
+    !isOnline ? "offline" : currentRide ? "busy" : "available";
+
+  // Live location broadcast (every 8s while online)
+  useDriverLocationBroadcast({ enabled: isOnline, presence, rideId: currentRide });
 
   const load = async () => {
     if (!user) return;
@@ -373,6 +383,15 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
     setDocs({ ...docs, is_online: v });
   };
 
+  const sendSOS = async () => {
+    if (!confirm("سيتم إرسال إشارة طوارئ إلى الإدارة. هل أنت متأكد؟")) return;
+    setSosLoading(true);
+    const { error } = await triggerSOS("طلب طوارئ من السائق");
+    setSosLoading(false);
+    if (error) return toast.error("تعذر إرسال SOS");
+    toast.success("تم إرسال إشارة الطوارئ");
+  };
+
   return (
     <div className="max-w-md mx-auto">
       <div className="bg-gradient-hero text-primary-foreground p-6 rounded-b-3xl">
@@ -380,10 +399,21 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
           <div>
             <h1 className="font-bold text-xl">واجهة السائق</h1>
             <p className="text-sm opacity-90">{docs.car_model} · {docs.car_plate}</p>
+            {isOnline && (
+              <div className="flex items-center gap-1.5 mt-2 text-xs opacity-90">
+                <Activity className="h-3 w-3 animate-pulse" />
+                <span>يتم بث الموقع</span>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-2 bg-white/15 backdrop-blur px-3 py-2 rounded-full">
-            <span className="text-xs font-bold">{docs.is_online ? "متاح" : "غير متاح"}</span>
-            <Switch checked={!!docs.is_online} onCheckedChange={toggleOnline} />
+          <div className="flex flex-col gap-2 items-end">
+            <div className="flex items-center gap-2 bg-white/15 backdrop-blur px-3 py-2 rounded-full">
+              <span className="text-xs font-bold">{isOnline ? "متاح" : "غير متاح"}</span>
+              <Switch checked={isOnline} onCheckedChange={toggleOnline} />
+            </div>
+            <Button onClick={sendSOS} disabled={sosLoading} size="sm" className="bg-destructive hover:bg-destructive/90 gap-1.5 h-8">
+              <Siren className="h-3.5 w-3.5" /> SOS
+            </Button>
           </div>
         </div>
 

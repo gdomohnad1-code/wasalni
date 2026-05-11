@@ -19,10 +19,13 @@ import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPermissionsRouteImport } from './routes/admin.permissions'
 import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminLiveRouteImport } from './routes/admin.live'
+import { Route as AdminGeofencesRouteImport } from './routes/admin.geofences'
 import { Route as AdminDuesRouteImport } from './routes/admin.dues'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as AdminComplaintsRouteImport } from './routes/admin.complaints'
 import { Route as AdminApplicantsRouteImport } from './routes/admin.applicants'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAdminsRouteImport } from './routes/admin.admins'
 import { Route as AppWalletRouteImport } from './routes/_app/wallet'
 import { Route as AppTripsRouteImport } from './routes/_app/trips'
@@ -82,6 +85,16 @@ const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLiveRoute = AdminLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGeofencesRoute = AdminGeofencesRouteImport.update({
+  id: '/geofences',
+  path: '/geofences',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDuesRoute = AdminDuesRouteImport.update({
   id: '/dues',
   path: '/dues',
@@ -100,6 +113,11 @@ const AdminComplaintsRoute = AdminComplaintsRouteImport.update({
 const AdminApplicantsRoute = AdminApplicantsRouteImport.update({
   id: '/applicants',
   path: '/applicants',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAdminsRoute = AdminAdminsRouteImport.update({
@@ -159,10 +177,13 @@ export interface FileRoutesByFullPath {
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/geofences': typeof AdminGeofencesRoute
+  '/admin/live': typeof AdminLiveRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
@@ -182,10 +203,13 @@ export interface FileRoutesByTo {
   '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/geofences': typeof AdminGeofencesRoute
+  '/admin/live': typeof AdminLiveRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
@@ -208,10 +232,13 @@ export interface FileRoutesById {
   '/_app/trips': typeof AppTripsRoute
   '/_app/wallet': typeof AppWalletRoute
   '/admin/admins': typeof AdminAdminsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/geofences': typeof AdminGeofencesRoute
+  '/admin/live': typeof AdminLiveRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
@@ -234,10 +261,13 @@ export interface FileRouteTypes {
     | '/trips'
     | '/wallet'
     | '/admin/admins'
+    | '/admin/analytics'
     | '/admin/applicants'
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/geofences'
+    | '/admin/live'
     | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
@@ -257,10 +287,13 @@ export interface FileRouteTypes {
     | '/trips'
     | '/wallet'
     | '/admin/admins'
+    | '/admin/analytics'
     | '/admin/applicants'
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/geofences'
+    | '/admin/live'
     | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
@@ -282,10 +315,13 @@ export interface FileRouteTypes {
     | '/_app/trips'
     | '/_app/wallet'
     | '/admin/admins'
+    | '/admin/analytics'
     | '/admin/applicants'
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/geofences'
+    | '/admin/live'
     | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
@@ -376,6 +412,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminNotificationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/live': {
+      id: '/admin/live'
+      path: '/live'
+      fullPath: '/admin/live'
+      preLoaderRoute: typeof AdminLiveRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/geofences': {
+      id: '/admin/geofences'
+      path: '/geofences'
+      fullPath: '/admin/geofences'
+      preLoaderRoute: typeof AdminGeofencesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/dues': {
       id: '/admin/dues'
       path: '/dues'
@@ -402,6 +452,13 @@ declare module '@tanstack/react-router' {
       path: '/applicants'
       fullPath: '/admin/applicants'
       preLoaderRoute: typeof AdminApplicantsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/admins': {
@@ -494,10 +551,13 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AdminRouteChildren {
   AdminAdminsRoute: typeof AdminAdminsRoute
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminApplicantsRoute: typeof AdminApplicantsRoute
   AdminComplaintsRoute: typeof AdminComplaintsRoute
   AdminDriversRoute: typeof AdminDriversRoute
   AdminDuesRoute: typeof AdminDuesRoute
+  AdminGeofencesRoute: typeof AdminGeofencesRoute
+  AdminLiveRoute: typeof AdminLiveRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPayoutsRoute: typeof AdminPayoutsRoute
   AdminPermissionsRoute: typeof AdminPermissionsRoute
@@ -508,10 +568,13 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminsRoute: AdminAdminsRoute,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminApplicantsRoute: AdminApplicantsRoute,
   AdminComplaintsRoute: AdminComplaintsRoute,
   AdminDriversRoute: AdminDriversRoute,
   AdminDuesRoute: AdminDuesRoute,
+  AdminGeofencesRoute: AdminGeofencesRoute,
+  AdminLiveRoute: AdminLiveRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPayoutsRoute: AdminPayoutsRoute,
   AdminPermissionsRoute: AdminPermissionsRoute,

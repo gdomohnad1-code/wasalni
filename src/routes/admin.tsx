@@ -15,6 +15,9 @@ import {
   Bell,
   Menu,
   X,
+  MapPin,
+  Map,
+  Activity,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +38,9 @@ export const Route = createFileRoute("/admin")({
 
 const NAV = [
   { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
+  { to: "/admin/live", label: "التتبع المباشر", icon: Activity },
+  { to: "/admin/analytics", label: "الإحصائيات", icon: TrendingUp },
+  { to: "/admin/geofences", label: "مناطق التوصيل", icon: Map },
   { to: "/admin/applicants", label: "المقدّمون", icon: ShieldQuestion },
   { to: "/admin/drivers", label: "السائقون", icon: Users },
   { to: "/admin/dues", label: "مستحقات الشركة", icon: Wallet },
