@@ -164,6 +164,16 @@ function RidePage() {
       </div>
 
       <ChatSheet rideId={id} open={chatOpen} onClose={() => setChatOpen(false)} />
+
+      {(ride.status === "accepted" || ride.status === "in_progress") &&
+        ride.pickup_lat && ride.pickup_lng && ride.destination_lat && ride.destination_lng && (
+          <RiderSafetyPanel
+            rideId={id}
+            driverId={ride.driver_id}
+            pickup={{ lat: Number(ride.pickup_lat), lng: Number(ride.pickup_lng) }}
+            destination={{ lat: Number(ride.destination_lat), lng: Number(ride.destination_lng) }}
+          />
+        )}
     </div>
   );
 }
