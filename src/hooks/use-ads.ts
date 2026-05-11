@@ -21,7 +21,32 @@ export type Ad = {
   is_sponsored: boolean;
   sponsor_name: string | null;
   auto_rotate: boolean;
+  target_area_lat: number | null;
+  target_area_lng: number | null;
+  target_area_radius_m: number | null;
 };
+
+function distM(a: number, b: number, c: number, d: number) {
+  const R = 6371000;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(c - a);
+  const dLng = toRad(d - b);
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a)) * Math.cos(toRad(c)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+let userPos: { lat: number; lng: number } | null = null;
+function ensurePos(): Promise<{ lat: number; lng: number } | null> {
+  if (userPos) return Promise.resolve(userPos);
+  return new Promise((resolve) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      (p) => { userPos = { lat: p.coords.latitude, lng: p.coords.longitude }; resolve(userPos); },
+      () => resolve(null),
+      { timeout: 4000, maximumAge: 60000 },
+    );
+  });
+}
 
 const ROTATION_KEY = "ads_rotation_v1";
 const SHOWN_KEY = "ads_shown_v1";
