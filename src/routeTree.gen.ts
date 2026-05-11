@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as CompleteProfileRouteImport } from './routes/complete-profile'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
@@ -46,6 +47,11 @@ import { Route as AppRideIdRouteImport } from './routes/_app/ride.$id'
 import { Route as ApiPublicHooksCheckDuesRouteImport } from './routes/api/public/hooks/check-dues'
 import { Route as ApiPublicHooksAdsTickRouteImport } from './routes/api/public/hooks/ads-tick'
 
+const CompleteProfileRoute = CompleteProfileRouteImport.update({
+  id: '/complete-profile',
+  path: '/complete-profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/complete-profile': typeof CompleteProfileRoute
   '/book': typeof AppBookRoute
   '/driver': typeof AppDriverRoute
   '/home': typeof AppHomeRoute
@@ -266,6 +273,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/complete-profile': typeof CompleteProfileRoute
   '/book': typeof AppBookRoute
   '/driver': typeof AppDriverRoute
   '/home': typeof AppHomeRoute
@@ -305,6 +313,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/complete-profile': typeof CompleteProfileRoute
   '/_app/book': typeof AppBookRoute
   '/_app/driver': typeof AppDriverRoute
   '/_app/home': typeof AppHomeRoute
@@ -344,6 +353,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/complete-profile'
     | '/book'
     | '/driver'
     | '/home'
@@ -380,6 +390,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/complete-profile'
     | '/book'
     | '/driver'
     | '/home'
@@ -418,6 +429,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/admin'
     | '/auth'
+    | '/complete-profile'
     | '/_app/book'
     | '/_app/driver'
     | '/_app/home'
@@ -457,12 +469,20 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CompleteProfileRoute: typeof CompleteProfileRoute
   ApiPublicHooksAdsTickRoute: typeof ApiPublicHooksAdsTickRoute
   ApiPublicHooksCheckDuesRoute: typeof ApiPublicHooksCheckDuesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/complete-profile': {
+      id: '/complete-profile'
+      path: '/complete-profile'
+      fullPath: '/complete-profile'
+      preLoaderRoute: typeof CompleteProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -799,6 +819,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  CompleteProfileRoute: CompleteProfileRoute,
   ApiPublicHooksAdsTickRoute: ApiPublicHooksAdsTickRoute,
   ApiPublicHooksCheckDuesRoute: ApiPublicHooksCheckDuesRoute,
 }
