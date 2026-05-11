@@ -91,7 +91,7 @@ function AdminOverview() {
   const cards = [
     { label: "رحلات اليوم", value: stats.ridesToday, icon: Car, color: "from-primary to-primary/70", to: "/admin/rides" as const },
     { label: "رحلات الشهر", value: stats.ridesMonth, icon: TrendingUp, color: "from-blue-500 to-blue-400", to: "/admin/rides" as const },
-    { label: "إيرادات الشهر", value: `${stats.revenue.toFixed(0)} ج.م`, icon: Wallet, color: "from-emerald-500 to-emerald-400", to: "/admin/analytics" as const },
+    { label: "عمولة الشركة (الشهر)", value: `${stats.revenue.toFixed(0)} ج.م`, icon: Wallet, color: "from-emerald-500 to-emerald-400", to: "/admin/analytics" as const },
     { label: "سائقون نشطون", value: stats.activeDrivers, icon: Users, color: "from-violet-500 to-violet-400", to: "/admin/drivers" as const },
     { label: "شكاوى مفتوحة", value: stats.openComplaints, icon: MessageSquareWarning, color: "from-orange-500 to-orange-400", to: "/admin/complaints" as const },
     { label: "إجمالي الركاب", value: stats.totalRiders, icon: UserCircle, color: "from-pink-500 to-pink-400", to: "/admin/riders" as const },
