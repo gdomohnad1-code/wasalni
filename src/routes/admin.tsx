@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Users,
   Wallet,
+  CreditCard,
   MessageSquareWarning,
   Car,
   TrendingUp,
@@ -34,7 +35,8 @@ export const Route = createFileRoute("/admin")({
 const NAV = [
   { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
   { to: "/admin/drivers", label: "السائقون", icon: Users },
-  { to: "/admin/payouts", label: "المستحقات", icon: Wallet },
+  { to: "/admin/dues", label: "مستحقات الشركة", icon: Wallet },
+  { to: "/admin/payouts", label: "سحوبات السائقين", icon: CreditCard },
   { to: "/admin/complaints", label: "الشكاوى", icon: MessageSquareWarning },
   { to: "/admin/rides", label: "الرحلات", icon: Car },
   { to: "/admin/reports", label: "التقارير", icon: TrendingUp },

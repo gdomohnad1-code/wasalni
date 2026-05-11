@@ -17,6 +17,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminRidesRouteImport } from './routes/admin.rides'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
+import { Route as AdminDuesRouteImport } from './routes/admin.dues'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as AdminComplaintsRouteImport } from './routes/admin.complaints'
 import { Route as AdminAdminsRouteImport } from './routes/admin.admins'
@@ -27,6 +28,7 @@ import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppBookRouteImport } from './routes/_app/book'
 import { Route as AppRideIdRouteImport } from './routes/_app/ride.$id'
+import { Route as ApiPublicHooksCheckDuesRouteImport } from './routes/api/public/hooks/check-dues'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -65,6 +67,11 @@ const AdminReportsRoute = AdminReportsRouteImport.update({
 const AdminPayoutsRoute = AdminPayoutsRouteImport.update({
   id: '/payouts',
   path: '/payouts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDuesRoute = AdminDuesRouteImport.update({
+  id: '/dues',
+  path: '/dues',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDriversRoute = AdminDriversRouteImport.update({
@@ -117,6 +124,11 @@ const AppRideIdRoute = AppRideIdRouteImport.update({
   path: '/ride/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicHooksCheckDuesRoute = ApiPublicHooksCheckDuesRouteImport.update({
+  id: '/api/public/hooks/check-dues',
+  path: '/api/public/hooks/check-dues',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,11 +143,13 @@ export interface FileRoutesByFullPath {
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
+  '/admin/dues': typeof AdminDuesRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/rides': typeof AdminRidesRoute
   '/admin/': typeof AdminIndexRoute
   '/ride/$id': typeof AppRideIdRoute
+  '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -149,11 +163,13 @@ export interface FileRoutesByTo {
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
+  '/admin/dues': typeof AdminDuesRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/rides': typeof AdminRidesRoute
   '/admin': typeof AdminIndexRoute
   '/ride/$id': typeof AppRideIdRoute
+  '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,11 +186,13 @@ export interface FileRoutesById {
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
+  '/admin/dues': typeof AdminDuesRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/rides': typeof AdminRidesRoute
   '/admin/': typeof AdminIndexRoute
   '/_app/ride/$id': typeof AppRideIdRoute
+  '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,11 +209,13 @@ export interface FileRouteTypes {
     | '/admin/admins'
     | '/admin/complaints'
     | '/admin/drivers'
+    | '/admin/dues'
     | '/admin/payouts'
     | '/admin/reports'
     | '/admin/rides'
     | '/admin/'
     | '/ride/$id'
+    | '/api/public/hooks/check-dues'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -209,11 +229,13 @@ export interface FileRouteTypes {
     | '/admin/admins'
     | '/admin/complaints'
     | '/admin/drivers'
+    | '/admin/dues'
     | '/admin/payouts'
     | '/admin/reports'
     | '/admin/rides'
     | '/admin'
     | '/ride/$id'
+    | '/api/public/hooks/check-dues'
   id:
     | '__root__'
     | '/'
@@ -229,11 +251,13 @@ export interface FileRouteTypes {
     | '/admin/admins'
     | '/admin/complaints'
     | '/admin/drivers'
+    | '/admin/dues'
     | '/admin/payouts'
     | '/admin/reports'
     | '/admin/rides'
     | '/admin/'
     | '/_app/ride/$id'
+    | '/api/public/hooks/check-dues'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -241,6 +265,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksCheckDuesRoute: typeof ApiPublicHooksCheckDuesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -299,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/payouts'
       fullPath: '/admin/payouts'
       preLoaderRoute: typeof AdminPayoutsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/dues': {
+      id: '/admin/dues'
+      path: '/dues'
+      fullPath: '/admin/dues'
+      preLoaderRoute: typeof AdminDuesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/drivers': {
@@ -371,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRideIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/hooks/check-dues': {
+      id: '/api/public/hooks/check-dues'
+      path: '/api/public/hooks/check-dues'
+      fullPath: '/api/public/hooks/check-dues'
+      preLoaderRoute: typeof ApiPublicHooksCheckDuesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -400,6 +439,7 @@ interface AdminRouteChildren {
   AdminAdminsRoute: typeof AdminAdminsRoute
   AdminComplaintsRoute: typeof AdminComplaintsRoute
   AdminDriversRoute: typeof AdminDriversRoute
+  AdminDuesRoute: typeof AdminDuesRoute
   AdminPayoutsRoute: typeof AdminPayoutsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminRidesRoute: typeof AdminRidesRoute
@@ -410,6 +450,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminsRoute: AdminAdminsRoute,
   AdminComplaintsRoute: AdminComplaintsRoute,
   AdminDriversRoute: AdminDriversRoute,
+  AdminDuesRoute: AdminDuesRoute,
   AdminPayoutsRoute: AdminPayoutsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminRidesRoute: AdminRidesRoute,
@@ -423,6 +464,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksCheckDuesRoute: ApiPublicHooksCheckDuesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
