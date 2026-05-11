@@ -27,7 +27,7 @@ function AdminOverview() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    setLoading(true);
+    if (!stats) setLoading(true);
     const now = new Date();
     const startToday = new Date(now); startToday.setHours(0, 0, 0, 0);
     const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
