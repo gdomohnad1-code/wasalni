@@ -70,9 +70,16 @@ function ApplicantsPage() {
 
   return (
     <div className="space-y-4" dir="rtl">
-      <div>
-        <h2 className="text-2xl font-bold">المقدّمون</h2>
-        <p className="text-sm text-muted-foreground">طلبات الانضمام كسائق</p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-2xl font-bold">المقدّمون</h2>
+          <p className="text-sm text-muted-foreground">طلبات الانضمام كسائق</p>
+        </div>
+        {isMainAdmin && (
+          <Button onClick={() => setShowAdd(true)} className="bg-gradient-primary">
+            <Plus className="h-4 w-4 ml-1" /> إضافة سائق يدوياً
+          </Button>
+        )}
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
