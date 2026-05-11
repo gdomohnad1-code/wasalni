@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { destinationForUser } from "@/lib/route-after-login";
 
 export const Route = createFileRoute("/")({
   component: SplashPage,
