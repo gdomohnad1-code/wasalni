@@ -518,29 +518,85 @@ function AdminsPage() {
         <h3 className="font-bold mb-3 flex items-center gap-2">
           <UserPlus className="h-4 w-4" /> إضافة بريد أدمن جديد
         </h3>
-        <div className="flex flex-col md:flex-row gap-2">
-          <Input
-            type="email"
-            placeholder="example@wasalni.app"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addEmail()}
-            dir="ltr"
-            className="text-left flex-1"
-          />
-          <Select value={newPerm} onValueChange={(v) => setNewPerm(v as AdminPerm)}>
-            <SelectTrigger className="md:w-56"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {ALL_PERMS.map((p) => (
-                <SelectItem key={p} value={p}>{PERM_META[p].label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button onClick={addEmail} disabled={loading}>إضافة</Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-semibold mb-1 block">البريد الإلكتروني</label>
+            <Input
+              type="email"
+              placeholder="example@wasalni.app"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              dir="ltr"
+              className="text-left"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold mb-1 block">الدور الافتراضي</label>
+            <Select value={newPerm} onValueChange={(v) => setNewPerm(v as AdminPerm)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ALL_PERMS.map((p) => (
+                  <SelectItem key={p} value={p}>{PERM_META[p].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold mb-1 block">الاسم الكامل (اختياري)</label>
+            <Input
+              placeholder="أحمد محمد"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold mb-1 block">
+              كلمة المرور (اختياري — لإنشاء الحساب فورًا)
+            </label>
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                placeholder="اتركه فارغًا للتسجيل لاحقًا"
+                value={newPw}
+                onChange={(e) => setNewPw(e.target.value)}
+                dir="ltr"
+                className="text-left flex-1"
+              />
+              <Button type="button" variant="outline" size="sm" onClick={generateNewPw}>
+                توليد
+              </Button>
+            </div>
+          </div>
         </div>
+        <Button onClick={addEmail} disabled={loading} className="mt-4 w-full md:w-auto">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4 ml-1" /> إضافة</>}
+        </Button>
         <p className="text-xs text-muted-foreground mt-2">
-          اختر الدور الافتراضي — سيُطبَّق تلقائيًا عند تسجيل صاحب البريد. يمكن تعديله لاحقًا.
+          إذا أدخلت كلمة المرور، سيُنشأ الحساب فورًا وجاهز للدخول. وإلا فسيُسجَّل البريد فقط بدوره الافتراضي حتى يقوم صاحبه بالتسجيل.
         </p>
+
+        {createdInfo && (
+          <div className="mt-4 p-3 rounded-lg bg-card border border-primary/30 text-sm space-y-2">
+            <p className="font-bold text-primary">✅ الحساب جاهز — أرسل هذه البيانات للمسؤول:</p>
+            <div className="flex items-center gap-2" dir="ltr">
+              <span className="text-muted-foreground text-xs w-20">Email:</span>
+              <code className="bg-muted px-2 py-0.5 rounded font-mono text-xs flex-1">{createdInfo.email}</code>
+              <Button size="icon" variant="ghost" className="h-6 w-6"
+                onClick={() => { navigator.clipboard.writeText(createdInfo.email); toast.success("تم النسخ"); }}>
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-2" dir="ltr">
+              <span className="text-muted-foreground text-xs w-20">Password:</span>
+              <code className="bg-muted px-2 py-0.5 rounded font-mono text-xs flex-1">{createdInfo.password}</code>
+              <Button size="icon" variant="ghost" className="h-6 w-6"
+                onClick={() => { navigator.clipboard.writeText(createdInfo.password); toast.success("تم النسخ"); }}>
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setCreatedInfo(null)}>إخفاء</Button>
+          </div>
+        )}
       </Card>
 
       <Card className="overflow-hidden">
