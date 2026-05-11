@@ -28,7 +28,7 @@ export function useDriverLocationBroadcast({ enabled, presence, rideId, interval
     const send = async () => {
       const c = lastCoordsRef.current;
       if (!c) return;
-      const { error } = await supabase.rpc("update_driver_location", {
+      const { error } = await supabase.rpc("update_driver_location" as any, {
         p_lat: c.lat,
         p_lng: c.lng,
         p_heading: c.heading,
@@ -44,7 +44,7 @@ export function useDriverLocationBroadcast({ enabled, presence, rideId, interval
       // Mark offline once, with last known coords if any
       if (lastCoordsRef.current) {
         const c = lastCoordsRef.current;
-        supabase.rpc("update_driver_location", {
+        supabase.rpc("update_driver_location" as any, {
           p_lat: c.lat, p_lng: c.lng, p_heading: c.heading, p_speed: c.speed,
           p_accuracy: c.accuracy, p_presence: "offline" as any, p_ride_id: null,
         });
@@ -75,7 +75,7 @@ export function useDriverLocationBroadcast({ enabled, presence, rideId, interval
       // best-effort offline ping
       if (lastCoordsRef.current) {
         const c = lastCoordsRef.current;
-        supabase.rpc("update_driver_location", {
+        supabase.rpc("update_driver_location" as any, {
           p_lat: c.lat, p_lng: c.lng, p_heading: c.heading, p_speed: c.speed,
           p_accuracy: c.accuracy, p_presence: "offline" as any, p_ride_id: null,
         });
@@ -94,5 +94,5 @@ export async function triggerSOS(message?: string) {
     );
     lat = pos.coords.latitude; lng = pos.coords.longitude;
   } catch { /* ignore */ }
-  return supabase.rpc("trigger_driver_sos", { p_message: message ?? "حالة طوارئ", p_lat: lat, p_lng: lng });
+  return supabase.rpc("trigger_driver_sos" as any, { p_message: message ?? "حالة طوارئ", p_lat: lat, p_lng: lng });
 }
