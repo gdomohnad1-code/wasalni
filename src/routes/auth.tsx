@@ -75,7 +75,7 @@ function AuthPage() {
             await supabase.from("profiles").update({ avatar_url: pub.publicUrl, full_name: fullName, phone }).eq("id", data.user.id);
           }
           if (influencerCode.trim()) {
-            const { data: r } = await supabase.rpc("apply_influencer_code", { p_code: influencerCode.trim() });
+            const { data: r } = await (supabase.rpc as any)("apply_influencer_code", { p_code: influencerCode.trim() });
             if ((r as any)?.ok) toast.success("تم تفعيل كود المؤثر ✨");
             else if ((r as any)?.error === "invalid_code") toast.error("كود المؤثر غير صالح");
           }
