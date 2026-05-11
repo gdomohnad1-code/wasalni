@@ -27,6 +27,7 @@ function AuthPage() {
   const [phone, setPhone] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [influencerCode, setInfluencerCode] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
