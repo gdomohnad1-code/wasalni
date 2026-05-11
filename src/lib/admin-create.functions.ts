@@ -17,14 +17,14 @@ const Schema = z.object({
   ]),
 });
 
-async function ensureSuperAdmin(userId: string) {
+async function ensureAdmin(userId: string) {
   const { data } = await supabaseAdmin
-    .from("admin_permissions")
-    .select("permission")
+    .from("user_roles")
+    .select("role")
     .eq("user_id", userId)
-    .eq("permission", "super_admin")
+    .eq("role", "admin")
     .maybeSingle();
-  if (!data) throw new Response("Forbidden — super admin only", { status: 403 });
+  if (!data) throw new Response("Forbidden — admin only", { status: 403 });
 }
 
 export const createAdminAccount = createServerFn({ method: "POST" })
