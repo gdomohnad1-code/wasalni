@@ -109,7 +109,7 @@ function RidePage() {
         </span>
       </div>
 
-      <div className="h-80 mx-4 mt-4 mb-2 rounded-2xl overflow-hidden shadow-card">
+      <div className={`${ride.status === "in_progress" || ride.status === "accepted" ? "h-[60vh]" : "h-80"} mx-4 mt-4 mb-2 rounded-2xl overflow-hidden shadow-card transition-all`}>
         {ride.pickup_lat && ride.pickup_lng && ride.destination_lat && ride.destination_lng ? (
           <RideMap
             pickup={{ lat: Number(ride.pickup_lat), lng: Number(ride.pickup_lng) }}
