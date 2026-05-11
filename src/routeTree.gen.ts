@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppWalletRouteImport } from './routes/_app/wallet'
+import { Route as AppTripsRouteImport } from './routes/_app/trips'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppBookRouteImport } from './routes/_app/book'
 import { Route as AppRideIdRouteImport } from './routes/_app/ride.$id'
@@ -36,6 +37,11 @@ const AppWalletRoute = AppWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTripsRoute = AppTripsRouteImport.update({
+  id: '/trips',
+  path: '/trips',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHomeRoute = AppHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/book': typeof AppBookRoute
   '/home': typeof AppHomeRoute
+  '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
   '/ride/$id': typeof AppRideIdRoute
 }
@@ -65,6 +72,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/book': typeof AppBookRoute
   '/home': typeof AppHomeRoute
+  '/trips': typeof AppTripsRoute
   '/wallet': typeof AppWalletRoute
   '/ride/$id': typeof AppRideIdRoute
 }
@@ -75,14 +83,22 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_app/book': typeof AppBookRoute
   '/_app/home': typeof AppHomeRoute
+  '/_app/trips': typeof AppTripsRoute
   '/_app/wallet': typeof AppWalletRoute
   '/_app/ride/$id': typeof AppRideIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/book' | '/home' | '/wallet' | '/ride/$id'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/book'
+    | '/home'
+    | '/trips'
+    | '/wallet'
+    | '/ride/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/book' | '/home' | '/wallet' | '/ride/$id'
+  to: '/' | '/auth' | '/book' | '/home' | '/trips' | '/wallet' | '/ride/$id'
   id:
     | '__root__'
     | '/'
@@ -90,6 +106,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_app/book'
     | '/_app/home'
+    | '/_app/trips'
     | '/_app/wallet'
     | '/_app/ride/$id'
   fileRoutesById: FileRoutesById
@@ -130,6 +147,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWalletRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/trips': {
+      id: '/_app/trips'
+      path: '/trips'
+      fullPath: '/trips'
+      preLoaderRoute: typeof AppTripsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/home': {
       id: '/_app/home'
       path: '/home'
@@ -157,6 +181,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppBookRoute: typeof AppBookRoute
   AppHomeRoute: typeof AppHomeRoute
+  AppTripsRoute: typeof AppTripsRoute
   AppWalletRoute: typeof AppWalletRoute
   AppRideIdRoute: typeof AppRideIdRoute
 }
@@ -164,6 +189,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppBookRoute: AppBookRoute,
   AppHomeRoute: AppHomeRoute,
+  AppTripsRoute: AppTripsRoute,
   AppWalletRoute: AppWalletRoute,
   AppRideIdRoute: AppRideIdRoute,
 }
