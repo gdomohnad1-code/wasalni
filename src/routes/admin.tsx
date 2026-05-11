@@ -10,6 +10,7 @@ import {
   Car,
   TrendingUp,
   Shield,
+  ShieldQuestion,
   LogOut,
   Bell,
   Menu,
@@ -41,6 +42,7 @@ const NAV = [
   { to: "/admin/rides", label: "الرحلات", icon: Car },
   { to: "/admin/reports", label: "التقارير", icon: TrendingUp },
   { to: "/admin/admins", label: "المسؤولون", icon: Shield },
+  { to: "/admin/permissions", label: "صلاحياتي", icon: ShieldQuestion },
 ] as const;
 
 function AdminLayout() {
