@@ -116,8 +116,39 @@ function ApplicantsPage() {
   );
 }
 
+type DocKind =
+  | "id_card_front"
+  | "id_card_back"
+  | "selfie"
+  | "driver_license"
+  | "car_photo"
+  | "car_license";
+
+const DOC_FIELDS: { kind: DocKind; label: string; urlField: string }[] = [
+  { kind: "id_card_front", label: "صورة البطاقة (وجه)", urlField: "id_card_front_url" },
+  { kind: "id_card_back", label: "صورة البطاقة (ظهر)", urlField: "id_card_back_url" },
+  { kind: "selfie", label: "السيلفي", urlField: "selfie_url" },
+  { kind: "driver_license", label: "رخصة القيادة", urlField: "driver_license_url" },
+  { kind: "car_photo", label: "صورة السيارة", urlField: "car_photo_url" },
+  { kind: "car_license", label: "رخصة السيارة", urlField: "car_license_url" },
+];
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const s = String(reader.result || "");
+      const idx = s.indexOf(",");
+      resolve(idx >= 0 ? s.slice(idx + 1) : s);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const create = useServerFn(manuallyCreateDriver);
+  const upload = useServerFn(adminUploadDriverDoc);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
     email: "",
@@ -128,6 +159,8 @@ function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; on
     car_model: "",
     car_plate: "",
   });
+  const [docs, setDocs] = useState<Record<string, string>>({});
+  const [uploadingKind, setUploadingKind] = useState<DocKind | null>(null);
   const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
   const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -136,6 +169,28 @@ function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; on
     let s = "";
     for (let i = 0; i < 12; i++) s += chars[Math.floor(Math.random() * chars.length)];
     set("password", s);
+  };
+
+  const handleFile = async (kind: DocKind, urlField: string, file: File) => {
+    if (file.size > 10 * 1024 * 1024) return toast.error("الحد الأقصى 10MB");
+    setUploadingKind(kind);
+    try {
+      const base64 = await fileToBase64(file);
+      const res: any = await upload({
+        data: {
+          kind,
+          filename: file.name,
+          content_type: file.type || "application/octet-stream",
+          base64,
+        },
+      });
+      setDocs((p) => ({ ...p, [urlField]: res.path }));
+      toast.success("تم رفع الملف ✅");
+    } catch (e: any) {
+      toast.error(e?.message ?? "فشل الرفع");
+    } finally {
+      setUploadingKind(null);
+    }
   };
 
   const submit = async () => {
@@ -153,6 +208,7 @@ function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; on
           car_type: form.car_type.trim() || null,
           car_model: form.car_model.trim() || null,
           car_plate: form.car_plate.trim() || null,
+          ...docs,
         } as any,
       });
       toast.success("تم إنشاء حساب السائق ✅");
@@ -201,9 +257,45 @@ function ManualAddDriverDialog({ onClose, onCreated }: { onClose: () => void; on
                 <Field label="اللوحة"><Input value={form.car_plate} onChange={(e) => set("car_plate", e.target.value)} /></Field>
               </div>
             </div>
+
+            <div className="border-t pt-3 space-y-2">
+              <div className="text-sm font-semibold">المستندات (اختياري)</div>
+              <div className="grid grid-cols-1 gap-2">
+                {DOC_FIELDS.map((d) => {
+                  const uploaded = !!docs[d.urlField];
+                  const isUp = uploadingKind === d.kind;
+                  return (
+                    <div key={d.kind} className="flex items-center gap-2 border rounded-lg p-2">
+                      <div className="flex-1 text-xs">
+                        <div className="font-medium">{d.label}</div>
+                        {uploaded && <div className="text-green-600 truncate">تم الرفع ✓</div>}
+                      </div>
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          className="hidden"
+                          disabled={isUp || busy}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) handleFile(d.kind, d.urlField, f);
+                            e.target.value = "";
+                          }}
+                        />
+                        <span className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-md border bg-background hover:bg-muted">
+                          {isUp ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                          {uploaded ? "استبدال" : "رفع"}
+                        </span>
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={onClose}>إلغاء</Button>
-              <Button onClick={submit} disabled={busy} className="bg-gradient-primary">
+              <Button onClick={submit} disabled={busy || !!uploadingKind} className="bg-gradient-primary">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء الحساب"}
               </Button>
             </DialogFooter>
