@@ -105,20 +105,46 @@ export function RideMap({
   const [tripPath, setTripPath] = useState<LL[]>([]);
   const [approachPath, setApproachPath] = useState<LL[]>([]);
   const [realDriver, setRealDriver] = useState<LL | null>(null);
+  const [mapStyle, setMapStyle] = useState<"streets" | "satellite">(
+    () => (typeof window !== "undefined" && (localStorage.getItem("map_style") as any)) || "streets"
+  );
+  const baseLayerRef = useRef<L.TileLayer | null>(null);
+  const labelsLayerRef = useRef<L.TileLayer | null>(null);
 
   // Init map
   useEffect(() => {
     if (!elRef.current || mapRef.current) return;
     const map = L.map(elRef.current, { zoomControl: false, attributionControl: false })
       .setView([pickup.lat, pickup.lng], 13);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 19, subdomains: "abcd",
-    }).addTo(map);
     L.control.zoom({ position: "bottomright" }).addTo(map);
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; layersRef.current = {}; };
+    return () => { map.remove(); mapRef.current = null; layersRef.current = {}; baseLayerRef.current = null; labelsLayerRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Apply / switch tile layers based on selected style
+  useEffect(() => {
+    const map = mapRef.current; if (!map) return;
+    if (baseLayerRef.current) { map.removeLayer(baseLayerRef.current); baseLayerRef.current = null; }
+    if (labelsLayerRef.current) { map.removeLayer(labelsLayerRef.current); labelsLayerRef.current = null; }
+
+    if (mapStyle === "satellite") {
+      baseLayerRef.current = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19, attribution: "Esri" }
+      ).addTo(map);
+      labelsLayerRef.current = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19, opacity: 0.9 }
+      ).addTo(map);
+    } else {
+      baseLayerRef.current = L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { maxZoom: 19, attribution: "© OpenStreetMap" }
+      ).addTo(map);
+    }
+    try { localStorage.setItem("map_style", mapStyle); } catch {}
+  }, [mapStyle]);
 
   // Fetch trip route pickup -> destination
   useEffect(() => {
@@ -258,5 +284,23 @@ export function RideMap({
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15, animate: true });
   }, [tripPath, approachPath, driverPos, phase, pickup.lat, pickup.lng, destination.lat, destination.lng]);
 
-  return <div ref={elRef} className={className ?? "w-full h-full rounded-2xl overflow-hidden"} />;
+  return (
+    <div className={`relative ${className ?? "w-full h-full rounded-2xl overflow-hidden"}`}>
+      <div ref={elRef} className="w-full h-full" />
+      <div className="absolute top-3 left-3 z-[1000] bg-white/95 backdrop-blur rounded-full shadow-md flex p-1 text-xs font-medium">
+        <button
+          onClick={() => setMapStyle("streets")}
+          className={`px-3 py-1.5 rounded-full transition ${mapStyle === "streets" ? "bg-black text-white" : "text-gray-700"}`}
+        >
+          خريطة
+        </button>
+        <button
+          onClick={() => setMapStyle("satellite")}
+          className={`px-3 py-1.5 rounded-full transition ${mapStyle === "satellite" ? "bg-black text-white" : "text-gray-700"}`}
+        >
+          قمر صناعي
+        </button>
+      </div>
+    </div>
+  );
 }
