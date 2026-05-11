@@ -19,6 +19,7 @@ import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPermissionsRouteImport } from './routes/admin.permissions'
 import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminLiveRouteImport } from './routes/admin.live'
 import { Route as AdminDuesRouteImport } from './routes/admin.dues'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as AdminComplaintsRouteImport } from './routes/admin.complaints'
@@ -80,6 +81,11 @@ const AdminPayoutsRoute = AdminPayoutsRouteImport.update({
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLiveRoute = AdminLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDuesRoute = AdminDuesRouteImport.update({
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/live': typeof AdminLiveRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/live': typeof AdminLiveRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/live': typeof AdminLiveRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/permissions': typeof AdminPermissionsRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/live'
     | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/live'
     | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/live'
     | '/admin/notifications'
     | '/admin/payouts'
     | '/admin/permissions'
@@ -374,6 +386,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/admin/notifications'
       preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/live': {
+      id: '/admin/live'
+      path: '/live'
+      fullPath: '/admin/live'
+      preLoaderRoute: typeof AdminLiveRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/dues': {
@@ -498,6 +517,7 @@ interface AdminRouteChildren {
   AdminComplaintsRoute: typeof AdminComplaintsRoute
   AdminDriversRoute: typeof AdminDriversRoute
   AdminDuesRoute: typeof AdminDuesRoute
+  AdminLiveRoute: typeof AdminLiveRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPayoutsRoute: typeof AdminPayoutsRoute
   AdminPermissionsRoute: typeof AdminPermissionsRoute
@@ -512,6 +532,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminComplaintsRoute: AdminComplaintsRoute,
   AdminDriversRoute: AdminDriversRoute,
   AdminDuesRoute: AdminDuesRoute,
+  AdminLiveRoute: AdminLiveRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPayoutsRoute: AdminPayoutsRoute,
   AdminPermissionsRoute: AdminPermissionsRoute,
