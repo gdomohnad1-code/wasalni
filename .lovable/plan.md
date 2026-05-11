@@ -1,94 +1,109 @@
+# Ads Manager — خطة التنفيذ
 
-# نظام التسجيل الكامل للسائقين
+نظام إعلانات ديناميكي كامل قابل للإدارة من الداش بورد بدون تعديل برمجي.
 
-## 1) تعديلات قاعدة البيانات (migration)
+## 1. قاعدة البيانات (Migration)
 
-إضافة الأعمدة الناقصة على جدول `driver_documents`:
+### جدول `ads`
+- `id`, `created_at`, `updated_at`, `created_by`
+- `title`, `description`
+- `type` enum: `banner | popup | video | story | notification | fullscreen | reward`
+- `placement` enum (multi via array): `home | book | waiting_driver | driver_app | pre_confirm | post_ride`
+- `target_audience` enum: `riders | drivers | both`
+- `target_cities` text[] (اختياري)
+- `target_min_rides` int / `target_max_rides` int (اختياري)
+- `media_type` enum: `image | video | gif | link | qr`
+- `media_url` (يرفع على bucket جديد `ads`)
+- `external_link` text
+- `qr_data` text
+- `start_at`, `end_at` timestamptz
+- `daily_start_hour`, `daily_end_hour` int (0-23, اختياري)
+- `max_impressions_per_user` int
+- `priority` int default 0 (الأعلى يظهر أولاً)
+- `is_sponsored` bool, `sponsor_name` text
+- `status` enum: `draft | scheduled | active | paused | ended`
+- `auto_rotate` bool default true
 
-| العمود | النوع | الوصف |
-|---|---|---|
-| `id_card_front_url` | text | صورة البطاقة (وجه) |
-| `id_card_back_url` | text | صورة البطاقة (ظهر) |
-| `selfie_url` | text | سيلفي السائق |
-| `car_type` | text | نوع العربية (سيدان/SUV/...) |
-| `submitted_at` | timestamptz | وقت تقديم الطلب |
-| `reviewed_at` | timestamptz | وقت المراجعة |
-| `reviewed_by` | uuid | الـ admin اللي راجع |
-| `next_attempt_at` | timestamptz | وقت السماح بإعادة المحاولة بعد الرفض (now + 24h) |
-| `rejection_count` | int default 0 | عدد مرات الرفض |
+### جدول `ad_events`
+- `id`, `ad_id`, `user_id`, `event_type` enum: `impression | click | conversion`
+- `created_at`, `metadata` jsonb
 
-تغيير `account_status` enum ليشمل: `pending` (قيد المراجعة) — موجود فعلاً: active/suspended/banned، هضيف `pending` و `rejected`.
+### Bucket تخزين
+- `ads` (public) لرفع صور/فيديوهات الإعلانات
 
-إضافة Storage bucket خاص: `driver-applications` (private، RLS: المستخدم يرفع لمجلده، الإدمن يقرأ الكل).
+### RLS
+- `ads`: admin يقرأ ويعدل كل شيء؛ المستخدم المسجل يقرأ الإعلانات النشطة المستهدفة له فقط
+- `ad_events`: المستخدم يدرج events خاصة به؛ admin يقرأ الكل
 
-## 2) واجهة تسجيل السائق (داخل التطبيق نفسه)
+### Function/Trigger
+- `notify_ad_campaign_end()` — trigger على `ads` يدخل notification للـ admins عند `status = 'ended'` أو عند تجاوز `end_at`
+- cron job (هنستخدم pg_cron إن متاح، أو route عام) يحدث الحالة من `scheduled → active → ended` كل 5 دقائق
 
-صفحة `/become-driver` فيها form متعدد الخطوات:
+## 2. صفحات الـ Admin
 
-- **خطوة 1 — البيانات الشخصية**: رفع البطاقة (وجه + ظهر) + سيلفي
-- **خطوة 2 — الرخصة**: صورة رخصة القيادة
-- **خطوة 3 — العربية**: نوعها + موديل + رقم اللوحة + صورة العربية + صورة الرخصة
-- **خطوة 4 — مراجعة وإرسال**: عرض كل البيانات + زر إرسال نهائي
+### `src/routes/admin.ads.tsx`
+- جدول بكل الإعلانات: العنوان، النوع، المكان، الحالة، Priority، عدد المشاهدات، CTR، أزرار تفعيل/إيقاف/تعديل/حذف
+- زر "إنشاء إعلان جديد" يفتح Dialog
+- Tabs: All / Active / Scheduled / Paused / Ended
 
-عند الإرسال:
-- `account_status = 'pending'`
-- `submitted_at = now()`
-- إنشاء إشعار للمستخدم: "تم استلام طلبك، سيتم المراجعة خلال 48 ساعة"
+### مكوّن `AdEditor` (Dialog)
+- form كامل بكل الحقول
+- رفع وسائط (image/video/gif) لـ bucket `ads`
+- اختيار placement(s) متعدد
+- اختيار target audience + cities (multi-select) + rides range
+- date/time pickers لـ start/end + ساعات اليوم
+- Priority slider
+- Preview pane حي يعرض شكل الإعلان حسب النوع
+- Save as draft / Publish / Schedule
 
-## 3) منطق الحماية (Gating)
+### `src/routes/admin.ads.$id.tsx` (Analytics لكل إعلان)
+- Cards: Impressions, Clicks, CTR, Conversions, Revenue (لو sponsored)
+- Chart زمني (recharts)
+- جدول آخر الـ events
 
-- لو المستخدم status=`pending` → تظهر له صفحة "طلبك قيد المراجعة" مع countdown للـ 48 ساعة
-- لو `rejected` و `next_attempt_at > now()` → "تم رفض طلبك، يمكنك المحاولة بعد X ساعة" (countdown حقيقي)
-- لو `rejected` و `next_attempt_at <= now()` → يقدر يقدم تاني (الـ form يفتح من جديد)
-- لو `active` → السائق يدخل واجهة السائق عادي
+### تحديث `src/routes/admin.tsx` (sidebar)
+- إضافة رابط "Ads Manager"
 
-## 4) قسم "المقدّمون" في الداشبورد
+## 3. عرض الإعلانات في التطبيق
 
-صفحة جديدة `/admin/applicants` فيها:
+### Hook `useAds(placement)`
+- يجلب الإعلانات المؤهلة (active, ضمن الفترة، target يطابق المستخدم، priority desc)
+- يفلتر حسب `max_impressions_per_user` (محلياً + عبر `ad_events`)
+- يدعم Smart Rotation: يخزن آخر `ad_id` ظهر للمستخدم في localStorage ويرجّع التالي
+- يسجل impression تلقائياً عند ظهور الإعلان
 
-- جدول بكل الطلبات `pending`
-- لكل طلب: اسم + تاريخ التقديم + زمن متبقي للـ 48 ساعة + زر "عرض"
-- صفحة تفصيلية: عرض كل الصور والبيانات
-- 3 أزرار:
-  1. **قبول** → `account_status='active'`, `approved=true`, إشعار قبول، إضافة دور `driver`
-  2. **رفض** → `account_status='rejected'`, `next_attempt_at = now()+24h`, `rejection_count++`، إشعار + سبب الرفض
-  3. **طلب تعديل** → نموذج فيه checkboxes (تغيير صورة شخصية / صورة عربية / رخصة / ...) + رسالة → يبعت إشعار + إيميل بالتعديلات المطلوبة، الـ status يفضل pending والمستخدم يقدر يعدّل ويعيد الإرسال
+### مكوّن `<AdSlot placement="home" />`
+- يختار العرض المناسب حسب `type`:
+  - `banner` → كارت أفقي
+  - `popup` → Dialog
+  - `video` → فيديو autoplay muted
+  - `story` → عرض ملء الشاشة لفترة
+  - `notification` → toast
+  - `fullscreen` → overlay كامل مع زر إغلاق
+  - `reward` → فيديو + زر "احصل على المكافأة"
+- يسجل click عند النقر ويفتح `external_link`
 
-## 5) الإشعارات
+### دمج في الصفحات
+- `home.tsx`: `<AdSlot placement="home" />`
+- `book.tsx`: `<AdSlot placement="book" />` و `placement="pre_confirm"` قبل زر التأكيد
+- `ride.$id.tsx`: `placement="waiting_driver"` (status=accepted) و `placement="post_ride"` (status=completed)
+- `driver.tsx`: `<AdSlot placement="driver_app" />`
 
-كلها عبر النظام الموجود (`notifications` table + FCM Push اللي ربطناه قبل كده):
+## 4. Cron job لتحديث حالات الإعلانات
 
-- **استلام**: "تم استلام طلبك، المراجعة خلال 48 ساعة"
-- **قبول**: "🎉 تم قبولك كسائق! يمكنك بدء العمل الآن"
-- **رفض**: "تم رفض الطلب: [السبب]. يمكنك إعادة التقديم بعد 24 ساعة"
-- **طلب تعديل**: "يلزم تعديل البيانات التالية: [القائمة]"
+`src/routes/api/public/hooks/ads-tick.ts` (POST):
+- يحول `scheduled → active` لو `start_at <= now()`
+- يحول `active → ended` لو `end_at < now()`
+- يدخل notification للـ admin عند انتهاء حملة
+- تأمين بـ apikey (anon)
+- يتم استدعاؤها من pg_cron كل 5 دقائق
 
-الإيميل: نفس النص يتبعت عبر Lovable Cloud auth (الإيميل مسجّل في `auth.users.email`).
+## 5. ترجمات
+إضافة كل المفاتيح الجديدة في `src/lib/i18n.tsx` (ar + en).
 
-## 6) واجهة إعادة التعديل (للسائق المرفوض/المطلوب تعديله)
+## تفاصيل تقنية
+- نستخدم shadcn (Dialog, Tabs, Select, Calendar, Checkbox, Slider, Badge)
+- recharts للتحليلات (مستخدم بالفعل)
+- لا تعديل على types.ts (يولّد تلقائياً بعد الـ migration)
 
-- شاشة بنفس الـ form القديم لكن:
-  - الحقول اللي طُلب تعديلها مهايلايت بإطار أحمر + رسالة "يجب تعديل هذا الحقل"
-  - باقي الحقول read-only (محفوظ)
-- زر "إعادة الإرسال" → status يرجع `pending` + `submitted_at = now()`
-
-## 7) ما لن يتم
-
-- لن أبني ساعة countdown في الـ backend (الفكرة تتم client-side من قراءة `next_attempt_at` من DB)
-- لن أبني SMS (إشعار + إيميل فقط)
-- لن أربط بمزوّد توثيق هوية تلقائي (المراجعة بشرية يدوية)
-
----
-
-## ملاحظات تقنية
-
-- Storage bucket جديد `driver-applications` private، RLS: `(storage.foldername(name))[1] = auth.uid()::text` للقراءة/الكتابة الذاتية + admin يقرأ الكل
-- صلاحية إدارية جديدة: ممكن نستخدم الموجود `drivers` ضمن `admin_permission` enum، أو نضيف `driver_applications` (هختار الموجود `drivers` لتبسيط الأمور)
-- صفحة المقدّمين تستخدم نفس layout الموجود في `/admin/drivers`
-- سرفر فنكشنز: `submit-application`, `approve-application`, `reject-application`, `request-changes-application` كلها `createServerFn` مع `requireSupabaseAuth`
-
----
-
-**سؤال قبل التنفيذ**: عايز الإيميل يتبعت من خلال Lovable Cloud الافتراضي (sender = `noreply`)، ولا تحب نفعّل **Resend connector** لإيميلات احترافية بـ branding واسم تطبيقك (ينصح بيه)؟ ولو Resend، عندك دومين موثّق أو نستخدم `onboarding@resend.dev` للتجربة؟
-
-لما تأكد على الخطة (ولو فيه أي تعديل)، أبدأ التنفيذ على الفور.
+هل أكمل التنفيذ؟
