@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Gift, Headphones, Home, Settings as SettingsIcon, Star, Wallet, History, Car, ShieldCheck, LogOut } from "lucide-react";
+import { ChevronLeft, Gift, Headphones, Home, Settings as SettingsIcon, Star, Wallet, History, ShieldCheck, LogOut } from "lucide-react";
 
 export const Route = createFileRoute("/_app/profile")({
   component: ProfilePage,
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/_app/profile")({
 
 function ProfilePage() {
   const { profile, user, roles, signOut } = useAuth();
+  const { t } = useI18n();
   const isAdmin = roles?.includes("admin");
   const isDriver = roles?.includes("driver");
 
