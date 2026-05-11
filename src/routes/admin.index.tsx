@@ -73,6 +73,7 @@ function AdminOverview() {
       totalRiders: riders.count ?? 0,
     });
     setLive(liveR.data ?? []);
+    loadedRef.current = true;
     setLoading(false);
   };
 
