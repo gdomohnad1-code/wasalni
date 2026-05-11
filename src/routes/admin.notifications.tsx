@@ -40,8 +40,12 @@ function NotificationsPage() {
     }
     setSending(true);
     try {
-      const res = await send({ data: { audience, title: title.trim(), body: body.trim() } });
-      toast.success(`تم إرسال الإشعار إلى ${res.sent} مستخدم`);
+      const res: any = await send({ data: { audience, title: title.trim(), body: body.trim() } });
+      const pushPart =
+        typeof res.pushSuccess === "number"
+          ? ` — إشعار Push: ${res.pushSuccess} نجح، ${res.pushFailure} فشل`
+          : "";
+      toast.success(`تم إرسال الإشعار إلى ${res.sent} مستخدم${pushPart}`);
       setTitle(""); setBody("");
     } catch (e: any) {
       toast.error(e?.message ?? "تعذّر الإرسال");
