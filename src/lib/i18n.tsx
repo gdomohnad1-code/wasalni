@@ -263,6 +263,10 @@ const dict = {
     "notif.ride_completed": "اكتملت الرحلة",
     "notif.ride_cancelled": "تم إلغاء الرحلة",
     "notif.new_ride_request": "طلب رحلة جديد",
+    "notif.center": "الإشعارات",
+    "notif.mark_all": "تعليم الكل كمقروء",
+    "notif.clear": "مسح الكل",
+    "notif.empty": "لا توجد إشعارات بعد",
   },
   en: {
     // nav
@@ -524,6 +528,10 @@ const dict = {
     "notif.ride_completed": "Ride completed",
     "notif.ride_cancelled": "Ride cancelled",
     "notif.new_ride_request": "New ride request",
+    "notif.center": "Notifications",
+    "notif.mark_all": "Mark all as read",
+    "notif.clear": "Clear all",
+    "notif.empty": "No notifications yet",
   },
 } as const;
 
