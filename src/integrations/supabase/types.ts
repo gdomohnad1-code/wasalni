@@ -681,6 +681,54 @@ export type Database = {
         }
         Relationships: []
       }
+      pricing_settings: {
+        Row: {
+          commission_rate: number
+          id: string
+          multipliers: Json
+          multistop_hourly: number
+          multistop_min: number
+          oneway_base: number
+          oneway_base_km: number
+          oneway_per_km: number
+          roundtrip_base: number
+          roundtrip_base_km: number
+          roundtrip_per_km: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          commission_rate?: number
+          id?: string
+          multipliers?: Json
+          multistop_hourly?: number
+          multistop_min?: number
+          oneway_base?: number
+          oneway_base_km?: number
+          oneway_per_km?: number
+          roundtrip_base?: number
+          roundtrip_base_km?: number
+          roundtrip_per_km?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          commission_rate?: number
+          id?: string
+          multipliers?: Json
+          multistop_hourly?: number
+          multistop_min?: number
+          oneway_base?: number
+          oneway_base_km?: number
+          oneway_per_km?: number
+          roundtrip_base?: number
+          roundtrip_base_km?: number
+          roundtrip_per_km?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
