@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import {
   Bell, AlertTriangle, Sparkles, Wallet, ShieldCheck, ChevronLeft,
-  Clock, MapPin, Star, Plus, Crown,
+  Clock, MapPin, Star, Crown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
