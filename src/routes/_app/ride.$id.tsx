@@ -273,7 +273,7 @@ function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; o
 
   if (!open) return null;
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-foreground/40 z-50 flex items-end">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-foreground/40 z-[9999] flex items-end">
       <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} className="bg-card w-full max-w-md mx-auto rounded-t-3xl flex flex-col h-[80vh]">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-bold">{t("ride.chat_title")}</h3>
