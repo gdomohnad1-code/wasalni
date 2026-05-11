@@ -583,7 +583,7 @@ function AdminsPage() {
   };
 
   const changePerm = async (userId: string, newPerm: AdminPerm) => {
-    if (!isSuper) { toast.error("المسؤول الرئيسي فقط يمكنه تغيير الأدوار"); return; }
+    // any admin allowed
     if (meId === userId && newPerm !== "super_admin") {
       toast.error("لا يمكنك تخفيض دور حسابك الرئيسي"); return;
     }
