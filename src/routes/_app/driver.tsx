@@ -632,20 +632,22 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
             car={`${docs.car_model || ""} · ${docs.car_plate || ""}`}
           />
         )}
-        {activeRide && phase === "to_pickup" && (
+        {activeRide && phase === "to_pickup" && pickup && (
           <ToPickupPanel
             address={activeRide.pickup_address}
             distanceKm={distToTarget}
             etaMin={etaMin}
+            target={pickup}
             onArrived={startTrip}
           />
         )}
-        {activeRide && phase === "in_progress" && (
+        {activeRide && phase === "in_progress" && destination && (
           <InTripPanel
             address={activeRide.destination_address}
             distanceKm={distToTarget}
             etaMin={etaMin}
             price={activeRide.price}
+            target={destination}
             onEnd={endTrip}
           />
         )}
