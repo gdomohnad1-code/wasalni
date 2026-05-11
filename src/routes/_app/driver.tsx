@@ -155,25 +155,41 @@ function DriverApplicationForm({ docs, onDone }: { docs: any; onDone: () => void
 
   const needsFix = (key: string) => isResubmit && fieldsToFix.includes(key);
 
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+
   const upload = async (key: string, file: File) => {
     if (!user) throw new Error("not authenticated");
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const path = `${user.id}/${key}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("driver-applications").upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from("driver-applications").upload(path, file, { upsert: true, contentType: file.type || "image/jpeg" });
     if (error) throw error;
-    // store the bucket-prefixed path so backend knows to sign it
     setUrls((p) => ({ ...p, [key]: `driver-applications/${path}` }));
   };
 
-  const onPickFile = (key: string) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onCapture = (key: string) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking same file
     if (!f) return;
+    if (!f.type.startsWith("image/")) { toast.error("صورة فقط"); return; }
+    // Local preview
+    const localUrl = URL.createObjectURL(f);
+    setPreviews((p) => { if (p[key]) URL.revokeObjectURL(p[key]); return { ...p, [key]: localUrl }; });
+    setUploadingKey(key);
     try {
       await upload(key, f);
-      toast.success("تم رفع الملف");
+      toast.success("تم التقاط الصورة ✅");
     } catch (err: any) {
       toast.error(err.message ?? "فشل الرفع");
+      setPreviews((p) => { URL.revokeObjectURL(p[key]); const n = { ...p }; delete n[key]; return n; });
+    } finally {
+      setUploadingKey(null);
     }
+  };
+
+  const retake = (key: string) => {
+    setPreviews((p) => { if (p[key]) URL.revokeObjectURL(p[key]); const n = { ...p }; delete n[key]; return n; });
+    setUrls((p) => ({ ...p, [key]: "" }));
   };
 
   const allFilled = useMemo(() => {
@@ -241,14 +257,14 @@ function DriverApplicationForm({ docs, onDone }: { docs: any; onDone: () => void
       <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
         {step === 0 && (
           <>
-            <FileField label="صورة البطاقة (وجه)" k="id_card_front_url" url={urls.id_card_front_url} onPick={onPickFile("id_card_front_url")} highlight={needsFix("id_card_front_url")} />
-            <FileField label="صورة البطاقة (ظهر)" k="id_card_back_url" url={urls.id_card_back_url} onPick={onPickFile("id_card_back_url")} highlight={needsFix("id_card_back_url")} />
-            <FileField label="سيلفي شخصي" k="selfie_url" url={urls.selfie_url} onPick={onPickFile("selfie_url")} highlight={needsFix("selfie_url")} icon={Camera} />
+            <CameraField label="صورة البطاقة (وجه)" k="id_card_front_url" url={urls.id_card_front_url} preview={previews.id_card_front_url} uploading={uploadingKey === "id_card_front_url"} onCapture={onCapture("id_card_front_url")} onRetake={() => retake("id_card_front_url")} highlight={needsFix("id_card_front_url")} />
+            <CameraField label="صورة البطاقة (ظهر)" k="id_card_back_url" url={urls.id_card_back_url} preview={previews.id_card_back_url} uploading={uploadingKey === "id_card_back_url"} onCapture={onCapture("id_card_back_url")} onRetake={() => retake("id_card_back_url")} highlight={needsFix("id_card_back_url")} />
+            <CameraField label="سيلفي شخصي" k="selfie_url" url={urls.selfie_url} preview={previews.selfie_url} uploading={uploadingKey === "selfie_url"} onCapture={onCapture("selfie_url")} onRetake={() => retake("selfie_url")} highlight={needsFix("selfie_url")} facing="user" />
           </>
         )}
         {step === 1 && (
           <>
-            <FileField label="صورة رخصة القيادة" k="driver_license_url" url={urls.driver_license_url} onPick={onPickFile("driver_license_url")} highlight={needsFix("driver_license_url")} />
+            <CameraField label="رخصة القيادة (وجه)" k="driver_license_url" url={urls.driver_license_url} preview={previews.driver_license_url} uploading={uploadingKey === "driver_license_url"} onCapture={onCapture("driver_license_url")} onRetake={() => retake("driver_license_url")} highlight={needsFix("driver_license_url")} />
           </>
         )}
         {step === 2 && (
@@ -256,8 +272,8 @@ function DriverApplicationForm({ docs, onDone }: { docs: any; onDone: () => void
             <Field label="نوع السيارة" v={carType} setV={setCarType} placeholder="سيدان / SUV / هاتشباك" highlight={needsFix("car_type")} />
             <Field label="موديل السيارة" v={carModel} setV={setCarModel} placeholder="هيونداي اكسنت 2020" highlight={needsFix("car_model")} />
             <Field label="رقم اللوحة" v={carPlate} setV={setCarPlate} placeholder="أ ب ج 1234" highlight={needsFix("car_plate")} />
-            <FileField label="صورة السيارة" k="car_photo_url" url={urls.car_photo_url} onPick={onPickFile("car_photo_url")} highlight={needsFix("car_photo_url")} />
-            <FileField label="صورة رخصة السيارة" k="car_license_url" url={urls.car_license_url} onPick={onPickFile("car_license_url")} highlight={needsFix("car_license_url")} />
+            <CameraField label="صورة السيارة" k="car_photo_url" url={urls.car_photo_url} preview={previews.car_photo_url} uploading={uploadingKey === "car_photo_url"} onCapture={onCapture("car_photo_url")} onRetake={() => retake("car_photo_url")} highlight={needsFix("car_photo_url")} />
+            <CameraField label="رخصة السيارة" k="car_license_url" url={urls.car_license_url} preview={previews.car_license_url} uploading={uploadingKey === "car_license_url"} onCapture={onCapture("car_license_url")} onRetake={() => retake("car_license_url")} highlight={needsFix("car_license_url")} />
           </>
         )}
         {step === 3 && (
@@ -300,24 +316,56 @@ function Field({ label, v, setV, placeholder, highlight }: { label: string; v: s
   );
 }
 
-function FileField({ label, k, url, onPick, highlight, icon: Icon = Upload }: { label: string; k: string; url: string; onPick: (e: React.ChangeEvent<HTMLInputElement>) => void; highlight?: boolean; icon?: any }) {
-  const has = Boolean(url);
+function CameraField({ label, k, url, preview, uploading, onCapture, onRetake, highlight, facing = "environment" }: {
+  label: string; k: string; url: string; preview?: string; uploading?: boolean;
+  onCapture: (e: React.ChangeEvent<HTMLInputElement>) => void; onRetake: () => void;
+  highlight?: boolean; facing?: "environment" | "user";
+}) {
+  const has = Boolean(url) || Boolean(preview);
+  const inputId = `cam-${k}`;
   return (
     <div>
-      <Label className={highlight ? "text-destructive" : ""}>{label} {highlight && <span className="text-[10px]">(يلزم التعديل)</span>}</Label>
-      <label className="cursor-pointer block">
-        <div className={`border-2 border-dashed rounded-xl p-3 text-center text-sm transition ${
-          highlight ? "border-destructive bg-destructive/5"
-          : has ? "border-primary bg-primary/5" : "border-border"
-        }`}>
-          {has ? (
-            <span className="flex items-center justify-center gap-1"><CheckCircle2 className="h-4 w-4 text-primary" /> تم الرفع</span>
-          ) : (
-            <span className="flex items-center justify-center gap-1"><Icon className="h-4 w-4" /> اختر ملف...</span>
+      <Label className={highlight ? "text-destructive" : ""}>
+        {label} {highlight && <span className="text-[10px]">(يلزم التعديل)</span>}
+      </Label>
+      <input
+        id={inputId}
+        type="file"
+        accept="image/*"
+        capture={facing}
+        className="hidden"
+        onChange={onCapture}
+      />
+      {has ? (
+        <div className={`relative rounded-xl overflow-hidden border-2 ${highlight ? "border-destructive" : "border-primary"} bg-black/5`}>
+          {preview && <img src={preview} alt={label} className="w-full h-44 object-cover" />}
+          {uploading && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-sm gap-2">
+              <Loader2 className="h-5 w-5 animate-spin" /> جاري الرفع...
+            </div>
           )}
+          {!uploading && url && (
+            <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-[11px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3" /> تم
+            </div>
+          )}
+          <div className="p-2 flex gap-2 bg-card">
+            <Button type="button" variant="outline" size="sm" className="flex-1 gap-1" onClick={onRetake} disabled={uploading}>
+              <Camera className="h-4 w-4" /> إعادة التصوير
+            </Button>
+          </div>
         </div>
-        <input type="file" accept="image/*" className="hidden" onChange={onPick} />
-      </label>
+      ) : (
+        <label htmlFor={inputId} className="cursor-pointer block">
+          <div className={`border-2 border-dashed rounded-xl p-6 text-center transition ${
+            highlight ? "border-destructive bg-destructive/5" : "border-border hover:border-primary hover:bg-primary/5"
+          }`}>
+            <Camera className={`h-8 w-8 mx-auto mb-2 ${highlight ? "text-destructive" : "text-muted-foreground"}`} />
+            <div className="text-sm font-bold">افتح الكاميرا والتقط صورة</div>
+            <div className="text-[11px] text-muted-foreground mt-1">تصوير مباشر — غير مسموح بالرفع من المعرض</div>
+          </div>
+        </label>
+      )}
     </div>
   );
 }
