@@ -62,7 +62,7 @@ function DriversAdmin() {
   const update = async (patch: Record<string, any>) => {
     if (!selected) return;
     setBusy(true);
-    const { error } = await supabase.from("driver_documents").update(patch).eq("driver_id", selected.driver_id);
+    const { error } = await supabase.from("driver_documents").update(patch as never).eq("driver_id", selected.driver_id);
     setBusy(false);
     if (error) { toast.error("تعذر حفظ التغييرات"); return; }
     toast.success("تم التحديث");
