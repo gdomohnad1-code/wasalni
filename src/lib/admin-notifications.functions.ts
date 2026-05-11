@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { sendFcmToTokens } from "@/lib/fcm.server";
 import { z } from "zod";
 
 const Schema = z.object({
@@ -65,5 +66,29 @@ export const sendBroadcastNotification = createServerFn({ method: "POST" })
       sent += slice.length;
     }
 
-    return { sent };
+    // Push notifications via FCM
+    let pushSuccess = 0;
+    let pushFailure = 0;
+    try {
+      const { data: tokenRows } = await supabaseAdmin
+        .from("device_tokens")
+        .select("token, user_id")
+        .in("user_id", userIds);
+      const tokens = (tokenRows ?? []).map((r: any) => r.token);
+      if (tokens.length > 0) {
+        const result = await sendFcmToTokens(tokens, data.title, data.body);
+        pushSuccess = result.success;
+        pushFailure = result.failure;
+        if (result.invalidTokens.length > 0) {
+          await supabaseAdmin
+            .from("device_tokens")
+            .delete()
+            .in("token", result.invalidTokens);
+        }
+      }
+    } catch (e: any) {
+      console.error("FCM send failed:", e?.message ?? e);
+    }
+
+    return { sent, pushSuccess, pushFailure };
   });
