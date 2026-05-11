@@ -381,19 +381,40 @@ function LiveTrackingPage() {
   );
 }
 
-function Kpi({ label, value, color }: { label: string; value: number; color: string }) {
+const KPI_TONES = {
+  primary: { bg: "from-primary/15 to-primary/5", text: "text-primary", icon: "bg-primary/15 text-primary" },
+  green: { bg: "from-green-500/15 to-green-500/5", text: "text-green-600 dark:text-green-400", icon: "bg-green-500/15 text-green-600 dark:text-green-400" },
+  amber: { bg: "from-amber-500/15 to-amber-500/5", text: "text-amber-600 dark:text-amber-400", icon: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+  muted: { bg: "from-muted to-muted/40", text: "text-muted-foreground", icon: "bg-muted text-muted-foreground" },
+  destructive: { bg: "from-destructive/15 to-destructive/5", text: "text-destructive", icon: "bg-destructive/15 text-destructive" },
+} as const;
+
+function Kpi({ label, value, icon: Icon, tone }: { label: string; value: number; icon: any; tone: keyof typeof KPI_TONES }) {
+  const t = KPI_TONES[tone];
   return (
-    <Card className="p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`text-2xl font-extrabold ${color.includes("text-") ? color.split(" ").find((c) => c.startsWith("text-")) : ""}`}>{value}</div>
+    <Card className={`p-3.5 border-border/60 bg-gradient-to-br ${t.bg} relative overflow-hidden`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${t.icon}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className={`text-2xl font-extrabold ${t.text}`}>{value}</div>
+      </div>
+      <div className="text-xs text-muted-foreground mt-2 font-medium">{label}</div>
     </Card>
   );
 }
 function Mini({ label, value }: { label: string; value: any }) {
   return (
-    <div className="bg-muted rounded-lg p-2 text-center">
+    <div className="bg-muted/50 rounded-xl p-2.5 text-center border border-border/40">
       <div className="text-[10px] text-muted-foreground">{label}</div>
-      <div className="font-extrabold text-sm">{value}</div>
+      <div className="font-extrabold text-sm mt-0.5">{value}</div>
+    </div>
+  );
+}
+function InfoRow({ icon: Icon, text }: { icon: any; text: string }) {
+  return (
+    <div className="flex items-center gap-2 text-muted-foreground">
+      <Icon className="h-3.5 w-3.5 shrink-0" /> <span className="truncate text-foreground/80">{text}</span>
     </div>
   );
 }
