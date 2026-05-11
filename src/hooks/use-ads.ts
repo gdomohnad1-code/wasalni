@@ -76,6 +76,8 @@ export function useAds(placement: AdPlacement) {
       const hour = now.getHours();
       const shownMap = readJSON<Record<string, number>>(SHOWN_KEY, {});
 
+      const pos = await ensurePos();
+
       const eligible = (data as Ad[]).filter((a) => {
         if (a.daily_start_hour != null && a.daily_end_hour != null) {
           if (a.daily_start_hour <= a.daily_end_hour) {
@@ -85,6 +87,10 @@ export function useAds(placement: AdPlacement) {
           }
         }
         if (a.max_impressions_per_user > 0 && (shownMap[a.id] ?? 0) >= a.max_impressions_per_user) return false;
+        if (a.target_area_lat != null && a.target_area_lng != null && a.target_area_radius_m) {
+          if (!pos) return false;
+          if (distM(pos.lat, pos.lng, a.target_area_lat, a.target_area_lng) > a.target_area_radius_m) return false;
+        }
         return true;
       });
 
