@@ -435,6 +435,8 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const [earnings, setEarnings] = useState({ today: 0, total: 0, rides: 0 });
   const [incoming, setIncoming] = useState<any | null>(null);
   const [sosLoading, setSosLoading] = useState(false);
+  const [arrivalPrompt, setArrivalPrompt] = useState<null | "pickup" | "destination">(null);
+  const arrivalFiredRef = useRef<Set<string>>(new Set());
   const declinedRef = useRef<Set<string>>(loadDeclined());
 
   const isOnline = !!docs.is_online;
