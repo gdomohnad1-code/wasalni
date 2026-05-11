@@ -22,6 +22,7 @@ function AppLayout() {
   const loc = useLocation();
   const { t } = useI18n();
   useRideNotifications();
+  usePricingSync();
   const tabs = [
     { to: "/home", label: t("nav.home"), icon: Home },
     { to: "/profile", label: t("nav.account"), icon: User },
