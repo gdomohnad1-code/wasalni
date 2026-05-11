@@ -293,16 +293,32 @@ function ResetPasswordByEmailDialog({
   disabled,
 }: { email: string; disabled?: boolean }) {
   const reset = useServerFn(resetPasswordByEmail);
+  const getPw = useServerFn(getAdminPasswordByEmail);
   const [open, setOpen] = useState(false);
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
+  const [current, setCurrent] = useState<{ password: string; updated_at: string } | null>(null);
+  const [revealing, setRevealing] = useState(false);
 
   const generate = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
     let p = "";
     for (let i = 0; i < 12; i++) p += chars[Math.floor(Math.random() * chars.length)];
     setPw(p); setPw2(p);
+  };
+
+  const reveal = async () => {
+    setRevealing(true);
+    try {
+      const res: any = await getPw({ data: { email } });
+      if (!res?.ok) toast.info("لا توجد كلمة مرور محفوظة لهذا البريد بعد");
+      else setCurrent({ password: res.password, updated_at: res.updated_at });
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذّر العرض");
+    } finally {
+      setRevealing(false);
+    }
   };
 
   const submit = async () => {
@@ -312,7 +328,7 @@ function ResetPasswordByEmailDialog({
     try {
       await reset({ data: { email, password: pw } });
       toast.success("تم تعيين كلمة المرور الجديدة ✅");
-      setOpen(false); setPw(""); setPw2("");
+      setOpen(false); setPw(""); setPw2(""); setCurrent(null);
     } catch (e: any) {
       toast.error(e?.message ?? "تعذّر التحديث");
     } finally {
@@ -321,7 +337,7 @@ function ResetPasswordByEmailDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setCurrent(null); }}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" disabled={disabled} title="تغيير كلمة المرور">
           <Lock className="h-3.5 w-3.5 ml-1" /> كلمة المرور
@@ -334,6 +350,35 @@ function ResetPasswordByEmailDialog({
             تعيين كلمة مرور جديدة للحساب: <span dir="ltr" className="font-mono">{email}</span>
           </DialogDescription>
         </DialogHeader>
+
+        {!disabled && (
+          <div className="rounded-lg border border-border/60 bg-muted/40 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-muted-foreground">كلمة المرور الحالية</span>
+              {!current ? (
+                <Button type="button" size="sm" variant="outline" onClick={reveal} disabled={revealing}>
+                  {revealing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Eye className="h-3.5 w-3.5 ml-1" /> عرض</>}
+                </Button>
+              ) : (
+                <Button type="button" size="sm" variant="ghost" onClick={() => setCurrent(null)}>إخفاء</Button>
+              )}
+            </div>
+            {current && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2" dir="ltr">
+                  <code className="bg-card px-2 py-1 rounded font-mono text-xs flex-1 border">{current.password}</code>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { navigator.clipboard.writeText(current.password); toast.success("تم النسخ"); }}>
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <div className="text-[11px] text-muted-foreground">
+                  آخر تحديث: {new Date(current.updated_at).toLocaleString("ar-EG")}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="space-y-3">
           <div>
             <label className="text-xs font-semibold mb-1 block">كلمة المرور الجديدة</label>
