@@ -73,13 +73,15 @@ function AuthPage() {
             await supabase.from("profiles").update({ avatar_url: pub.publicUrl, full_name: fullName, phone }).eq("id", data.user.id);
           }
           toast.success("تم إنشاء حسابك بنجاح! 🎉");
-          navigate({ to: "/home" });
+          const to = await destinationForUser(data.user.id);
+          navigate({ to });
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data: signin, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("أهلاً بعودتك!");
-        navigate({ to: "/home" });
+        const to = signin.user ? await destinationForUser(signin.user.id) : "/home";
+        navigate({ to });
       }
     } catch (err: any) {
       toast.error(err.message || "حدث خطأ");
