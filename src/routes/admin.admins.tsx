@@ -37,7 +37,7 @@ const PERM_META: Record<AdminPerm, { label: string; desc: string; icon: any; col
 
 const ALL_PERMS: AdminPerm[] = ["super_admin", "full_control", "assigner", "collections", "notifications", "viewer"];
 
-interface AdminEmail { id: string; email: string; created_at: string; }
+interface AdminEmail { id: string; email: string; created_at: string; default_permission: AdminPerm; }
 interface AdminUser {
   user_id: string;
   full_name: string;
