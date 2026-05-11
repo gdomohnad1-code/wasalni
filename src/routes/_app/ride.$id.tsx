@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { FakeMap } from "@/components/FakeMap";
 import { toast } from "sonner";
 import { RIDE_TYPES } from "@/lib/pricing";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/ride/$id")({
   component: RidePage,
@@ -30,13 +31,13 @@ interface Ride {
 function RidePage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [ride, setRide] = useState<Ride | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [rated, setRated] = useState(false);
   const [stars, setStars] = useState(5);
   const [countdown, setCountdown] = useState(0);
 
-  // Auto-simulate driver acceptance after 4s if no real driver
   useEffect(() => {
     let cancel = false;
     const load = async () => {
@@ -50,11 +51,9 @@ function RidePage() {
         (payload) => setRide(payload.new as Ride))
       .subscribe();
 
-    // Demo: auto-accept after 5s
     const timer = setTimeout(async () => {
       const { data: cur } = await supabase.from("rides").select("*").eq("id", id).maybeSingle();
       if (cur && cur.status === "searching") {
-        // create a fake driver association (rider's own user as demo driver if no driver assigned)
         const { data: { user } } = await supabase.auth.getUser();
         await supabase.from("rides").update({
           status: "accepted",
@@ -67,7 +66,6 @@ function RidePage() {
     return () => { cancel = true; supabase.removeChannel(ch); clearTimeout(timer); };
   }, [id]);
 
-  // countdown for in_progress
   useEffect(() => {
     if (ride?.status !== "in_progress") return;
     setCountdown(ride.duration_min * 60);
@@ -84,7 +82,7 @@ function RidePage() {
   const submitRating = async () => {
     await supabase.from("rides").update({ rating: stars }).eq("id", id);
     setRated(true);
-    toast.success("شكراً لتقييمك! ⭐");
+    toast.success(t("ride.thank_rating"));
     setTimeout(() => navigate({ to: "/home" }), 1200);
   };
 
@@ -97,8 +95,8 @@ function RidePage() {
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col bg-background">
       <div className="flex items-center gap-3 p-4 bg-card border-b sticky top-0 z-30">
-        <button onClick={() => navigate({ to: "/home" })}><ArrowRight className="h-5 w-5" /></button>
-        <h1 className="font-bold flex-1">رحلتك</h1>
+        <button onClick={() => navigate({ to: "/home" })}><ArrowRight className="h-5 w-5 ltr:rotate-180" /></button>
+        <h1 className="font-bold flex-1">{t("ride.title")}</h1>
         <span className="text-xs px-2 py-1 rounded-full bg-primary/15 text-primary font-bold">
           {RIDE_TYPES[ride.ride_type as keyof typeof RIDE_TYPES]?.label}
         </span>
@@ -117,7 +115,7 @@ function RidePage() {
           {ride.status === "completed" && rated && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
               <div className="text-6xl mb-3">✅</div>
-              <p className="font-bold text-lg">تم الإنهاء بنجاح</p>
+              <p className="font-bold text-lg">{t("ride.completed")}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -129,64 +127,68 @@ function RidePage() {
 }
 
 function Searching() {
+  const { t } = useI18n();
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
       className="bg-card rounded-2xl p-6 shadow-card text-center">
       <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         className="h-16 w-16 mx-auto rounded-full border-4 border-primary/20 border-t-primary mb-4" />
-      <h3 className="font-bold text-lg">جاري البحث عن سائق...</h3>
-      <p className="text-sm text-muted-foreground mt-1">السائقين القريبين بيستلموا طلبك</p>
+      <h3 className="font-bold text-lg">{t("ride.searching")}</h3>
+      <p className="text-sm text-muted-foreground mt-1">{t("ride.searching_sub")}</p>
     </motion.div>
   );
 }
 
 function Accepted({ onStart, onChat }: { onStart: () => void; onChat: () => void }) {
+  const { t } = useI18n();
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
       className="bg-card rounded-2xl p-5 shadow-card space-y-4">
       <div className="flex items-center gap-3">
         <div className="h-14 w-14 rounded-full bg-gradient-primary flex items-center justify-center text-2xl">🧑‍✈️</div>
         <div className="flex-1">
-          <div className="font-bold">أحمد المصري</div>
+          <div className="font-bold">{t("ride.driver_name")}</div>
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <Star className="h-3 w-3 fill-warning text-warning" /> 4.8 · هيونداي اكسنت · أ ب ج 1234
+            <Star className="h-3 w-3 fill-warning text-warning" /> 4.8 · Hyundai Accent · ABC 1234
           </div>
         </div>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={onChat}><MessageCircle className="h-4 w-4 ml-1" /> شات</Button>
-        <Button variant="outline" className="flex-1"><Phone className="h-4 w-4 ml-1" /> اتصال</Button>
+        <Button variant="outline" className="flex-1" onClick={onChat}><MessageCircle className="h-4 w-4 ms-1" /> {t("ride.chat")}</Button>
+        <Button variant="outline" className="flex-1"><Phone className="h-4 w-4 ms-1" /> {t("ride.call")}</Button>
       </div>
       <Button onClick={onStart} className="w-full h-12 bg-gradient-primary font-bold">
-        <Car className="h-5 w-5 ml-2" /> ابدأ الرحلة
+        <Car className="h-5 w-5 ms-2" /> {t("ride.start")}
       </Button>
     </motion.div>
   );
 }
 
 function InProgress({ countdown, onEnd, onChat }: { countdown: string; onEnd: () => void; onChat: () => void }) {
+  const { t } = useI18n();
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="bg-card rounded-2xl p-5 shadow-card space-y-4">
       <div className="text-center">
-        <p className="text-sm text-muted-foreground">الوقت المتبقي</p>
+        <p className="text-sm text-muted-foreground">{t("ride.remaining")}</p>
         <div className="text-4xl font-black text-primary tracking-wider">{countdown}</div>
       </div>
       <Button variant="outline" className="w-full" onClick={onChat}>
-        <MessageCircle className="h-4 w-4 ml-1" /> راسل السائق
+        <MessageCircle className="h-4 w-4 ms-1" /> {t("ride.msg_driver")}
       </Button>
-      <Button onClick={onEnd} variant="destructive" className="w-full h-12 font-bold">إنهاء الرحلة</Button>
+      <Button onClick={onEnd} variant="destructive" className="w-full h-12 font-bold">{t("ride.end")}</Button>
     </motion.div>
   );
 }
 
 function RateBox({ stars, setStars, onSubmit }: { stars: number; setStars: (n: number) => void; onSubmit: () => void }) {
+  const { t } = useI18n();
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
       className="bg-card rounded-2xl p-6 shadow-card text-center">
       <div className="text-5xl mb-2">🎉</div>
-      <h3 className="font-bold text-lg mb-1">قيّم رحلتك</h3>
-      <p className="text-sm text-muted-foreground mb-4">رأيك يساعدنا نتحسن</p>
+      <h3 className="font-bold text-lg mb-1">{t("ride.rate_title")}</h3>
+      <p className="text-sm text-muted-foreground mb-4">{t("ride.rate_sub")}</p>
       <div className="flex justify-center gap-2 mb-5">
         {[1, 2, 3, 4, 5].map((n) => (
           <button key={n} onClick={() => setStars(n)}>
@@ -194,12 +196,13 @@ function RateBox({ stars, setStars, onSubmit }: { stars: number; setStars: (n: n
           </button>
         ))}
       </div>
-      <Button onClick={onSubmit} className="w-full h-12 bg-gradient-primary font-bold">إرسال التقييم</Button>
+      <Button onClick={onSubmit} className="w-full h-12 bg-gradient-primary font-bold">{t("ride.submit_rating")}</Button>
     </motion.div>
   );
 }
 
 function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; onClose: () => void }) {
+  const { t } = useI18n();
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
   const [me, setMe] = useState<string>("");
@@ -234,11 +237,11 @@ function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; o
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-foreground/40 z-50 flex items-end">
       <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} className="bg-card w-full max-w-md mx-auto rounded-t-3xl flex flex-col h-[80vh]">
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-bold">شات الرحلة</h3>
+          <h3 className="font-bold">{t("ride.chat_title")}</h3>
           <button onClick={onClose}><X className="h-5 w-5" /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {messages.length === 0 && <p className="text-center text-sm text-muted-foreground mt-10">ابدأ المحادثة 💬</p>}
+          {messages.length === 0 && <p className="text-center text-sm text-muted-foreground mt-10">{t("ride.chat_start")}</p>}
           {messages.map((m) => (
             <div key={m.id} className={`flex ${m.sender_id === me ? "justify-start" : "justify-end"}`}>
               <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${m.sender_id === me ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
@@ -249,7 +252,7 @@ function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; o
           <div ref={endRef} />
         </div>
         <div className="flex gap-2 p-3 border-t">
-          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب رسالتك..."
+          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder={t("ride.chat_ph")}
             onKeyDown={(e) => e.key === "Enter" && send()} />
           <Button onClick={send} size="icon" className="bg-gradient-primary"><Send className="h-4 w-4" /></Button>
         </div>
