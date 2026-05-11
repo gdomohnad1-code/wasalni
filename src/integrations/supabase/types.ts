@@ -46,6 +46,54 @@ export type Database = {
           },
         ]
       }
+      complaints: {
+        Row: {
+          admin_response: string | null
+          category: string
+          created_at: string
+          id: string
+          message: string
+          priority: Database["public"]["Enums"]["complaint_priority"]
+          responded_at: string | null
+          responded_by: string | null
+          ride_id: string | null
+          status: Database["public"]["Enums"]["complaint_status"]
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          message: string
+          priority?: Database["public"]["Enums"]["complaint_priority"]
+          responded_at?: string | null
+          responded_by?: string | null
+          ride_id?: string | null
+          status?: Database["public"]["Enums"]["complaint_status"]
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          priority?: Database["public"]["Enums"]["complaint_priority"]
+          responded_at?: string | null
+          responded_by?: string | null
+          ride_id?: string | null
+          status?: Database["public"]["Enums"]["complaint_status"]
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       driver_documents: {
         Row: {
           approved: boolean
@@ -305,6 +353,8 @@ export type Database = {
     }
     Enums: {
       app_role: "rider" | "driver" | "admin"
+      complaint_priority: "low" | "medium" | "high" | "urgent"
+      complaint_status: "new" | "in_progress" | "resolved" | "closed"
       ride_status:
         | "searching"
         | "accepted"
@@ -441,6 +491,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["rider", "driver", "admin"],
+      complaint_priority: ["low", "medium", "high", "urgent"],
+      complaint_status: ["new", "in_progress", "resolved", "closed"],
       ride_status: [
         "searching",
         "accepted",
