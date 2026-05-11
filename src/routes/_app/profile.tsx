@@ -68,6 +68,14 @@ function ProfilePage() {
           <Row label="رصيد المحفظة" value={`${profile?.wallet_balance || 0} ج.م`} />
         </div>
 
+        {isAdmin && (
+          <Link to="/admin">
+            <Button className="w-full gap-2 bg-gradient-primary">
+              <ShieldCheck className="h-4 w-4" /> فتح لوحة الإدارة
+            </Button>
+          </Link>
+        )}
+
         <Button onClick={signOut} variant="outline" className="w-full text-destructive border-destructive/30">
           <LogOut className="h-4 w-4 ml-2" /> تسجيل الخروج
         </Button>
