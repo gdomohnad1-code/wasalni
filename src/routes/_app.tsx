@@ -17,8 +17,6 @@ export const Route = createFileRoute("/_app")({
 
 const tabs = [
   { to: "/home", label: "الرئيسية", icon: Home },
-  { to: "/trips", label: "رحلاتي", icon: History },
-  { to: "/wallet", label: "المحفظة", icon: Wallet },
   { to: "/profile", label: "حسابي", icon: User },
 ] as const;
 
