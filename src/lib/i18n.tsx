@@ -253,6 +253,16 @@ const dict = {
     "admin.ov.rides_unit": "رحلة",
     "admin.ov.live_title": "رحلات جارية الآن",
     "admin.ov.no_live": "لا توجد رحلات جارية حالياً",
+    // foreground notifications
+    "notif.ride_booked": "تم الحجز",
+    "notif.ride_booked_desc": "بنبحث عن سائق قريب منك",
+    "notif.driver_accepted": "السائق قبل رحلتك",
+    "notif.driver_accepted_desc": "السائق في طريقه إليك",
+    "notif.ride_started": "بدأت الرحلة",
+    "notif.ride_started_desc": "في الطريق للوجهة",
+    "notif.ride_completed": "اكتملت الرحلة",
+    "notif.ride_cancelled": "تم إلغاء الرحلة",
+    "notif.new_ride_request": "طلب رحلة جديد",
   },
   en: {
     // nav
