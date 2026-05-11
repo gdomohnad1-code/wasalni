@@ -552,7 +552,7 @@ function AdminsPage() {
   };
 
   const updateEmailPerm = async (id: string, perm: AdminPerm) => {
-    if (!isSuper) { toast.error("المسؤول الرئيسي فقط"); return; }
+    // any admin allowed
     const { error } = await supabase
       .from("admin_emails")
       .update({ default_permission: perm })
