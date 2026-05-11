@@ -316,24 +316,56 @@ function Field({ label, v, setV, placeholder, highlight }: { label: string; v: s
   );
 }
 
-function FileField({ label, k, url, onPick, highlight, icon: Icon = Upload }: { label: string; k: string; url: string; onPick: (e: React.ChangeEvent<HTMLInputElement>) => void; highlight?: boolean; icon?: any }) {
-  const has = Boolean(url);
+function CameraField({ label, k, url, preview, uploading, onCapture, onRetake, highlight, facing = "environment" }: {
+  label: string; k: string; url: string; preview?: string; uploading?: boolean;
+  onCapture: (e: React.ChangeEvent<HTMLInputElement>) => void; onRetake: () => void;
+  highlight?: boolean; facing?: "environment" | "user";
+}) {
+  const has = Boolean(url) || Boolean(preview);
+  const inputId = `cam-${k}`;
   return (
     <div>
-      <Label className={highlight ? "text-destructive" : ""}>{label} {highlight && <span className="text-[10px]">(يلزم التعديل)</span>}</Label>
-      <label className="cursor-pointer block">
-        <div className={`border-2 border-dashed rounded-xl p-3 text-center text-sm transition ${
-          highlight ? "border-destructive bg-destructive/5"
-          : has ? "border-primary bg-primary/5" : "border-border"
-        }`}>
-          {has ? (
-            <span className="flex items-center justify-center gap-1"><CheckCircle2 className="h-4 w-4 text-primary" /> تم الرفع</span>
-          ) : (
-            <span className="flex items-center justify-center gap-1"><Icon className="h-4 w-4" /> اختر ملف...</span>
+      <Label className={highlight ? "text-destructive" : ""}>
+        {label} {highlight && <span className="text-[10px]">(يلزم التعديل)</span>}
+      </Label>
+      <input
+        id={inputId}
+        type="file"
+        accept="image/*"
+        capture={facing}
+        className="hidden"
+        onChange={onCapture}
+      />
+      {has ? (
+        <div className={`relative rounded-xl overflow-hidden border-2 ${highlight ? "border-destructive" : "border-primary"} bg-black/5`}>
+          {preview && <img src={preview} alt={label} className="w-full h-44 object-cover" />}
+          {uploading && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-sm gap-2">
+              <Loader2 className="h-5 w-5 animate-spin" /> جاري الرفع...
+            </div>
           )}
+          {!uploading && url && (
+            <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-[11px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3" /> تم
+            </div>
+          )}
+          <div className="p-2 flex gap-2 bg-card">
+            <Button type="button" variant="outline" size="sm" className="flex-1 gap-1" onClick={onRetake} disabled={uploading}>
+              <Camera className="h-4 w-4" /> إعادة التصوير
+            </Button>
+          </div>
         </div>
-        <input type="file" accept="image/*" className="hidden" onChange={onPick} />
-      </label>
+      ) : (
+        <label htmlFor={inputId} className="cursor-pointer block">
+          <div className={`border-2 border-dashed rounded-xl p-6 text-center transition ${
+            highlight ? "border-destructive bg-destructive/5" : "border-border hover:border-primary hover:bg-primary/5"
+          }`}>
+            <Camera className={`h-8 w-8 mx-auto mb-2 ${highlight ? "text-destructive" : "text-muted-foreground"}`} />
+            <div className="text-sm font-bold">افتح الكاميرا والتقط صورة</div>
+            <div className="text-[11px] text-muted-foreground mt-1">تصوير مباشر — غير مسموح بالرفع من المعرض</div>
+          </div>
+        </label>
+      )}
     </div>
   );
 }
