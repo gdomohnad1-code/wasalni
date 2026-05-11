@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Mail, Phone, Lock, User as UserIcon } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
