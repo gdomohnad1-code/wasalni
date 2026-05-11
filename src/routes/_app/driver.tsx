@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Upload, Siren, Activity, BatteryFull, BatteryLow, BatteryCharging } from "lucide-react";
+import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Siren, Activity, BatteryFull, BatteryLow, BatteryCharging } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { submitDriverApplication } from "@/lib/driver-applications.functions";
 import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
 import { useDriverLocationBroadcast, triggerSOS, useBatteryStatus } from "@/hooks/use-driver-location";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
@@ -57,10 +58,11 @@ function DriverPage() {
 // ============= Status: Pending =============
 
 function StatusPending({ docs }: { docs: any }) {
+  const { t } = useI18n();
   const submitted = docs.submitted_at ? new Date(docs.submitted_at).getTime() : Date.now();
   const deadline = submitted + 48 * 60 * 60 * 1000;
   const [now, setNow] = useState(Date.now());
-  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(t); }, []);
+  useEffect(() => { const tm = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(tm); }, []);
   const remaining = Math.max(0, deadline - now);
   const hrs = Math.floor(remaining / 3600000);
   const mins = Math.floor((remaining % 3600000) / 60000);
@@ -70,15 +72,13 @@ function StatusPending({ docs }: { docs: any }) {
         <div className="h-20 w-20 rounded-full bg-primary/10 grid place-items-center mx-auto mb-4">
           <Clock className="h-10 w-10 text-primary" />
         </div>
-        <h2 className="text-xl font-bold mb-2">طلبك قيد المراجعة</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          تم استلام طلب الانضمام كسائق وفريقنا يراجع البيانات. سيتم الرد خلال 48 ساعة.
-        </p>
+        <h2 className="text-xl font-bold mb-2">{t("driver.pending_title")}</h2>
+        <p className="text-sm text-muted-foreground mb-4">{t("driver.pending_desc")}</p>
         <div className="bg-muted rounded-xl p-4 mb-2">
-          <p className="text-xs text-muted-foreground mb-1">الوقت المتبقي للمراجعة</p>
-          <p className="text-2xl font-black text-primary">{hrs} س : {String(mins).padStart(2, "0")} د</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("driver.pending_remaining")}</p>
+          <p className="text-2xl font-black text-primary">{hrs} {t("driver.unit_h")} : {String(mins).padStart(2, "0")} {t("driver.unit_m")}</p>
         </div>
-        <p className="text-xs text-muted-foreground">سنرسل لك إشعاراً فور الانتهاء من المراجعة.</p>
+        <p className="text-xs text-muted-foreground">{t("driver.pending_notify")}</p>
       </div>
     </div>
   );
@@ -87,15 +87,16 @@ function StatusPending({ docs }: { docs: any }) {
 // ============= Status: Rejected (cooldown) =============
 
 function StatusRejected({ docs, onReady }: { docs: any; onReady: () => void }) {
+  const { t } = useI18n();
   const target = new Date(docs.next_attempt_at).getTime();
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
-    const t = setInterval(() => {
+    const tm = setInterval(() => {
       const n = Date.now();
       setNow(n);
       if (n >= target) onReady();
     }, 1000);
-    return () => clearInterval(t);
+    return () => clearInterval(tm);
   }, [target]);
   const remaining = Math.max(0, target - now);
   const hrs = Math.floor(remaining / 3600000);
@@ -107,17 +108,15 @@ function StatusRejected({ docs, onReady }: { docs: any; onReady: () => void }) {
         <div className="h-20 w-20 rounded-full bg-destructive/10 grid place-items-center mx-auto mb-4">
           <XCircle className="h-10 w-10 text-destructive" />
         </div>
-        <h2 className="text-xl font-bold mb-2">تم رفض طلبك</h2>
+        <h2 className="text-xl font-bold mb-2">{t("driver.rejected_title")}</h2>
         {docs.rejection_reason && (
-          <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-lg p-3 mb-4 text-right">
-            <span className="font-bold">السبب:</span> {docs.rejection_reason}
+          <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-lg p-3 mb-4 text-start">
+            <span className="font-bold">{t("driver.rejection_reason")}</span> {docs.rejection_reason}
           </div>
         )}
-        <p className="text-sm text-muted-foreground mb-4">
-          يمكنك إعادة التقديم بعد انتهاء المدة التالية:
-        </p>
+        <p className="text-sm text-muted-foreground mb-4">{t("driver.rejected_desc")}</p>
         <div className="bg-muted rounded-xl p-4">
-          <p className="text-xs text-muted-foreground mb-1">الوقت المتبقي</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("driver.remaining")}</p>
           <p className="text-3xl font-black text-foreground tabular-nums">
             {String(hrs).padStart(2, "0")} : {String(mins).padStart(2, "0")} : {String(secs).padStart(2, "0")}
           </p>

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowDown, ArrowUp, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/wallet")({
   component: WalletPage,
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/_app/wallet")({
 
 function WalletPage() {
   const { profile } = useAuth();
+  const { t, locale } = useI18n();
   const [txs, setTxs] = useState<any[]>([]);
 
   const load = async () => {
@@ -30,31 +32,29 @@ function WalletPage() {
   return (
     <div className="max-w-md mx-auto">
       <div className="bg-gradient-hero text-primary-foreground p-6 pb-10 rounded-b-3xl shadow-soft">
-        <h1 className="font-bold text-xl mb-6">المحفظة</h1>
-        <p className="text-sm opacity-90">رصيدك الحالي</p>
+        <h1 className="font-bold text-xl mb-6">{t("wallet.title")}</h1>
+        <p className="text-sm opacity-90">{t("wallet.balance")}</p>
         <div className="text-5xl font-black mt-1">
-          {profile?.wallet_balance?.toFixed(0) || 0} <span className="text-xl">ج.م</span>
+          {profile?.wallet_balance?.toFixed(0) || 0} <span className="text-xl">{t("c.currency")}</span>
         </div>
       </div>
 
       <div className="p-4">
         <div className="flex items-start gap-2 bg-muted/50 border border-border rounded-xl p-3 mb-4">
           <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            لإضافة رصيد إلى محفظتك، يمكنك التواصل مع السائق مباشرةً أو طلب الشحن من إدارة التطبيق.
-          </p>
+          <p className="text-xs text-muted-foreground leading-relaxed">{t("wallet.info")}</p>
         </div>
 
-        <h2 className="font-bold mb-3">سجل العمليات</h2>
+        <h2 className="font-bold mb-3">{t("wallet.history")}</h2>
         <div className="space-y-2">
           {txs.length === 0 && (
-            <p className="text-center text-sm text-muted-foreground py-10">لا يوجد عمليات بعد</p>
+            <p className="text-center text-sm text-muted-foreground py-10">{t("wallet.empty")}</p>
           )}
-          {txs.map((t, i) => {
-            const positive = t.type === "topup" || t.type === "refund" || t.type === "referral_bonus";
+          {txs.map((tx, i) => {
+            const positive = tx.type === "topup" || tx.type === "refund" || tx.type === "referral_bonus";
             return (
               <motion.div
-                key={t.id}
+                key={tx.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.03 }}
@@ -64,11 +64,11 @@ function WalletPage() {
                   {positive ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-semibold">{t.description || t.type}</div>
-                  <div className="text-xs text-muted-foreground">{new Date(t.created_at).toLocaleString("ar-EG")}</div>
+                  <div className="text-sm font-semibold">{tx.description || tx.type}</div>
+                  <div className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleString(locale)}</div>
                 </div>
                 <div className={`font-bold ${positive ? "text-success" : "text-destructive"}`}>
-                  {positive ? "+" : "-"}{t.amount} ج.م
+                  {positive ? "+" : "-"}{tx.amount} {t("c.currency")}
                 </div>
               </motion.div>
             );

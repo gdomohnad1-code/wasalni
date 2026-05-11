@@ -15,6 +15,7 @@ import { FakeMap } from "@/components/FakeMap";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/book")({
   validateSearch: z.object({
@@ -23,11 +24,13 @@ export const Route = createFileRoute("/_app/book")({
   component: BookPage,
 });
 
-const SUGGEST = ["مدينة نصر", "المعادي", "وسط البلد", "مصر الجديدة", "التجمع الخامس", "الزمالك", "مول العرب"];
+const SUGGEST_AR = ["مدينة نصر", "المعادي", "وسط البلد", "مصر الجديدة", "التجمع الخامس", "الزمالك", "مول العرب"];
+const SUGGEST_EN = ["Nasr City", "Maadi", "Downtown", "Heliopolis", "5th Settlement", "Zamalek", "Mall of Arabia"];
 
 function BookPage() {
   const navigate = useNavigate();
   const { type } = Route.useSearch();
+  const { t, lang } = useI18n();
   const [rideType, setRideType] = useState<RideTypeKey>(type);
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
@@ -40,13 +43,16 @@ function BookPage() {
   const [creating, setCreating] = useState(false);
   const destDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const SUGGEST = lang === "ar" ? SUGGEST_AR : SUGGEST_EN;
+
   useEffect(() => {
     detectLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const detectLocation = () => {
     if (!navigator.geolocation) {
-      setPickup("القاهرة");
+      setPickup(t("book.cairo"));
       setPickupCoords({ lat: 30.0444, lng: 31.2357 });
       return;
     }
@@ -56,11 +62,11 @@ function BookPage() {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setPickupCoords(coords);
         const name = await reverseGeocode(coords);
-        setPickup(name ?? `موقعك (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
+        setPickup(name ?? `${t("book.your_loc")} (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
         setGpsLoading(false);
       },
       () => {
-        setPickup("القاهرة، مصر");
+        setPickup(t("book.cairo_eg"));
         setPickupCoords({ lat: 30.0444, lng: 31.2357 });
         setGpsLoading(false);
       },
@@ -68,7 +74,6 @@ function BookPage() {
     );
   };
 
-  // Geocode الوجهة عند الكتابة (debounce)
   useEffect(() => {
     if (destDebounce.current) clearTimeout(destDebounce.current);
     if (!destination.trim()) { setDestCoords(null); return; }
@@ -90,13 +95,13 @@ function BookPage() {
 
   const handleConfirm = async () => {
     if (!pickupCoords || !destCoords) {
-      toast.error("لم نتمكن من تحديد الإحداثيات — جرّب مكان أوضح");
+      toast.error(t("book.coords_err"));
       return;
     }
     setCreating(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("لازم تسجل دخول");
+      if (!user) throw new Error(t("c.must_signin"));
       const { data, error } = await supabase.from("rides").insert({
         rider_id: user.id,
         pickup_address: pickup,
@@ -109,7 +114,7 @@ function BookPage() {
         status: "searching",
       }).select().single();
       if (error) throw error;
-      toast.success("جاري البحث عن سائق...");
+      toast.success(t("book.searching_driver"));
       navigate({ to: "/ride/$id", params: { id: data.id } });
     } catch (err: any) {
       toast.error(err.message);
@@ -120,43 +125,40 @@ function BookPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col">
-      {/* Header */}
       <div className="flex items-center gap-3 p-4 bg-card border-b">
-        <button onClick={() => navigate({ to: "/home" })} className="p-2 -mr-2">
-          <ArrowRight className="h-5 w-5" />
+        <button onClick={() => navigate({ to: "/home" })} className="p-2 -ms-2">
+          <ArrowRight className="h-5 w-5 ltr:rotate-180" />
         </button>
-        <h1 className="font-bold text-lg">احجز رحلتك</h1>
+        <h1 className="font-bold text-lg">{t("book.title")}</h1>
       </div>
 
-      {/* Map */}
       <div className="h-56 mx-4 mt-4">
         <FakeMap pickup={pickup} destination={destination} />
       </div>
 
-      {/* Form */}
       <div className="p-4 space-y-4 flex-1">
         <div>
-          <Label className="text-xs">نقطة الالتقاط</Label>
+          <Label className="text-xs">{t("book.pickup")}</Label>
           <div className="relative">
-            <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-            <Input value={pickup} onChange={(e) => setPickup(e.target.value)} className="pr-10 pl-10" placeholder="من فين؟" />
-            <button onClick={detectLocation} className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 text-primary">
+            <MapPin className="absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+            <Input value={pickup} onChange={(e) => setPickup(e.target.value)} className="ps-10 pe-10" placeholder={t("book.pickup_ph")} />
+            <button onClick={detectLocation} className="absolute start-2 top-1/2 -translate-y-1/2 p-1.5 text-primary">
               {gpsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
         <div>
-          <Label className="text-xs">الوجهة</Label>
+          <Label className="text-xs">{t("book.destination")}</Label>
           <div className="relative">
-            <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
-            <Input value={destination} onChange={(e) => setDestination(e.target.value)} className="pr-10 pl-10" placeholder="رايح فين؟" />
+            <MapPin className="absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
+            <Input value={destination} onChange={(e) => setDestination(e.target.value)} className="ps-10 pe-10" placeholder={t("book.dest_ph")} />
             {geoLoading && (
-              <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+              <Loader2 className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
             )}
           </div>
           {destination && !geoLoading && !destCoords && (
-            <p className="text-[11px] text-destructive mt-1">لم نعثر على هذا المكان — جرّب اسم أوضح</p>
+            <p className="text-[11px] text-destructive mt-1">{t("book.not_found")}</p>
           )}
           <div className="flex gap-2 mt-2 flex-wrap">
             {SUGGEST.map((s) => (
@@ -168,14 +170,14 @@ function BookPage() {
 
         <Tabs value={tripMode} onValueChange={(v) => setTripMode(v as TripMode)}>
           <TabsList className="grid grid-cols-3 w-full">
-            <TabsTrigger value="oneway">ذهاب فقط</TabsTrigger>
-            <TabsTrigger value="roundtrip">ذهاب وعودة</TabsTrigger>
-            <TabsTrigger value="multistop">عدة وجهات</TabsTrigger>
+            <TabsTrigger value="oneway">{t("book.mode_oneway")}</TabsTrigger>
+            <TabsTrigger value="roundtrip">{t("book.mode_roundtrip")}</TabsTrigger>
+            <TabsTrigger value="multistop">{t("book.mode_multistop")}</TabsTrigger>
           </TabsList>
         </Tabs>
 
         <div>
-          <Label className="text-xs">نوع الخدمة</Label>
+          <Label className="text-xs">{t("book.service")}</Label>
           <div className="grid grid-cols-5 gap-2 mt-1">
             {(Object.entries(RIDE_TYPES) as [RideTypeKey, typeof RIDE_TYPES[RideTypeKey]][]).map(([k, v]) => (
               <button key={k} onClick={() => setRideType(k)}
@@ -191,21 +193,21 @@ function BookPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="bg-gradient-primary text-primary-foreground rounded-2xl p-4 shadow-soft">
             <div className="flex justify-between text-sm">
-              <span>المسافة</span><span className="font-bold">{distance.toFixed(1)} كم</span>
+              <span>{t("book.distance")}</span><span className="font-bold">{distance.toFixed(1)} {t("c.km")}</span>
             </div>
             <div className="flex justify-between text-sm mt-1">
-              <span>الوقت المتوقع</span><span className="font-bold">{duration} دقيقة</span>
+              <span>{t("book.duration")}</span><span className="font-bold">{duration} {t("c.min")}</span>
             </div>
             {tripMode === "multistop" && (
-              <div className="text-[11px] mt-1 opacity-90">تسعير بالساعة (200 ج.م/س — حد أدنى 75 ج.م)</div>
+              <div className="text-[11px] mt-1 opacity-90">{t("book.multistop_note")}</div>
             )}
             <div className="flex justify-between mt-2 pt-2 border-t border-white/30">
-              <span className="font-bold">السعر النهائي</span>
-              <span className="font-black text-2xl">{price} ج.م</span>
+              <span className="font-bold">{t("book.final_price")}</span>
+              <span className="font-black text-2xl">{price} {t("c.currency")}</span>
             </div>
             <div className="flex justify-between text-[11px] opacity-90 mt-1">
-              <span>عمولة المنصة ({Math.round(PLATFORM_COMMISSION_RATE * 100)}%)</span>
-              <span>{commission} ج.م</span>
+              <span>{t("book.commission")} ({Math.round(PLATFORM_COMMISSION_RATE * 100)}%)</span>
+              <span>{commission} {t("c.currency")}</span>
             </div>
           </motion.div>
         )}
@@ -215,31 +217,30 @@ function BookPage() {
           disabled={!pickup || !destination}
           className="w-full h-14 text-base font-bold bg-gradient-primary shadow-soft"
         >
-          متابعة الحجز
+          {t("book.continue")}
         </Button>
       </div>
 
-      {/* Confirm sheet */}
       {confirming && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-foreground/40 z-50 flex items-end">
           <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} className="bg-card w-full max-w-md mx-auto rounded-t-3xl p-6 shadow-elevated">
             <div className="h-1.5 w-12 bg-border rounded-full mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-4">تأكيد الحجز</h2>
+            <h2 className="text-xl font-bold mb-4">{t("book.confirm_title")}</h2>
             <div className="space-y-2 text-sm">
-              <Row k="من" v={pickup} />
-              <Row k="إلى" v={destination} />
-              <Row k="الخدمة" v={`${RIDE_TYPES[rideType].icon} ${RIDE_TYPES[rideType].label}`} />
-              <Row k="المسافة" v={`${distance} كم`} />
-              <Row k="الوقت" v={`${duration} دقيقة`} />
+              <Row k={t("book.from")} v={pickup} />
+              <Row k={t("book.to")} v={destination} />
+              <Row k={t("book.service_short")} v={`${RIDE_TYPES[rideType].icon} ${RIDE_TYPES[rideType].label}`} />
+              <Row k={t("book.distance")} v={`${distance} ${t("c.km")}`} />
+              <Row k={t("book.time")} v={`${duration} ${t("c.min")}`} />
               <div className="flex justify-between items-center pt-3 border-t">
-                <span className="font-bold">الإجمالي</span>
-                <span className="text-2xl font-black text-primary">{price} ج.م</span>
+                <span className="font-bold">{t("book.total")}</span>
+                <span className="text-2xl font-black text-primary">{price} {t("c.currency")}</span>
               </div>
             </div>
             <div className="flex gap-2 mt-5">
-              <Button variant="outline" className="flex-1" onClick={() => setConfirming(false)}>تعديل</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setConfirming(false)}>{t("book.edit")}</Button>
               <Button className="flex-1 bg-gradient-primary" onClick={handleConfirm} disabled={creating}>
-                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : "تأكيد الحجز"}
+                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : t("book.confirm")}
               </Button>
             </div>
           </motion.div>
@@ -253,7 +254,7 @@ function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex justify-between gap-3">
       <span className="text-muted-foreground">{k}</span>
-      <span className="font-semibold text-left flex-1">{v}</span>
+      <span className="font-semibold text-end flex-1">{v}</span>
     </div>
   );
 }
