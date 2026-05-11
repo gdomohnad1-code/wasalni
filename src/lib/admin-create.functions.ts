@@ -112,6 +112,15 @@ export const resetAdminPassword = createServerFn({ method: "POST" })
     });
     if (error) throw new Response(error.message, { status: 400 });
 
+    // Remember new password
+    const { data: u } = await supabaseAdmin.auth.admin.getUserById(data.user_id);
+    if (u?.user?.email) {
+      await (supabaseAdmin as any).from("admin_credentials").upsert(
+        { user_id: data.user_id, email: u.user.email, password: data.password, updated_by: context.userId, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+    }
+
     return { ok: true };
   });
 
