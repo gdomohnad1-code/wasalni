@@ -20,6 +20,7 @@ import { Route as AdminPermissionsRouteImport } from './routes/admin.permissions
 import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminLiveRouteImport } from './routes/admin.live'
+import { Route as AdminGeofencesRouteImport } from './routes/admin.geofences'
 import { Route as AdminDuesRouteImport } from './routes/admin.dues'
 import { Route as AdminDriversRouteImport } from './routes/admin.drivers'
 import { Route as AdminComplaintsRouteImport } from './routes/admin.complaints'
@@ -87,6 +88,11 @@ const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
 const AdminLiveRoute = AdminLiveRouteImport.update({
   id: '/live',
   path: '/live',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGeofencesRoute = AdminGeofencesRouteImport.update({
+  id: '/geofences',
+  path: '/geofences',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDuesRoute = AdminDuesRouteImport.update({
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/geofences': typeof AdminGeofencesRoute
   '/admin/live': typeof AdminLiveRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
@@ -201,6 +208,7 @@ export interface FileRoutesByTo {
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/geofences': typeof AdminGeofencesRoute
   '/admin/live': typeof AdminLiveRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/dues': typeof AdminDuesRoute
+  '/admin/geofences': typeof AdminGeofencesRoute
   '/admin/live': typeof AdminLiveRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payouts': typeof AdminPayoutsRoute
@@ -257,6 +266,7 @@ export interface FileRouteTypes {
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/geofences'
     | '/admin/live'
     | '/admin/notifications'
     | '/admin/payouts'
@@ -282,6 +292,7 @@ export interface FileRouteTypes {
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/geofences'
     | '/admin/live'
     | '/admin/notifications'
     | '/admin/payouts'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/admin/complaints'
     | '/admin/drivers'
     | '/admin/dues'
+    | '/admin/geofences'
     | '/admin/live'
     | '/admin/notifications'
     | '/admin/payouts'
@@ -405,6 +417,13 @@ declare module '@tanstack/react-router' {
       path: '/live'
       fullPath: '/admin/live'
       preLoaderRoute: typeof AdminLiveRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/geofences': {
+      id: '/admin/geofences'
+      path: '/geofences'
+      fullPath: '/admin/geofences'
+      preLoaderRoute: typeof AdminGeofencesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/dues': {
@@ -537,6 +556,7 @@ interface AdminRouteChildren {
   AdminComplaintsRoute: typeof AdminComplaintsRoute
   AdminDriversRoute: typeof AdminDriversRoute
   AdminDuesRoute: typeof AdminDuesRoute
+  AdminGeofencesRoute: typeof AdminGeofencesRoute
   AdminLiveRoute: typeof AdminLiveRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPayoutsRoute: typeof AdminPayoutsRoute
@@ -553,6 +573,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminComplaintsRoute: AdminComplaintsRoute,
   AdminDriversRoute: AdminDriversRoute,
   AdminDuesRoute: AdminDuesRoute,
+  AdminGeofencesRoute: AdminGeofencesRoute,
   AdminLiveRoute: AdminLiveRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPayoutsRoute: AdminPayoutsRoute,
