@@ -118,6 +118,26 @@ function AuthPage() {
     }
   };
 
+  const handleApple = async () => {
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: `${window.location.origin}/complete-profile`,
+      });
+      if (result.error) {
+        toast.error("فشل تسجيل الدخول عبر Apple");
+        setLoading(false);
+        return;
+      }
+      if (result.redirected) return;
+      const { data: s } = await supabase.auth.getSession();
+      if (s.session) navigate({ to: "/complete-profile" });
+    } catch (err: any) {
+      toast.error(err.message || "حدث خطأ");
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
       <motion.div
