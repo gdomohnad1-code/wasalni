@@ -31,7 +31,7 @@ export const createAdminAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => Schema.parse(input))
   .handler(async ({ data, context }) => {
-    await ensureSuperAdmin(context.userId);
+    await ensureAdmin(context.userId);
 
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.identifier);
     const email = isEmail
@@ -91,7 +91,7 @@ export const resetAdminPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => ResetSchema.parse(input))
   .handler(async ({ data, context }) => {
-    await ensureSuperAdmin(context.userId);
+    await ensureAdmin(context.userId);
 
     // Confirm target is actually an admin
     const { data: role } = await supabaseAdmin
@@ -119,7 +119,7 @@ export const resetPasswordByEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => ResetByEmailSchema.parse(input))
   .handler(async ({ data, context }) => {
-    await ensureSuperAdmin(context.userId);
+    await ensureAdmin(context.userId);
 
     // Look up user by email via admin API (paged scan)
     let foundId: string | null = null;
