@@ -177,7 +177,11 @@ export const getAnalyticsOverview = createServerFn({ method: "POST" })
 export const getDriverDailyStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { userId } = context;
+    const { supabase, userId } = context;
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    if (!(roles ?? []).some((r: any) => r.role === "driver")) {
+      throw new Response("Forbidden", { status: 403 });
+    }
     const start = new Date(); start.setHours(0, 0, 0, 0);
     const startISO = start.toISOString();
     const { data: rides } = await supabaseAdmin.from("rides").select("price, status, distance_km, duration_min, completed_at").eq("driver_id", userId).gte("created_at", startISO);
@@ -200,7 +204,9 @@ const PolygonSchema = z.object({
 
 export const listGeofences = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await ensureAdmin(supabase, userId);
     const { data } = await supabaseAdmin.from("geofences").select("*").order("created_at", { ascending: false });
     return { zones: data ?? [] };
   });

@@ -988,6 +988,7 @@ export type Database = {
       ads_tick: { Args: never; Returns: Json }
       apply_influencer_code: { Args: { p_code: string }; Returns: Json }
       detect_idle_drivers: { Args: { p_minutes?: number }; Returns: number }
+      driver_accept_ride: { Args: { p_ride_id: string }; Returns: boolean }
       has_admin_permission: {
         Args: {
           _perm: Database["public"]["Enums"]["admin_permission"]
