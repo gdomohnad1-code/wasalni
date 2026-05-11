@@ -122,6 +122,30 @@ export function RideMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Apply / switch tile layers based on selected style
+  useEffect(() => {
+    const map = mapRef.current; if (!map) return;
+    if (baseLayerRef.current) { map.removeLayer(baseLayerRef.current); baseLayerRef.current = null; }
+    if (labelsLayerRef.current) { map.removeLayer(labelsLayerRef.current); labelsLayerRef.current = null; }
+
+    if (mapStyle === "satellite") {
+      baseLayerRef.current = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19, attribution: "Esri" }
+      ).addTo(map);
+      labelsLayerRef.current = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19, opacity: 0.9 }
+      ).addTo(map);
+    } else {
+      baseLayerRef.current = L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { maxZoom: 19, attribution: "© OpenStreetMap" }
+      ).addTo(map);
+    }
+    try { localStorage.setItem("map_style", mapStyle); } catch {}
+  }, [mapStyle]);
+
   // Fetch trip route pickup -> destination
   useEffect(() => {
     let cancel = false;
