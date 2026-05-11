@@ -497,7 +497,7 @@ function AdminsPage() {
     );
 
     if (user?.id) {
-      setIsSuper(permMap.get(user.id) === "super_admin");
+      setIsSuper(user.email?.toLowerCase() === "admin@wasalni.app");
     }
   };
 
