@@ -132,7 +132,7 @@ function HomePage() {
       {/* Offers — compact single row */}
       <div className="px-5 mt-6">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-bold text-muted-foreground">عروض</h3>
+          <h3 className="text-sm font-bold text-muted-foreground">{t("home.offers")}</h3>
           <Sparkles className="h-3.5 w-3.5 text-amber-500" />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-5 px-5">
@@ -153,9 +153,9 @@ function HomePage() {
       <div className="px-5 mt-6">
         <div className="grid grid-cols-3 gap-2.5">
           {[
-            { icon: Clock, label: "رحلاتي", to: "/trips" },
-            { icon: MapPin, label: "وجهاتي", to: "/profile" },
-            { icon: Wallet, label: "المحفظة", to: "/wallet" },
+            { icon: Clock, label: t("home.my_trips"), to: "/trips" },
+            { icon: MapPin, label: t("home.destinations"), to: "/profile" },
+            { icon: Wallet, label: t("home.wallet"), to: "/wallet" },
           ].map(({ icon: I, label, to }) => (
             <button key={label}
               onClick={() => navigate({ to: to as any })}
