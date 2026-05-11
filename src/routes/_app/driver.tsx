@@ -16,6 +16,7 @@ import { submitDriverApplication } from "@/lib/driver-applications.functions";
 import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
 import { useDriverLocationBroadcast, triggerSOS, useBatteryStatus } from "@/hooks/use-driver-location";
 import { useI18n } from "@/lib/i18n";
+import { AdSlot } from "@/components/AdSlot";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
@@ -482,6 +483,10 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
           <Stat icon={DollarSign} label="الأرباح" value={`${earnings.toFixed(0)} ج.م`} />
           <Stat icon={Car} label="نشطة" value={String(active.length)} />
         </div>
+      </div>
+
+      <div className="px-4 mt-4">
+        <AdSlot placement="driver_app" />
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="p-4">
