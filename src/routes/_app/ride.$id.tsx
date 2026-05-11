@@ -5,7 +5,7 @@ import { Loader2, Phone, MessageCircle, Star, Send, X, ArrowRight, Car } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FakeMap } from "@/components/FakeMap";
+import { RideMap } from "@/components/RideMap";
 import { toast } from "sonner";
 import { RIDE_TYPES } from "@/lib/pricing";
 import { useI18n } from "@/lib/i18n";
@@ -19,6 +19,10 @@ interface Ride {
   status: string;
   pickup_address: string;
   destination_address: string;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
+  destination_lat: number | null;
+  destination_lng: number | null;
   ride_type: string;
   distance_km: number;
   duration_min: number;
@@ -26,6 +30,8 @@ interface Ride {
   driver_id: string | null;
   rider_id: string;
   rating: number | null;
+  accepted_at: string | null;
+  started_at: string | null;
 }
 
 function RidePage() {
@@ -37,6 +43,7 @@ function RidePage() {
   const [rated, setRated] = useState(false);
   const [stars, setStars] = useState(5);
   const [countdown, setCountdown] = useState(0);
+  const [etaSec, setEtaSec] = useState(0);
 
   useEffect(() => {
     let cancel = false;
@@ -102,9 +109,41 @@ function RidePage() {
         </span>
       </div>
 
-      <div className="h-72 m-4">
-        <FakeMap pickup={ride.pickup_address} destination={ride.destination_address} animate={ride.status === "in_progress"} />
+      <div className="h-80 mx-4 mt-4 mb-2 rounded-2xl overflow-hidden shadow-card">
+        {ride.pickup_lat && ride.pickup_lng && ride.destination_lat && ride.destination_lng ? (
+          <RideMap
+            pickup={{ lat: Number(ride.pickup_lat), lng: Number(ride.pickup_lng) }}
+            destination={{ lat: Number(ride.destination_lat), lng: Number(ride.destination_lng) }}
+            driverId={ride.driver_id}
+            phase={ride.status as any}
+            acceptedAt={ride.accepted_at}
+            startedAt={ride.started_at}
+            durationMin={ride.duration_min}
+            onEta={setEtaSec}
+            className="w-full h-full"
+          />
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center text-sm text-muted-foreground">
+            {t("ride.title")}
+          </div>
+        )}
       </div>
+
+      {(ride.status === "accepted" || ride.status === "in_progress") && etaSec > 0 && (
+        <div className="mx-4 mb-2 rounded-2xl bg-foreground text-background px-4 py-3 flex items-center justify-between shadow-card">
+          <div>
+            <div className="text-[11px] opacity-70 uppercase tracking-wide">
+              {ride.status === "accepted" ? t("ride.driver_eta") : t("ride.arrival_eta")}
+            </div>
+            <div className="text-2xl font-black leading-tight">
+              {Math.ceil(etaSec / 60)} {t("ride.min")}
+            </div>
+          </div>
+          <div className="text-xs opacity-70">
+            {ride.status === "accepted" ? t("ride.on_the_way") : t("ride.in_route")}
+          </div>
+        </div>
+      )}
 
       <div className="px-4 flex-1">
         <AnimatePresence mode="wait">
