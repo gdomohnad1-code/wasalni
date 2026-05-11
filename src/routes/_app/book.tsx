@@ -150,8 +150,14 @@ function BookPage() {
           <Label className="text-xs">الوجهة</Label>
           <div className="relative">
             <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
-            <Input value={destination} onChange={(e) => setDestination(e.target.value)} className="pr-10" placeholder="رايح فين؟" />
+            <Input value={destination} onChange={(e) => setDestination(e.target.value)} className="pr-10 pl-10" placeholder="رايح فين؟" />
+            {geoLoading && (
+              <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            )}
           </div>
+          {destination && !geoLoading && !destCoords && (
+            <p className="text-[11px] text-destructive mt-1">لم نعثر على هذا المكان — جرّب اسم أوضح</p>
+          )}
           <div className="flex gap-2 mt-2 flex-wrap">
             {SUGGEST.map((s) => (
               <button key={s} onClick={() => setDestination(s)}
