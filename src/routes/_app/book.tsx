@@ -154,14 +154,21 @@ function BookPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="bg-gradient-primary text-primary-foreground rounded-2xl p-4 shadow-soft">
             <div className="flex justify-between text-sm">
-              <span>المسافة</span><span className="font-bold">{distance} كم</span>
+              <span>المسافة</span><span className="font-bold">{distance.toFixed(1)} كم</span>
             </div>
             <div className="flex justify-between text-sm mt-1">
               <span>الوقت المتوقع</span><span className="font-bold">{duration} دقيقة</span>
             </div>
+            {tripMode === "multistop" && (
+              <div className="text-[11px] mt-1 opacity-90">تسعير بالساعة (200 ج.م/س — حد أدنى 75 ج.م)</div>
+            )}
             <div className="flex justify-between mt-2 pt-2 border-t border-white/30">
               <span className="font-bold">السعر النهائي</span>
               <span className="font-black text-2xl">{price} ج.م</span>
+            </div>
+            <div className="flex justify-between text-[11px] opacity-90 mt-1">
+              <span>عمولة المنصة ({Math.round(PLATFORM_COMMISSION_RATE * 100)}%)</span>
+              <span>{commission} ج.م</span>
             </div>
           </motion.div>
         )}
