@@ -233,6 +233,7 @@ function AdminsPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="text-right">البريد</TableHead>
+              <TableHead className="text-right w-56">الدور الافتراضي</TableHead>
               <TableHead className="text-right">تاريخ الإضافة</TableHead>
               <TableHead className="text-right w-24">إجراء</TableHead>
             </TableRow>
@@ -240,7 +241,7 @@ function AdminsPage() {
           <TableBody>
             {emails.length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                   لا توجد بُرد مسجلة
                 </TableCell>
               </TableRow>
@@ -248,6 +249,20 @@ function AdminsPage() {
             {emails.map((e) => (
               <TableRow key={e.id}>
                 <TableCell className="font-mono" dir="ltr">{e.email}</TableCell>
+                <TableCell>
+                  <Select
+                    value={e.default_permission}
+                    disabled={!isSuper}
+                    onValueChange={(v) => updateEmailPerm(e.id, v as AdminPerm)}
+                  >
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {ALL_PERMS.map((p) => (
+                        <SelectItem key={p} value={p}>{PERM_META[p].label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
                 <TableCell>{new Date(e.created_at).toLocaleDateString("ar-EG")}</TableCell>
                 <TableCell>
                   <Button
