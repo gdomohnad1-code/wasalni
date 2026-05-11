@@ -11,7 +11,7 @@ import {
   calcPrice, calcDuration, haversineKm, calcCommission, PLATFORM_COMMISSION_RATE,
 } from "@/lib/pricing";
 import { geocodeAddress, reverseGeocode, type LatLng } from "@/lib/geocode";
-import { FakeMap } from "@/components/FakeMap";
+import { BookMap } from "@/components/BookMap";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -137,7 +137,7 @@ function BookPage() {
       </div>
 
       <div className="h-56 mx-4 mt-4">
-        <FakeMap pickup={pickup} destination={destination} />
+        <BookMap pickup={pickupCoords} destination={destCoords} />
       </div>
 
       <div className="p-4 space-y-4 flex-1">
