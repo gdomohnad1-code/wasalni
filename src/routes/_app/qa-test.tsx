@@ -346,16 +346,29 @@ function QATestPage() {
 
   // ===== E2E ride flow (rider request → rating) =====
   const e2eRideId = useRef<string | null>(null);
-  const e2eRt = useRef<{ titles: Set<string>; channel: any } | null>(null);
+  type RtNotif = {
+    id: string;
+    user_id: string;
+    title: string;
+    body: string | null;
+    created_at: string;
+    read: boolean;
+  };
+  const e2eRt = useRef<{
+    events: RtNotif[];
+    byTitle: Map<string, RtNotif>;
+    channel: any;
+  } | null>(null);
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   const waitForRtTitle = async (title: string, timeoutMs = 6000) => {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
-      if (e2eRt.current?.titles.has(title)) return true;
+      const n = e2eRt.current?.byTitle.get(title);
+      if (n) return n;
       await sleep(200);
     }
-    return false;
+    return null;
   };
 
   const e2eChecks: Check[] = [
@@ -367,25 +380,30 @@ function QATestPage() {
         if (e2eRt.current?.channel) {
           await supabase.removeChannel(e2eRt.current.channel);
         }
-        const titles = new Set<string>();
+        const events: RtNotif[] = [];
+        const byTitle = new Map<string, RtNotif>();
         const channel = supabase
           .channel(`qa-notifs-${id}-${Date.now()}`)
           .on(
             "postgres_changes",
             { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${id}` },
             (payload: any) => {
-              const t = payload?.new?.title;
-              if (typeof t === "string") titles.add(t);
+              const n = payload?.new as RtNotif | undefined;
+              if (n && typeof n.title === "string") {
+                events.push(n);
+                byTitle.set(n.title, n);
+              }
             },
           );
         const status = await new Promise<string>((resolve) => {
           channel.subscribe((s: string) => resolve(s));
         });
         if (status !== "SUBSCRIBED") throw new Error(`فشل الاشتراك (${status})`);
-        e2eRt.current = { titles, channel };
+        e2eRt.current = { events, byTitle, channel };
         return "✓ مشترك في قناة الإشعارات";
       },
     },
+
     {
 
       id: "e2e-create",
