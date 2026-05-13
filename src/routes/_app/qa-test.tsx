@@ -660,6 +660,39 @@ function QATestPage() {
   };
   // علم عام لمنع تعارض عدة MockClock متداخلة في نفس الجلسة
   const MOCK_FLAG = "__qaMockClockActive__";
+  // === شبكة أمان عالمية ===
+  // نلتقط Date الأصلي + واصفه مرّة واحدة عند تحميل الوحدة، بحيث نستطيع
+  // استعادتهما لاحقًا حتى لو فشل install() في منتصف العملية أو حدث استثناء
+  // غير متوقع داخل الاختبار.
+  const PRISTINE_DATE: DateConstructor = (globalThis as any).Date;
+  const PRISTINE_GLOBAL_DATE_DESCRIPTOR =
+    Object.getOwnPropertyDescriptor(globalThis, "Date") ?? {
+      value: PRISTINE_DATE,
+      writable: true,
+      configurable: true,
+      enumerable: false,
+    };
+  const PRISTINE_STATIC_DESCRIPTORS: Record<string | symbol, PropertyDescriptor> = {};
+  for (const k of Object.getOwnPropertyNames(PRISTINE_DATE)) {
+    const d = Object.getOwnPropertyDescriptor(PRISTINE_DATE, k);
+    if (d) PRISTINE_STATIC_DESCRIPTORS[k] = d;
+  }
+  for (const s of Object.getOwnPropertySymbols(PRISTINE_DATE)) {
+    const d = Object.getOwnPropertyDescriptor(PRISTINE_DATE, s);
+    if (d) PRISTINE_STATIC_DESCRIPTORS[s.toString()] = d;
+  }
+  // استعادة قسرية idempotent — تُستدعى من finally كشبكة أمان حتى لو لم يُنصَّب أي Mock
+  const forceRestorePristineDate = () => {
+    try {
+      Object.defineProperty(globalThis, "Date", PRISTINE_GLOBAL_DATE_DESCRIPTOR);
+    } catch {
+      try { (globalThis as any).Date = PRISTINE_DATE; } catch { /* ignore */ }
+    }
+    for (const [key, desc] of Object.entries(PRISTINE_STATIC_DESCRIPTORS)) {
+      try { Object.defineProperty(PRISTINE_DATE, key, desc); } catch { /* ignore */ }
+    }
+    try { delete (globalThis as any)[MOCK_FLAG]; } catch { /* ignore */ }
+  };
   const createMockClock = (startMs = Date.parse("2025-01-01T00:00:00.000Z")): MockClock => {
     let current = startMs;
     let installed = false;
@@ -692,41 +725,55 @@ function QATestPage() {
         if ((globalThis as any).Date !== RealDate) {
           throw new Error("MockClock: تم تعديل globalThis.Date من طرف ثالث قبل التركيب");
         }
-        installed = true;
-        (globalThis as any)[MOCK_FLAG] = true;
-        const Patched: any = function (this: any, ...args: any[]) {
-          if (!(this instanceof Patched)) return new RealDate(current).toString();
-          if (args.length === 0) return new RealDate(current);
-          // @ts-ignore
-          return new RealDate(...args);
-        };
-        // إعادة بناء كل الخصائص الثابتة من الواصفات الأصلية
-        for (const [key, desc] of Object.entries(realStaticDescriptors)) {
-          try { Object.defineProperty(Patched, key, desc); } catch { /* ignore non-writable */ }
+        // تنظيف داخلي: لو فشلنا في منتصف التركيب نتراجع لحالة نظيفة قبل الرمي
+        try {
+          (globalThis as any)[MOCK_FLAG] = true;
+          const Patched: any = function (this: any, ...args: any[]) {
+            if (!(this instanceof Patched)) return new RealDate(current).toString();
+            if (args.length === 0) return new RealDate(current);
+            // @ts-ignore
+            return new RealDate(...args);
+          };
+          for (const [key, desc] of Object.entries(realStaticDescriptors)) {
+            try { Object.defineProperty(Patched, key, desc); } catch { /* ignore non-writable */ }
+          }
+          Patched.now = () => current;
+          Patched.prototype = RealDate.prototype;
+          Object.defineProperty(globalThis, "Date", {
+            value: Patched,
+            writable: true,
+            configurable: true,
+            enumerable: false,
+          });
+          installed = true;
+        } catch (err) {
+          // تراجع شامل عبر شبكة الأمان العالمية
+          forceRestorePristineDate();
+          installed = false;
+          throw err;
         }
-        Patched.now = () => current;
-        Patched.prototype = RealDate.prototype;
-        Object.defineProperty(globalThis, "Date", {
-          value: Patched,
-          writable: true,
-          configurable: true,
-          enumerable: false,
-        });
       },
       uninstall() {
-        if (!installed) return;
-        installed = false;
-        // استعادة Date الأصلي عبر الواصف المخزّن
+        // حتى لو لم نُسجَّل كـ installed، نضمن استعادة الحالة الأصلية كـ no-op آمن
         try {
-          Object.defineProperty(globalThis, "Date", realGlobalDateDescriptor);
-        } catch {
-          (globalThis as any).Date = RealDate;
+          if (installed) {
+            try {
+              Object.defineProperty(globalThis, "Date", realGlobalDateDescriptor);
+            } catch {
+              (globalThis as any).Date = RealDate;
+            }
+            for (const [key, desc] of Object.entries(realStaticDescriptors)) {
+              try { Object.defineProperty(RealDate, key, desc); } catch { /* ignore */ }
+            }
+          }
+        } finally {
+          installed = false;
+          try { delete (globalThis as any)[MOCK_FLAG]; } catch { /* ignore */ }
+          // شبكة أمان نهائية: اضمن أن globalThis.Date هو الأصلي مهما حدث
+          if ((globalThis as any).Date !== PRISTINE_DATE) {
+            forceRestorePristineDate();
+          }
         }
-        // استعادة كل الخصائص الثابتة (في حال عبث طرف ثالث بها أثناء التركيب)
-        for (const [key, desc] of Object.entries(realStaticDescriptors)) {
-          try { Object.defineProperty(RealDate, key, desc); } catch { /* ignore */ }
-        }
-        delete (globalThis as any)[MOCK_FLAG];
       },
       advance(ms: number) { current += ms; },
       set(ms: number) { current = ms; },
@@ -737,11 +784,27 @@ function QATestPage() {
   };
   const withMockClock = async <T,>(fn: (clock: MockClock) => Promise<T> | T, startMs?: number): Promise<T> => {
     const clock = createMockClock(startMs);
-    clock.install();
     try {
+      clock.install();
       return await fn(clock);
     } finally {
-      clock.uninstall();
+      // try/finally مزدوج: uninstall ثم شبكة أمان مهما حصل
+      try { clock.uninstall(); } catch { /* ignore */ }
+      if ((globalThis as any).Date !== PRISTINE_DATE || (globalThis as any)[MOCK_FLAG]) {
+        forceRestorePristineDate();
+      }
+    }
+  };
+
+  // afterEach-style: يلفّ كل run() في try/finally يضمن استعادة Date حتى لو
+  // رُمي استثناء قبل وصول الكود لـ withMockClock أو أثنائه.
+  const withDateCleanup = <R,>(run: () => Promise<R> | R) => async (): Promise<R> => {
+    try {
+      return await run();
+    } finally {
+      if ((globalThis as any).Date !== PRISTINE_DATE || (globalThis as any)[MOCK_FLAG]) {
+        forceRestorePristineDate();
+      }
     }
   };
 
@@ -793,7 +856,7 @@ function QATestPage() {
     {
       id: "neg-mock-clock-sanity",
       label: "0) Mock Clock ثابت — Date.now() لا يتغير دون advance()",
-      run: async () => {
+      run: withDateCleanup(async () => {
         return await withMockClock(async (clock) => {
           const t1 = Date.now();
           // محاكاة تأخير شبكة حقيقي — يجب ألا يؤثر على الساعة المُحاكاة
@@ -810,12 +873,12 @@ function QATestPage() {
             throw new Error("new Date() لا يحترم Mock Clock");
           return `✓ ثابت تحت تأخير شبكة + advance(1234ms) دقيق`;
         });
-      },
+      }),
     },
     {
       id: "neg-baseline-pass",
       label: "1) سيناريو طبيعي يمر بدون أخطاء (sanity)",
-      run: async () =>
+      run: withDateCleanup(() =>
         withMockClock(async (clock) => {
           const booked = clock.nowISO();
           clock.advance(30_000);
@@ -824,12 +887,12 @@ function QATestPage() {
           const started = clock.nowISO();
           const r = validateNotifTiming(booked, accepted, started);
           return `✓ Δحجز→قبول ${fmtSec(r.dBA)} • Δقبول→بدء ${fmtSec(r.dAS)}`;
-        }),
+        })),
     },
     {
       id: "neg-accept-delay",
       label: "2) تأخير قبول السائق 7 دقائق → يجب أن يفشل (>5د)",
-      run: async () =>
+      run: withDateCleanup(() =>
         withMockClock(async (clock) => {
           const booked = clock.nowISO();
           clock.advance(7 * 60 * 1000);
@@ -842,12 +905,12 @@ function QATestPage() {
             "تأخير قبول",
           );
           return `✓ فشل كما هو متوقع — ${msg}`;
-        }),
+        })),
     },
     {
       id: "neg-start-delay",
       label: "3) تأخير بدء الرحلة 5 دقائق → يجب أن يفشل (>3د)",
-      run: async () =>
+      run: withDateCleanup(() =>
         withMockClock(async (clock) => {
           const booked = clock.nowISO();
           clock.advance(30_000);
@@ -860,12 +923,12 @@ function QATestPage() {
             "تأخير بدء",
           );
           return `✓ فشل كما هو متوقع — ${msg}`;
-        }),
+        })),
     },
     {
       id: "neg-out-of-order",
       label: "4) ترتيب مقلوب (قبول قبل الحجز) → يجب أن يفشل",
-      run: async () =>
+      run: withDateCleanup(() =>
         withMockClock(async (clock) => {
           const start = clock.now();
           const accepted = new Date(start).toISOString();
@@ -879,7 +942,7 @@ function QATestPage() {
             "ترتيب مقلوب",
           );
           return `✓ فشل كما هو متوقع — ${msg}`;
-        }),
+        })),
     },
   ];
 
