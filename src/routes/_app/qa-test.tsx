@@ -346,10 +346,48 @@ function QATestPage() {
 
   // ===== E2E ride flow (rider request → rating) =====
   const e2eRideId = useRef<string | null>(null);
+  const e2eRt = useRef<{ titles: Set<string>; channel: any } | null>(null);
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  const waitForRtTitle = async (title: string, timeoutMs = 6000) => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      if (e2eRt.current?.titles.has(title)) return true;
+      await sleep(200);
+    }
+    return false;
+  };
 
   const e2eChecks: Check[] = [
     {
+      id: "e2e-rt-subscribe",
+      label: "0) الاشتراك في إشعارات Realtime",
+      run: async () => {
+        const id = requireUid();
+        if (e2eRt.current?.channel) {
+          await supabase.removeChannel(e2eRt.current.channel);
+        }
+        const titles = new Set<string>();
+        const channel = supabase
+          .channel(`qa-notifs-${id}-${Date.now()}`)
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${id}` },
+            (payload: any) => {
+              const t = payload?.new?.title;
+              if (typeof t === "string") titles.add(t);
+            },
+          );
+        const status = await new Promise<string>((resolve) => {
+          channel.subscribe((s: string) => resolve(s));
+        });
+        if (status !== "SUBSCRIBED") throw new Error(`فشل الاشتراك (${status})`);
+        e2eRt.current = { titles, channel };
+        return "✓ مشترك في قناة الإشعارات";
+      },
+    },
+    {
+
       id: "e2e-create",
       label: "1) إنشاء طلب رحلة من الراكب",
       run: async () => {
