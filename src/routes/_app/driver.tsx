@@ -41,20 +41,30 @@ function DriverPage() {
 
   if (loading) return <div className="flex justify-center pt-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
-  // Active driver → dashboard
+  let content: React.ReactNode;
   if (isDriver && docs?.account_status === "active") {
-    return <DriverDashboard docs={docs} setDocs={setDocs} />;
+    content = <DriverDashboard docs={docs} setDocs={setDocs} />;
+  } else {
+    const status = docs?.account_status;
+    if (status === "pending") content = <StatusPending docs={docs} />;
+    else if (status === "rejected" && !(docs.next_attempt_at && new Date(docs.next_attempt_at).getTime() <= Date.now())) {
+      content = <StatusRejected docs={docs} onReady={reload} />;
+    } else {
+      content = <DriverApplicationForm docs={docs} onDone={() => { refresh(); reload(); }} />;
+    }
   }
 
-  // Status screens for application lifecycle
-  const status = docs?.account_status;
-  if (status === "pending") return <StatusPending docs={docs} />;
-  if (status === "rejected") {
-    const ready = docs.next_attempt_at && new Date(docs.next_attempt_at).getTime() <= Date.now();
-    if (!ready) return <StatusRejected docs={docs} onReady={reload} />;
-  }
-  // changes_requested OR rejected-but-cooldown-passed OR no record yet → show form
-  return <DriverApplicationForm docs={docs} onDone={() => { refresh(); reload(); }} />;
+  return (
+    <>
+      {content}
+      <Link
+        to="/home"
+        className="fixed top-3 left-3 z-[9999] bg-black/80 text-white text-[11px] font-bold px-3 py-2 rounded-full shadow-lg backdrop-blur border border-dashed border-white/40 hover:bg-black"
+      >
+        👤 معاينة الراكب
+      </Link>
+    </>
+  );
 }
 
 // ============= Status: Pending =============
