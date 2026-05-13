@@ -787,6 +787,7 @@ function QATestPage() {
       </Card>
 
       <CheckSection title="رحلة كاملة (راكب ← تقييم)" icon={RouteIcon} checks={e2eChecks} accent="bg-purple-600" />
+      <CheckSection title="فشل متعمد — حدود زمنية للإشعارات" icon={XCircle} checks={negativeChecks} accent="bg-rose-600" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <CheckSection title="مسار الراكب" icon={User} checks={riderChecks} accent="bg-blue-600" />
