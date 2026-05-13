@@ -451,7 +451,7 @@ function QATestPage() {
     },
     {
       id: "e2e-rate",
-      label: "5) تقييم الراكب للرحلة",
+      label: "7) تقييم الراكب للرحلة",
       run: async () => {
         if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
         const { error } = await supabase.from("rides")
@@ -463,7 +463,7 @@ function QATestPage() {
     },
     {
       id: "e2e-verify",
-      label: "6) التحقق النهائي من الرحلة",
+      label: "8) التحقق النهائي من الرحلة",
       run: async () => {
         if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
         const { data, error } = await supabase.from("rides")
