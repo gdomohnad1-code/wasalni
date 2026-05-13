@@ -42,23 +42,29 @@ export function NotificationCenter({ className = "" }: { className?: string }) {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     let ch: ReturnType<typeof supabase.channel> | null = null;
     (async () => {
       const { data } = await supabase.auth.getUser();
       const id = data.user?.id;
-      if (!id) return;
+      if (!id || cancelled) return;
       setUid(id);
       await load(id);
-      ch = supabase
-        .channel(`notif-center-${id}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${id}` },
-          () => load(id),
-        )
-        .subscribe();
+      if (cancelled) return;
+      const channel = supabase.channel(`notif-center-${id}-${Math.random().toString(36).slice(2)}`);
+      channel.on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${id}` },
+        () => load(id),
+      );
+      if (cancelled) { supabase.removeChannel(channel); return; }
+      channel.subscribe();
+      ch = channel;
     })();
-    return () => { if (ch) supabase.removeChannel(ch); };
+    return () => {
+      cancelled = true;
+      if (ch) supabase.removeChannel(ch);
+    };
   }, [load]);
 
   const unread = items.filter((n) => !n.read).length;
