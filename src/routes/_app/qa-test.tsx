@@ -587,7 +587,24 @@ function QATestPage() {
           );
         }
 
-        return `✓ ${expected.length} إشعارات صحيحة • user_id ✓ • ترتيب زمني ✓ • مرتبطة بالرحلة ${ride.id.slice(0, 8)}…`;
+        // 5) التحقق من حدود الفارق الزمني المنطقية
+        const MAX_BOOKED_TO_ACCEPTED_MS = 5 * 60 * 1000; // 5 دقائق
+        const MAX_ACCEPTED_TO_STARTED_MS = 3 * 60 * 1000; // 3 دقائق
+        const fmtSec = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+        const dBA = tAccepted - tBooked;
+        const dAS = tStarted - tAccepted;
+        if (dBA > MAX_BOOKED_TO_ACCEPTED_MS) {
+          throw new Error(
+            `الفارق بين «تم الحجز» و«السائق قبل رحلتك» كبير جدًا: ${fmtSec(dBA)} (الحد ${fmtSec(MAX_BOOKED_TO_ACCEPTED_MS)})`,
+          );
+        }
+        if (dAS > MAX_ACCEPTED_TO_STARTED_MS) {
+          throw new Error(
+            `الفارق بين «السائق قبل رحلتك» و«بدأت الرحلة» كبير جدًا: ${fmtSec(dAS)} (الحد ${fmtSec(MAX_ACCEPTED_TO_STARTED_MS)})`,
+          );
+        }
+
+        return `✓ ${expected.length} إشعارات صحيحة • ترتيب ✓ • Δحجز→قبول ${fmtSec(dBA)} • Δقبول→بدء ${fmtSec(dAS)} • رحلة ${ride.id.slice(0, 8)}…`;
       },
     },
     {
