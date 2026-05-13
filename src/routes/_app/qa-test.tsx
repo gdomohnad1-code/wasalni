@@ -471,6 +471,8 @@ function QATestPage() {
         </div>
       </Card>
 
+      <CheckSection title="رحلة كاملة (راكب ← تقييم)" icon={RouteIcon} checks={e2eChecks} accent="bg-purple-600" />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <CheckSection title="مسار الراكب" icon={User} checks={riderChecks} accent="bg-blue-600" />
         <CheckSection title="مسار السائق" icon={Car} checks={driverChecks} accent="bg-amber-600" />
