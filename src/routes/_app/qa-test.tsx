@@ -856,7 +856,7 @@ function QATestPage() {
     {
       id: "neg-mock-clock-sanity",
       label: "0) Mock Clock ثابت — Date.now() لا يتغير دون advance()",
-      run: async () => {
+      run: withDateCleanup(async () => {
         return await withMockClock(async (clock) => {
           const t1 = Date.now();
           // محاكاة تأخير شبكة حقيقي — يجب ألا يؤثر على الساعة المُحاكاة
@@ -873,12 +873,12 @@ function QATestPage() {
             throw new Error("new Date() لا يحترم Mock Clock");
           return `✓ ثابت تحت تأخير شبكة + advance(1234ms) دقيق`;
         });
-      },
+      }),
     },
     {
       id: "neg-baseline-pass",
       label: "1) سيناريو طبيعي يمر بدون أخطاء (sanity)",
-      run: async () =>
+      run: withDateCleanup(() =>
         withMockClock(async (clock) => {
           const booked = clock.nowISO();
           clock.advance(30_000);
@@ -887,12 +887,12 @@ function QATestPage() {
           const started = clock.nowISO();
           const r = validateNotifTiming(booked, accepted, started);
           return `✓ Δحجز→قبول ${fmtSec(r.dBA)} • Δقبول→بدء ${fmtSec(r.dAS)}`;
-        }),
+        })),
     },
     {
       id: "neg-accept-delay",
       label: "2) تأخير قبول السائق 7 دقائق → يجب أن يفشل (>5د)",
-      run: async () =>
+      run: withDateCleanup(() =>
         withMockClock(async (clock) => {
           const booked = clock.nowISO();
           clock.advance(7 * 60 * 1000);
@@ -905,12 +905,12 @@ function QATestPage() {
             "تأخير قبول",
           );
           return `✓ فشل كما هو متوقع — ${msg}`;
-        }),
+        })),
     },
     {
       id: "neg-start-delay",
       label: "3) تأخير بدء الرحلة 5 دقائق → يجب أن يفشل (>3د)",
-      run: async () =>
+      run: withDateCleanup(() =>
         withMockClock(async (clock) => {
           const booked = clock.nowISO();
           clock.advance(30_000);
@@ -923,12 +923,12 @@ function QATestPage() {
             "تأخير بدء",
           );
           return `✓ فشل كما هو متوقع — ${msg}`;
-        }),
+        })),
     },
     {
       id: "neg-out-of-order",
       label: "4) ترتيب مقلوب (قبول قبل الحجز) → يجب أن يفشل",
-      run: async () =>
+      run: withDateCleanup(() =>
         withMockClock(async (clock) => {
           const start = clock.now();
           const accepted = new Date(start).toISOString();
@@ -942,7 +942,7 @@ function QATestPage() {
             "ترتيب مقلوب",
           );
           return `✓ فشل كما هو متوقع — ${msg}`;
-        }),
+        })),
     },
   ];
 
