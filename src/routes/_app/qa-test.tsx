@@ -438,6 +438,26 @@ function QATestPage() {
       },
     },
     {
+      id: "e2e-verify-started",
+      label: "5.1) التحقق من ضبط started_at",
+      run: async () => {
+        if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
+        const { data, error } = await supabase.from("rides")
+          .select("status,started_at").eq("id", e2eRideId.current).single();
+        if (error) throw error;
+        if (data.status !== "in_progress")
+          throw new Error(`الحالة ليست in_progress (${data.status})`);
+        if (!data.started_at)
+          throw new Error("started_at لم يُضبط");
+        const ts = new Date(data.started_at).getTime();
+        if (Number.isNaN(ts))
+          throw new Error("started_at غير صالح");
+        if (Date.now() - ts > 5 * 60 * 1000)
+          throw new Error("started_at قديم جدًا");
+        return `✓ started_at: ${new Date(ts).toLocaleTimeString("ar")}`;
+      },
+    },
+    {
       id: "e2e-complete",
       label: "6) إنهاء الرحلة (completed)",
       run: async () => {
