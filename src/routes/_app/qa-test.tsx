@@ -496,6 +496,21 @@ function QATestPage() {
       },
     },
     {
+      id: "e2e-rt-verify",
+      label: "5.2) وصول إشعارات Realtime (حجز/قبول/بدء)",
+      run: async () => {
+        if (!e2eRt.current) throw new Error("لم يتم الاشتراك بـ Realtime — شغّل الخطوة 0 أولاً");
+        const expected = ["تم الحجز", "السائق قبل رحلتك", "بدأت الرحلة"];
+        const missing: string[] = [];
+        for (const t of expected) {
+          const ok = await waitForRtTitle(t, 6000);
+          if (!ok) missing.push(t);
+        }
+        if (missing.length) throw new Error(`لم تصل: ${missing.join("، ")}`);
+        return `✓ وصلت الإشعارات: ${expected.join(" • ")}`;
+      },
+    },
+    {
       id: "e2e-complete",
       label: "6) إنهاء الرحلة (completed)",
       run: async () => {
