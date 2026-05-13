@@ -646,6 +646,114 @@ function QATestPage() {
     },
   ];
 
+  // ===== Negative tests: تأخير مقصود يجب أن يفشل التحقق =====
+  const MAX_BOOKED_TO_ACCEPTED_MS = 5 * 60 * 1000;
+  const MAX_ACCEPTED_TO_STARTED_MS = 3 * 60 * 1000;
+  const fmtSec = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+
+  const validateNotifTiming = (booked: string, accepted: string, started: string) => {
+    const tB = new Date(booked).getTime();
+    const tA = new Date(accepted).getTime();
+    const tS = new Date(started).getTime();
+    if (!(tB <= tA))
+      throw new Error("ترتيب زمني خاطئ: «تم الحجز» بعد «السائق قبل رحلتك»");
+    if (!(tA <= tS))
+      throw new Error("ترتيب زمني خاطئ: «السائق قبل رحلتك» بعد «بدأت الرحلة»");
+    const dBA = tA - tB;
+    const dAS = tS - tA;
+    if (dBA > MAX_BOOKED_TO_ACCEPTED_MS)
+      throw new Error(
+        `الفارق بين «تم الحجز» و«السائق قبل رحلتك» كبير جدًا: ${fmtSec(dBA)} (الحد ${fmtSec(MAX_BOOKED_TO_ACCEPTED_MS)})`,
+      );
+    if (dAS > MAX_ACCEPTED_TO_STARTED_MS)
+      throw new Error(
+        `الفارق بين «السائق قبل رحلتك» و«بدأت الرحلة» كبير جدًا: ${fmtSec(dAS)} (الحد ${fmtSec(MAX_ACCEPTED_TO_STARTED_MS)})`,
+      );
+    return { dBA, dAS };
+  };
+
+  const expectFailure = (
+    fn: () => unknown,
+    expectedSubstr: string,
+    label: string,
+  ) => {
+    try {
+      fn();
+    } catch (e: any) {
+      const msg = e?.message ?? String(e);
+      if (!msg.includes(expectedSubstr))
+        throw new Error(
+          `${label}: فشل لكن برسالة غير متوقعة — "${msg}" (متوقع يحوي: "${expectedSubstr}")`,
+        );
+      return msg;
+    }
+    throw new Error(`${label}: لم يفشل التحقق رغم تجاوز الحد المنطقي`);
+  };
+
+  const negativeChecks: Check[] = [
+    {
+      id: "neg-baseline-pass",
+      label: "0) سيناريو طبيعي يمر بدون أخطاء (sanity)",
+      run: async () => {
+        const now = Date.now();
+        const r = validateNotifTiming(
+          new Date(now).toISOString(),
+          new Date(now + 30_000).toISOString(),
+          new Date(now + 60_000).toISOString(),
+        );
+        return `✓ Δحجز→قبول ${fmtSec(r.dBA)} • Δقبول→بدء ${fmtSec(r.dAS)}`;
+      },
+    },
+    {
+      id: "neg-accept-delay",
+      label: "1) تأخير قبول السائق 7 دقائق → يجب أن يفشل (>5د)",
+      run: async () => {
+        const now = Date.now();
+        const booked = new Date(now).toISOString();
+        const accepted = new Date(now + 7 * 60 * 1000).toISOString();
+        const started = new Date(now + 7 * 60 * 1000 + 30_000).toISOString();
+        const msg = expectFailure(
+          () => validateNotifTiming(booked, accepted, started),
+          "«تم الحجز» و«السائق قبل رحلتك» كبير جدًا",
+          "تأخير قبول",
+        );
+        return `✓ فشل كما هو متوقع — ${msg}`;
+      },
+    },
+    {
+      id: "neg-start-delay",
+      label: "2) تأخير بدء الرحلة 5 دقائق → يجب أن يفشل (>3د)",
+      run: async () => {
+        const now = Date.now();
+        const booked = new Date(now).toISOString();
+        const accepted = new Date(now + 30_000).toISOString();
+        const started = new Date(now + 30_000 + 5 * 60 * 1000).toISOString();
+        const msg = expectFailure(
+          () => validateNotifTiming(booked, accepted, started),
+          "«السائق قبل رحلتك» و«بدأت الرحلة» كبير جدًا",
+          "تأخير بدء",
+        );
+        return `✓ فشل كما هو متوقع — ${msg}`;
+      },
+    },
+    {
+      id: "neg-out-of-order",
+      label: "3) ترتيب مقلوب (قبول قبل الحجز) → يجب أن يفشل",
+      run: async () => {
+        const now = Date.now();
+        const booked = new Date(now + 60_000).toISOString();
+        const accepted = new Date(now).toISOString();
+        const started = new Date(now + 90_000).toISOString();
+        const msg = expectFailure(
+          () => validateNotifTiming(booked, accepted, started),
+          "ترتيب زمني خاطئ",
+          "ترتيب مقلوب",
+        );
+        return `✓ فشل كما هو متوقع — ${msg}`;
+      },
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-muted/30 p-4 lg:p-6 space-y-4" dir="rtl">
       <Card className="p-4">
