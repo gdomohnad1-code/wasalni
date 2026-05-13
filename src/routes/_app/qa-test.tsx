@@ -660,6 +660,39 @@ function QATestPage() {
   };
   // علم عام لمنع تعارض عدة MockClock متداخلة في نفس الجلسة
   const MOCK_FLAG = "__qaMockClockActive__";
+  // === شبكة أمان عالمية ===
+  // نلتقط Date الأصلي + واصفه مرّة واحدة عند تحميل الوحدة، بحيث نستطيع
+  // استعادتهما لاحقًا حتى لو فشل install() في منتصف العملية أو حدث استثناء
+  // غير متوقع داخل الاختبار.
+  const PRISTINE_DATE: DateConstructor = (globalThis as any).Date;
+  const PRISTINE_GLOBAL_DATE_DESCRIPTOR =
+    Object.getOwnPropertyDescriptor(globalThis, "Date") ?? {
+      value: PRISTINE_DATE,
+      writable: true,
+      configurable: true,
+      enumerable: false,
+    };
+  const PRISTINE_STATIC_DESCRIPTORS: Record<string | symbol, PropertyDescriptor> = {};
+  for (const k of Object.getOwnPropertyNames(PRISTINE_DATE)) {
+    const d = Object.getOwnPropertyDescriptor(PRISTINE_DATE, k);
+    if (d) PRISTINE_STATIC_DESCRIPTORS[k] = d;
+  }
+  for (const s of Object.getOwnPropertySymbols(PRISTINE_DATE)) {
+    const d = Object.getOwnPropertyDescriptor(PRISTINE_DATE, s);
+    if (d) PRISTINE_STATIC_DESCRIPTORS[s.toString()] = d;
+  }
+  // استعادة قسرية idempotent — تُستدعى من finally كشبكة أمان حتى لو لم يُنصَّب أي Mock
+  const forceRestorePristineDate = () => {
+    try {
+      Object.defineProperty(globalThis, "Date", PRISTINE_GLOBAL_DATE_DESCRIPTOR);
+    } catch {
+      try { (globalThis as any).Date = PRISTINE_DATE; } catch { /* ignore */ }
+    }
+    for (const [key, desc] of Object.entries(PRISTINE_STATIC_DESCRIPTORS)) {
+      try { Object.defineProperty(PRISTINE_DATE, key, desc); } catch { /* ignore */ }
+    }
+    try { delete (globalThis as any)[MOCK_FLAG]; } catch { /* ignore */ }
+  };
   const createMockClock = (startMs = Date.parse("2025-01-01T00:00:00.000Z")): MockClock => {
     let current = startMs;
     let installed = false;
