@@ -389,10 +389,47 @@ function QATestPage() {
       },
     },
     {
-      id: "e2e-start",
-      label: "3) بدء الرحلة (in_progress)",
+      id: "e2e-accept",
+      label: "3) قبول السائق للرحلة تلقائيًا (accepted)",
+      run: async () => {
+        const id = requireUid();
+        if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
+        const { error } = await supabase.from("rides")
+          .update({
+            driver_id: id,
+            status: "accepted",
+            accepted_at: new Date().toISOString(),
+          })
+          .eq("id", e2eRideId.current);
+        if (error) throw error;
+        return "تم تعيين السائق • status=accepted";
+      },
+    },
+    {
+      id: "e2e-verify-accepted",
+      label: "4) التحقق من انتقال الحالة إلى accepted",
       run: async () => {
         if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
+        await sleep(300);
+        const { data, error } = await supabase.from("rides")
+          .select("status,driver_id,accepted_at").eq("id", e2eRideId.current).single();
+        if (error) throw error;
+        if (data.status !== "accepted") throw new Error(`status=${data.status} (متوقع accepted)`);
+        if (!data.driver_id) throw new Error("لم يتم تعيين سائق");
+        if (!data.accepted_at) throw new Error("accepted_at فارغ");
+        return `✓ accepted • driver: ${data.driver_id.slice(0, 8)}…`;
+      },
+    },
+    {
+      id: "e2e-start",
+      label: "5) بدء الرحلة (in_progress)",
+      run: async () => {
+        if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
+        const { data: pre, error: preErr } = await supabase.from("rides")
+          .select("status").eq("id", e2eRideId.current).single();
+        if (preErr) throw preErr;
+        if (pre.status !== "accepted")
+          throw new Error(`يجب أن تكون accepted قبل البدء (الحالية: ${pre.status})`);
         const { error } = await supabase.from("rides")
           .update({ status: "in_progress", started_at: new Date().toISOString() })
           .eq("id", e2eRideId.current);
@@ -402,7 +439,7 @@ function QATestPage() {
     },
     {
       id: "e2e-complete",
-      label: "4) إنهاء الرحلة (completed)",
+      label: "6) إنهاء الرحلة (completed)",
       run: async () => {
         if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
         const { error } = await supabase.from("rides")
@@ -414,7 +451,7 @@ function QATestPage() {
     },
     {
       id: "e2e-rate",
-      label: "5) تقييم الراكب للرحلة",
+      label: "7) تقييم الراكب للرحلة",
       run: async () => {
         if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
         const { error } = await supabase.from("rides")
@@ -426,7 +463,7 @@ function QATestPage() {
     },
     {
       id: "e2e-verify",
-      label: "6) التحقق النهائي من الرحلة",
+      label: "8) التحقق النهائي من الرحلة",
       run: async () => {
         if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
         const { data, error } = await supabase.from("rides")
