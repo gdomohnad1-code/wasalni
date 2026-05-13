@@ -572,7 +572,22 @@ function QATestPage() {
         if (!within(arrived["بدأت الرحلة"].created_at, ride.started_at))
           throw new Error("توقيت «بدأت الرحلة» لا يطابق started_at");
 
-        return `✓ ${expected.length} إشعارات صحيحة • user_id ✓ • مرتبطة بالرحلة ${ride.id.slice(0, 8)}…`;
+        // 4) التحقق من الترتيب الزمني الصحيح للإشعارات
+        const tBooked = new Date(arrived["تم الحجز"].created_at).getTime();
+        const tAccepted = new Date(arrived["السائق قبل رحلتك"].created_at).getTime();
+        const tStarted = new Date(arrived["بدأت الرحلة"].created_at).getTime();
+        if (!(tBooked <= tAccepted)) {
+          throw new Error(
+            `ترتيب زمني خاطئ: «تم الحجز» (${new Date(tBooked).toLocaleTimeString("ar")}) بعد «السائق قبل رحلتك» (${new Date(tAccepted).toLocaleTimeString("ar")})`,
+          );
+        }
+        if (!(tAccepted <= tStarted)) {
+          throw new Error(
+            `ترتيب زمني خاطئ: «السائق قبل رحلتك» (${new Date(tAccepted).toLocaleTimeString("ar")}) بعد «بدأت الرحلة» (${new Date(tStarted).toLocaleTimeString("ar")})`,
+          );
+        }
+
+        return `✓ ${expected.length} إشعارات صحيحة • user_id ✓ • ترتيب زمني ✓ • مرتبطة بالرحلة ${ride.id.slice(0, 8)}…`;
       },
     },
     {
