@@ -646,7 +646,61 @@ function QATestPage() {
     },
   ];
 
-  // ===== Negative tests: تأخير مقصود يجب أن يفشل التحقق =====
+  // ===== Mock Clock — يضمن ثبات نتائج اختبارات التأخير بغضّ النظر عن سرعة الشبكة =====
+  type MockClock = {
+    install: () => void;
+    uninstall: () => void;
+    advance: (ms: number) => void;
+    set: (ms: number) => void;
+    now: () => number;
+    nowISO: () => string;
+    isInstalled: () => boolean;
+  };
+  const createMockClock = (startMs = Date.parse("2025-01-01T00:00:00.000Z")): MockClock => {
+    let current = startMs;
+    let installed = false;
+    const RealDate = Date;
+    const realNow = Date.now.bind(Date);
+    return {
+      install() {
+        if (installed) return;
+        installed = true;
+        (Date as any).now = () => current;
+        const Patched: any = function (this: any, ...args: any[]) {
+          if (args.length === 0) return new RealDate(current);
+          // @ts-ignore
+          return new RealDate(...args);
+        };
+        Patched.now = () => current;
+        Patched.parse = RealDate.parse;
+        Patched.UTC = RealDate.UTC;
+        Patched.prototype = RealDate.prototype;
+        (globalThis as any).Date = Patched;
+      },
+      uninstall() {
+        if (!installed) return;
+        installed = false;
+        (globalThis as any).Date = RealDate;
+        (RealDate as any).now = realNow;
+      },
+      advance(ms: number) { current += ms; },
+      set(ms: number) { current = ms; },
+      now() { return current; },
+      nowISO() { return new RealDate(current).toISOString(); },
+      isInstalled() { return installed; },
+    };
+  };
+  const withMockClock = async <T,>(fn: (clock: MockClock) => Promise<T> | T, startMs?: number): Promise<T> => {
+    const clock = createMockClock(startMs);
+    clock.install();
+    try {
+      return await fn(clock);
+    } finally {
+      clock.uninstall();
+    }
+  };
+
+  // ===== Negative tests: تأخير مقصود يجب أن يفشل التحقق (مع Mock Clock للثبات) =====
   const MAX_BOOKED_TO_ACCEPTED_MS = 5 * 60 * 1000;
   const MAX_ACCEPTED_TO_STARTED_MS = 3 * 60 * 1000;
   const fmtSec = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
@@ -692,65 +746,95 @@ function QATestPage() {
 
   const negativeChecks: Check[] = [
     {
-      id: "neg-baseline-pass",
-      label: "0) سيناريو طبيعي يمر بدون أخطاء (sanity)",
+      id: "neg-mock-clock-sanity",
+      label: "0) Mock Clock ثابت — Date.now() لا يتغير دون advance()",
       run: async () => {
-        const now = Date.now();
-        const r = validateNotifTiming(
-          new Date(now).toISOString(),
-          new Date(now + 30_000).toISOString(),
-          new Date(now + 60_000).toISOString(),
-        );
-        return `✓ Δحجز→قبول ${fmtSec(r.dBA)} • Δقبول→بدء ${fmtSec(r.dAS)}`;
+        return await withMockClock(async (clock) => {
+          const t1 = Date.now();
+          // محاكاة تأخير شبكة حقيقي — يجب ألا يؤثر على الساعة المُحاكاة
+          await new Promise((r) => setTimeout(r, 50));
+          const t2 = Date.now();
+          if (t1 !== t2) throw new Error(`Mock Clock غير ثابت: ${t1} → ${t2}`);
+          clock.advance(1234);
+          const t3 = Date.now();
+          if (t3 - t2 !== 1234)
+            throw new Error(`advance() لا يعمل: المتوقع +1234 وجاء ${t3 - t2}`);
+          // تحقق أن new Date() يحترم الساعة أيضًا
+          const isoNow = new Date().toISOString();
+          if (new Date(isoNow).getTime() !== t3)
+            throw new Error("new Date() لا يحترم Mock Clock");
+          return `✓ ثابت تحت تأخير شبكة + advance(1234ms) دقيق`;
+        });
       },
+    },
+    {
+      id: "neg-baseline-pass",
+      label: "1) سيناريو طبيعي يمر بدون أخطاء (sanity)",
+      run: async () =>
+        withMockClock(async (clock) => {
+          const booked = clock.nowISO();
+          clock.advance(30_000);
+          const accepted = clock.nowISO();
+          clock.advance(30_000);
+          const started = clock.nowISO();
+          const r = validateNotifTiming(booked, accepted, started);
+          return `✓ Δحجز→قبول ${fmtSec(r.dBA)} • Δقبول→بدء ${fmtSec(r.dAS)}`;
+        }),
     },
     {
       id: "neg-accept-delay",
-      label: "1) تأخير قبول السائق 7 دقائق → يجب أن يفشل (>5د)",
-      run: async () => {
-        const now = Date.now();
-        const booked = new Date(now).toISOString();
-        const accepted = new Date(now + 7 * 60 * 1000).toISOString();
-        const started = new Date(now + 7 * 60 * 1000 + 30_000).toISOString();
-        const msg = expectFailure(
-          () => validateNotifTiming(booked, accepted, started),
-          "«تم الحجز» و«السائق قبل رحلتك» كبير جدًا",
-          "تأخير قبول",
-        );
-        return `✓ فشل كما هو متوقع — ${msg}`;
-      },
+      label: "2) تأخير قبول السائق 7 دقائق → يجب أن يفشل (>5د)",
+      run: async () =>
+        withMockClock(async (clock) => {
+          const booked = clock.nowISO();
+          clock.advance(7 * 60 * 1000);
+          const accepted = clock.nowISO();
+          clock.advance(30_000);
+          const started = clock.nowISO();
+          const msg = expectFailure(
+            () => validateNotifTiming(booked, accepted, started),
+            "«تم الحجز» و«السائق قبل رحلتك» كبير جدًا",
+            "تأخير قبول",
+          );
+          return `✓ فشل كما هو متوقع — ${msg}`;
+        }),
     },
     {
       id: "neg-start-delay",
-      label: "2) تأخير بدء الرحلة 5 دقائق → يجب أن يفشل (>3د)",
-      run: async () => {
-        const now = Date.now();
-        const booked = new Date(now).toISOString();
-        const accepted = new Date(now + 30_000).toISOString();
-        const started = new Date(now + 30_000 + 5 * 60 * 1000).toISOString();
-        const msg = expectFailure(
-          () => validateNotifTiming(booked, accepted, started),
-          "«السائق قبل رحلتك» و«بدأت الرحلة» كبير جدًا",
-          "تأخير بدء",
-        );
-        return `✓ فشل كما هو متوقع — ${msg}`;
-      },
+      label: "3) تأخير بدء الرحلة 5 دقائق → يجب أن يفشل (>3د)",
+      run: async () =>
+        withMockClock(async (clock) => {
+          const booked = clock.nowISO();
+          clock.advance(30_000);
+          const accepted = clock.nowISO();
+          clock.advance(5 * 60 * 1000);
+          const started = clock.nowISO();
+          const msg = expectFailure(
+            () => validateNotifTiming(booked, accepted, started),
+            "«السائق قبل رحلتك» و«بدأت الرحلة» كبير جدًا",
+            "تأخير بدء",
+          );
+          return `✓ فشل كما هو متوقع — ${msg}`;
+        }),
     },
     {
       id: "neg-out-of-order",
-      label: "3) ترتيب مقلوب (قبول قبل الحجز) → يجب أن يفشل",
-      run: async () => {
-        const now = Date.now();
-        const booked = new Date(now + 60_000).toISOString();
-        const accepted = new Date(now).toISOString();
-        const started = new Date(now + 90_000).toISOString();
-        const msg = expectFailure(
-          () => validateNotifTiming(booked, accepted, started),
-          "ترتيب زمني خاطئ",
-          "ترتيب مقلوب",
-        );
-        return `✓ فشل كما هو متوقع — ${msg}`;
-      },
+      label: "4) ترتيب مقلوب (قبول قبل الحجز) → يجب أن يفشل",
+      run: async () =>
+        withMockClock(async (clock) => {
+          const start = clock.now();
+          const accepted = new Date(start).toISOString();
+          clock.advance(60_000);
+          const booked = new Date(clock.now()).toISOString();
+          clock.advance(30_000);
+          const started = new Date(clock.now()).toISOString();
+          const msg = expectFailure(
+            () => validateNotifTiming(booked, accepted, started),
+            "ترتيب زمني خاطئ",
+            "ترتيب مقلوب",
+          );
+          return `✓ فشل كما هو متوقع — ${msg}`;
+        }),
     },
   ];
 
