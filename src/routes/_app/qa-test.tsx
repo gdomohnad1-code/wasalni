@@ -515,17 +515,64 @@ function QATestPage() {
     },
     {
       id: "e2e-rt-verify",
-      label: "5.2) وصول إشعارات Realtime (حجز/قبول/بدء)",
+      label: "5.2) وصول إشعارات Realtime + سلامة payload.new",
       run: async () => {
         if (!e2eRt.current) throw new Error("لم يتم الاشتراك بـ Realtime — شغّل الخطوة 0 أولاً");
+        if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
+        const uid = requireUid();
         const expected = ["تم الحجز", "السائق قبل رحلتك", "بدأت الرحلة"];
+
+        // 1) الانتظار حتى وصول كل العناوين المتوقعة
+        const arrived: Record<string, RtNotif> = {};
         const missing: string[] = [];
         for (const t of expected) {
-          const ok = await waitForRtTitle(t, 6000);
-          if (!ok) missing.push(t);
+          const n = await waitForRtTitle(t, 6000);
+          if (!n) missing.push(t);
+          else arrived[t] = n;
         }
         if (missing.length) throw new Error(`لم تصل: ${missing.join("، ")}`);
-        return `✓ وصلت الإشعارات: ${expected.join(" • ")}`;
+
+        // 2) فحص بنية payload.new لكل إشعار
+        const required: (keyof RtNotif)[] = ["id", "user_id", "title", "body", "created_at", "read"];
+        for (const t of expected) {
+          const n = arrived[t];
+          for (const k of required) {
+            if (!(k in n)) throw new Error(`payload.new ناقص "${k}" في «${t}»`);
+          }
+          if (typeof n.id !== "string" || n.id.length < 10)
+            throw new Error(`id غير صالح في «${t}»`);
+          if (n.user_id !== uid)
+            throw new Error(`user_id غير مطابق في «${t}» (الفعلي: ${n.user_id})`);
+          if (typeof n.title !== "string" || n.title !== t)
+            throw new Error(`title غير مطابق في «${t}»`);
+          if (n.body !== null && typeof n.body !== "string")
+            throw new Error(`body من نوع غير متوقع في «${t}»`);
+          if (typeof n.read !== "boolean")
+            throw new Error(`read ليس boolean في «${t}»`);
+          const ts = new Date(n.created_at).getTime();
+          if (Number.isNaN(ts)) throw new Error(`created_at غير صالح في «${t}»`);
+        }
+
+        // 3) ربط الإشعارات بالرحلة عبر التسلسل الزمني لأحداث rides
+        const { data: ride, error: rErr } = await supabase.from("rides")
+          .select("id,rider_id,created_at,accepted_at,started_at")
+          .eq("id", e2eRideId.current).single();
+        if (rErr) throw rErr;
+        if (ride.rider_id !== uid)
+          throw new Error("rider_id الرحلة لا يطابق المستخدم الحالي");
+
+        const within = (a: string, b: string | null, sec = 30) => {
+          if (!b) return false;
+          return Math.abs(new Date(a).getTime() - new Date(b).getTime()) <= sec * 1000;
+        };
+        if (!within(arrived["تم الحجز"].created_at, ride.created_at))
+          throw new Error("توقيت «تم الحجز» لا يطابق إنشاء الرحلة");
+        if (!within(arrived["السائق قبل رحلتك"].created_at, ride.accepted_at))
+          throw new Error("توقيت «السائق قبل رحلتك» لا يطابق accepted_at");
+        if (!within(arrived["بدأت الرحلة"].created_at, ride.started_at))
+          throw new Error("توقيت «بدأت الرحلة» لا يطابق started_at");
+
+        return `✓ ${expected.length} إشعارات صحيحة • user_id ✓ • مرتبطة بالرحلة ${ride.id.slice(0, 8)}…`;
       },
     },
     {
