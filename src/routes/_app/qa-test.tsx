@@ -344,6 +344,101 @@ function QATestPage() {
     },
   ];
 
+  // ===== E2E ride flow (rider request → rating) =====
+  const e2eRideId = useRef<string | null>(null);
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  const e2eChecks: Check[] = [
+    {
+      id: "e2e-create",
+      label: "1) إنشاء طلب رحلة من الراكب",
+      run: async () => {
+        const id = requireUid();
+        e2eRideId.current = null;
+        const { data, error } = await supabase.from("rides").insert({
+          rider_id: id,
+          pickup_address: "[QA] مدينة نصر",
+          destination_address: "[QA] المعادي",
+          pickup_lat: 30.0626, pickup_lng: 31.3399,
+          destination_lat: 29.9603, destination_lng: 31.2569,
+          ride_type: "private",
+          distance_km: 12.5,
+          duration_min: 25,
+          price: 75,
+          status: "searching",
+        }).select("id").single();
+        if (error) throw error;
+        e2eRideId.current = data.id;
+        return `تم الإنشاء — ride: ${data.id.slice(0, 8)}…`;
+      },
+    },
+    {
+      id: "e2e-notif",
+      label: "2) تأكيد إشعار «تم الحجز»",
+      run: async () => {
+        const id = requireUid();
+        if (!e2eRideId.current) throw new Error("شغّل خطوة الإنشاء أولاً");
+        await sleep(500);
+        const { data, error } = await supabase
+          .from("notifications").select("title,body")
+          .eq("user_id", id).order("created_at", { ascending: false }).limit(1);
+        if (error) throw error;
+        const last = data?.[0];
+        if (!last || last.title !== "تم الحجز") throw new Error("لم يصل الإشعار");
+        return `✓ ${last.title}`;
+      },
+    },
+    {
+      id: "e2e-start",
+      label: "3) بدء الرحلة (in_progress)",
+      run: async () => {
+        if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
+        const { error } = await supabase.from("rides")
+          .update({ status: "in_progress", started_at: new Date().toISOString() })
+          .eq("id", e2eRideId.current);
+        if (error) throw error;
+        return "حالة الرحلة: in_progress";
+      },
+    },
+    {
+      id: "e2e-complete",
+      label: "4) إنهاء الرحلة (completed)",
+      run: async () => {
+        if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
+        const { error } = await supabase.from("rides")
+          .update({ status: "completed", completed_at: new Date().toISOString() })
+          .eq("id", e2eRideId.current);
+        if (error) throw error;
+        return "حالة الرحلة: completed";
+      },
+    },
+    {
+      id: "e2e-rate",
+      label: "5) تقييم الراكب للرحلة",
+      run: async () => {
+        if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
+        const { error } = await supabase.from("rides")
+          .update({ rating: 5, rating_comment: "[QA] رحلة اختبار ممتازة" })
+          .eq("id", e2eRideId.current);
+        if (error) throw error;
+        return "★ 5/5";
+      },
+    },
+    {
+      id: "e2e-verify",
+      label: "6) التحقق النهائي من الرحلة",
+      run: async () => {
+        if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
+        const { data, error } = await supabase.from("rides")
+          .select("status,rating,completed_at").eq("id", e2eRideId.current).single();
+        if (error) throw error;
+        if (data.status !== "completed") throw new Error(`status=${data.status}`);
+        if (data.rating !== 5) throw new Error("التقييم لم يُحفظ");
+        return `مكتملة • ★${data.rating}`;
+      },
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-muted/30 p-4 lg:p-6 space-y-4" dir="rtl">
       <Card className="p-4">
