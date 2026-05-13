@@ -646,7 +646,61 @@ function QATestPage() {
     },
   ];
 
-  // ===== Negative tests: تأخير مقصود يجب أن يفشل التحقق =====
+  // ===== Mock Clock — يضمن ثبات نتائج اختبارات التأخير بغضّ النظر عن سرعة الشبكة =====
+  type MockClock = {
+    install: () => void;
+    uninstall: () => void;
+    advance: (ms: number) => void;
+    set: (ms: number) => void;
+    now: () => number;
+    nowISO: () => string;
+    isInstalled: () => boolean;
+  };
+  const createMockClock = (startMs = Date.parse("2025-01-01T00:00:00.000Z")): MockClock => {
+    let current = startMs;
+    let installed = false;
+    const RealDate = Date;
+    const realNow = Date.now.bind(Date);
+    return {
+      install() {
+        if (installed) return;
+        installed = true;
+        (Date as any).now = () => current;
+        const Patched: any = function (this: any, ...args: any[]) {
+          if (args.length === 0) return new RealDate(current);
+          // @ts-ignore
+          return new RealDate(...args);
+        };
+        Patched.now = () => current;
+        Patched.parse = RealDate.parse;
+        Patched.UTC = RealDate.UTC;
+        Patched.prototype = RealDate.prototype;
+        (globalThis as any).Date = Patched;
+      },
+      uninstall() {
+        if (!installed) return;
+        installed = false;
+        (globalThis as any).Date = RealDate;
+        (RealDate as any).now = realNow;
+      },
+      advance(ms: number) { current += ms; },
+      set(ms: number) { current = ms; },
+      now() { return current; },
+      nowISO() { return new RealDate(current).toISOString(); },
+      isInstalled() { return installed; },
+    };
+  };
+  const withMockClock = async <T,>(fn: (clock: MockClock) => Promise<T> | T, startMs?: number): Promise<T> => {
+    const clock = createMockClock(startMs);
+    clock.install();
+    try {
+      return await fn(clock);
+    } finally {
+      clock.uninstall();
+    }
+  };
+
+  // ===== Negative tests: تأخير مقصود يجب أن يفشل التحقق (مع Mock Clock للثبات) =====
   const MAX_BOOKED_TO_ACCEPTED_MS = 5 * 60 * 1000;
   const MAX_ACCEPTED_TO_STARTED_MS = 3 * 60 * 1000;
   const fmtSec = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
