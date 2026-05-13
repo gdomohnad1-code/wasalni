@@ -53,8 +53,17 @@ function HomePage() {
             <p className="text-[12px] text-muted-foreground">{t("home.hello")}</p>
             <h2 className="text-xl font-black mt-0.5 text-foreground">{profile?.full_name || t("home.guest")}</h2>
           </div>
-          <NotificationCenter />
-
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-3 text-[11px] font-bold border-dashed"
+              onClick={() => navigate({ to: "/driver" })}
+            >
+              🚗 معاينة السائق
+            </Button>
+            <NotificationCenter />
+          </div>
         </div>
 
         {/* wallet */}
