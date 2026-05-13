@@ -346,16 +346,29 @@ function QATestPage() {
 
   // ===== E2E ride flow (rider request → rating) =====
   const e2eRideId = useRef<string | null>(null);
-  const e2eRt = useRef<{ titles: Set<string>; channel: any } | null>(null);
+  type RtNotif = {
+    id: string;
+    user_id: string;
+    title: string;
+    body: string | null;
+    created_at: string;
+    read: boolean;
+  };
+  const e2eRt = useRef<{
+    events: RtNotif[];
+    byTitle: Map<string, RtNotif>;
+    channel: any;
+  } | null>(null);
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   const waitForRtTitle = async (title: string, timeoutMs = 6000) => {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
-      if (e2eRt.current?.titles.has(title)) return true;
+      const n = e2eRt.current?.byTitle.get(title);
+      if (n) return n;
       await sleep(200);
     }
-    return false;
+    return null;
   };
 
   const e2eChecks: Check[] = [
@@ -367,25 +380,30 @@ function QATestPage() {
         if (e2eRt.current?.channel) {
           await supabase.removeChannel(e2eRt.current.channel);
         }
-        const titles = new Set<string>();
+        const events: RtNotif[] = [];
+        const byTitle = new Map<string, RtNotif>();
         const channel = supabase
           .channel(`qa-notifs-${id}-${Date.now()}`)
           .on(
             "postgres_changes",
             { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${id}` },
             (payload: any) => {
-              const t = payload?.new?.title;
-              if (typeof t === "string") titles.add(t);
+              const n = payload?.new as RtNotif | undefined;
+              if (n && typeof n.title === "string") {
+                events.push(n);
+                byTitle.set(n.title, n);
+              }
             },
           );
         const status = await new Promise<string>((resolve) => {
           channel.subscribe((s: string) => resolve(s));
         });
         if (status !== "SUBSCRIBED") throw new Error(`فشل الاشتراك (${status})`);
-        e2eRt.current = { titles, channel };
+        e2eRt.current = { events, byTitle, channel };
         return "✓ مشترك في قناة الإشعارات";
       },
     },
+
     {
 
       id: "e2e-create",
@@ -497,17 +515,64 @@ function QATestPage() {
     },
     {
       id: "e2e-rt-verify",
-      label: "5.2) وصول إشعارات Realtime (حجز/قبول/بدء)",
+      label: "5.2) وصول إشعارات Realtime + سلامة payload.new",
       run: async () => {
         if (!e2eRt.current) throw new Error("لم يتم الاشتراك بـ Realtime — شغّل الخطوة 0 أولاً");
+        if (!e2eRideId.current) throw new Error("لا توجد رحلة اختبارية");
+        const uid = requireUid();
         const expected = ["تم الحجز", "السائق قبل رحلتك", "بدأت الرحلة"];
+
+        // 1) الانتظار حتى وصول كل العناوين المتوقعة
+        const arrived: Record<string, RtNotif> = {};
         const missing: string[] = [];
         for (const t of expected) {
-          const ok = await waitForRtTitle(t, 6000);
-          if (!ok) missing.push(t);
+          const n = await waitForRtTitle(t, 6000);
+          if (!n) missing.push(t);
+          else arrived[t] = n;
         }
         if (missing.length) throw new Error(`لم تصل: ${missing.join("، ")}`);
-        return `✓ وصلت الإشعارات: ${expected.join(" • ")}`;
+
+        // 2) فحص بنية payload.new لكل إشعار
+        const required: (keyof RtNotif)[] = ["id", "user_id", "title", "body", "created_at", "read"];
+        for (const t of expected) {
+          const n = arrived[t];
+          for (const k of required) {
+            if (!(k in n)) throw new Error(`payload.new ناقص "${k}" في «${t}»`);
+          }
+          if (typeof n.id !== "string" || n.id.length < 10)
+            throw new Error(`id غير صالح في «${t}»`);
+          if (n.user_id !== uid)
+            throw new Error(`user_id غير مطابق في «${t}» (الفعلي: ${n.user_id})`);
+          if (typeof n.title !== "string" || n.title !== t)
+            throw new Error(`title غير مطابق في «${t}»`);
+          if (n.body !== null && typeof n.body !== "string")
+            throw new Error(`body من نوع غير متوقع في «${t}»`);
+          if (typeof n.read !== "boolean")
+            throw new Error(`read ليس boolean في «${t}»`);
+          const ts = new Date(n.created_at).getTime();
+          if (Number.isNaN(ts)) throw new Error(`created_at غير صالح في «${t}»`);
+        }
+
+        // 3) ربط الإشعارات بالرحلة عبر التسلسل الزمني لأحداث rides
+        const { data: ride, error: rErr } = await supabase.from("rides")
+          .select("id,rider_id,created_at,accepted_at,started_at")
+          .eq("id", e2eRideId.current).single();
+        if (rErr) throw rErr;
+        if (ride.rider_id !== uid)
+          throw new Error("rider_id الرحلة لا يطابق المستخدم الحالي");
+
+        const within = (a: string, b: string | null, sec = 30) => {
+          if (!b) return false;
+          return Math.abs(new Date(a).getTime() - new Date(b).getTime()) <= sec * 1000;
+        };
+        if (!within(arrived["تم الحجز"].created_at, ride.created_at))
+          throw new Error("توقيت «تم الحجز» لا يطابق إنشاء الرحلة");
+        if (!within(arrived["السائق قبل رحلتك"].created_at, ride.accepted_at))
+          throw new Error("توقيت «السائق قبل رحلتك» لا يطابق accepted_at");
+        if (!within(arrived["بدأت الرحلة"].created_at, ride.started_at))
+          throw new Error("توقيت «بدأت الرحلة» لا يطابق started_at");
+
+        return `✓ ${expected.length} إشعارات صحيحة • user_id ✓ • مرتبطة بالرحلة ${ride.id.slice(0, 8)}…`;
       },
     },
     {
