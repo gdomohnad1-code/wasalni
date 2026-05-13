@@ -647,6 +647,8 @@ function QATestPage() {
   ];
 
   // ===== Mock Clock — يضمن ثبات نتائج اختبارات التأخير بغضّ النظر عن سرعة الشبكة =====
+  // آلية حماية: نخزّن جميع خصائص Date (الواصفات الكاملة) ونرفض التركيب إذا كان
+  // هناك Mock آخر نشط أو إذا تم تعديل Date من طرف ثالث بين install() و uninstall().
   type MockClock = {
     install: () => void;
     uninstall: () => void;
@@ -656,32 +658,75 @@ function QATestPage() {
     nowISO: () => string;
     isInstalled: () => boolean;
   };
+  // علم عام لمنع تعارض عدة MockClock متداخلة في نفس الجلسة
+  const MOCK_FLAG = "__qaMockClockActive__";
   const createMockClock = (startMs = Date.parse("2025-01-01T00:00:00.000Z")): MockClock => {
     let current = startMs;
     let installed = false;
-    const RealDate = Date;
-    const realNow = Date.now.bind(Date);
+    // التقاط مرجع Date الحقيقي + جميع خصائصه قبل أي تعديل
+    const RealDate: DateConstructor = (globalThis as any).Date;
+    const realStaticDescriptors: Record<string, PropertyDescriptor> = {};
+    for (const key of Object.getOwnPropertyNames(RealDate)) {
+      const d = Object.getOwnPropertyDescriptor(RealDate, key);
+      if (d) realStaticDescriptors[key] = d;
+    }
+    for (const sym of Object.getOwnPropertySymbols(RealDate)) {
+      const d = Object.getOwnPropertyDescriptor(RealDate, sym);
+      if (d) realStaticDescriptors[sym.toString()] = d;
+    }
+    const realGlobalDateDescriptor =
+      Object.getOwnPropertyDescriptor(globalThis, "Date") ?? {
+        value: RealDate,
+        writable: true,
+        configurable: true,
+        enumerable: false,
+      };
     return {
       install() {
         if (installed) return;
+        // تعارض: Mock آخر نشط بالفعل
+        if ((globalThis as any)[MOCK_FLAG]) {
+          throw new Error("MockClock: يوجد Mock آخر نشط على Date — تم رفض التركيب لمنع التعارض");
+        }
+        // تعارض: تم استبدال Date بكائن غير الأصلي قبل التركيب
+        if ((globalThis as any).Date !== RealDate) {
+          throw new Error("MockClock: تم تعديل globalThis.Date من طرف ثالث قبل التركيب");
+        }
         installed = true;
-        (Date as any).now = () => current;
+        (globalThis as any)[MOCK_FLAG] = true;
         const Patched: any = function (this: any, ...args: any[]) {
+          if (!(this instanceof Patched)) return new RealDate(current).toString();
           if (args.length === 0) return new RealDate(current);
           // @ts-ignore
           return new RealDate(...args);
         };
+        // إعادة بناء كل الخصائص الثابتة من الواصفات الأصلية
+        for (const [key, desc] of Object.entries(realStaticDescriptors)) {
+          try { Object.defineProperty(Patched, key, desc); } catch { /* ignore non-writable */ }
+        }
         Patched.now = () => current;
-        Patched.parse = RealDate.parse;
-        Patched.UTC = RealDate.UTC;
         Patched.prototype = RealDate.prototype;
-        (globalThis as any).Date = Patched;
+        Object.defineProperty(globalThis, "Date", {
+          value: Patched,
+          writable: true,
+          configurable: true,
+          enumerable: false,
+        });
       },
       uninstall() {
         if (!installed) return;
         installed = false;
-        (globalThis as any).Date = RealDate;
-        (RealDate as any).now = realNow;
+        // استعادة Date الأصلي عبر الواصف المخزّن
+        try {
+          Object.defineProperty(globalThis, "Date", realGlobalDateDescriptor);
+        } catch {
+          (globalThis as any).Date = RealDate;
+        }
+        // استعادة كل الخصائص الثابتة (في حال عبث طرف ثالث بها أثناء التركيب)
+        for (const [key, desc] of Object.entries(realStaticDescriptors)) {
+          try { Object.defineProperty(RealDate, key, desc); } catch { /* ignore */ }
+        }
+        delete (globalThis as any)[MOCK_FLAG];
       },
       advance(ms: number) { current += ms; },
       set(ms: number) { current = ms; },
