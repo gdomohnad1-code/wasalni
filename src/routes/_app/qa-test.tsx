@@ -944,6 +944,56 @@ function QATestPage() {
           return `✓ فشل كما هو متوقع — ${msg}`;
         })),
     },
+    {
+      id: "neg-install-mid-failure",
+      label: "5) فشل install() في منتصف التركيب → استعادة Date تلقائيًا",
+      run: withDateCleanup(async () => {
+        const DateBefore = (globalThis as any).Date;
+        if (DateBefore !== PRISTINE_DATE) {
+          throw new Error("شرط مسبق: Date ليس بحالته الأصلية قبل الاختبار");
+        }
+        const realDefineProperty = Object.defineProperty;
+        let threwAsExpected = false;
+        // اعتراض defineProperty لإسقاط install() عند لحظة استبدال globalThis.Date
+        Object.defineProperty = function (target: any, key: any, desc: any) {
+          if (target === globalThis && key === "Date") {
+            throw new Error("فشل اصطناعي في منتصف التركيب");
+          }
+          return realDefineProperty(target, key, desc);
+        } as typeof Object.defineProperty;
+        try {
+          const clock = createMockClock();
+          try {
+            clock.install();
+          } catch (e: any) {
+            if (!/فشل اصطناعي/.test(e?.message ?? "")) throw e;
+            threwAsExpected = true;
+          }
+        } finally {
+          Object.defineProperty = realDefineProperty;
+        }
+        if (!threwAsExpected) {
+          throw new Error("install() لم يرمِ استثناءً رغم الفشل المتعمد");
+        }
+        // تحقق الاستعادة التلقائية
+        if ((globalThis as any).Date !== PRISTINE_DATE) {
+          throw new Error("globalThis.Date لم يُستعد إلى الأصلي بعد فشل install()");
+        }
+        if ((globalThis as any).__qaMockClockActive__) {
+          throw new Error("علم MOCK_FLAG لم يُحذف بعد فشل install()");
+        }
+        // تحقق أن واصفات Date ما تزال سليمة وقابلة للاستخدام
+        const sample = Date.now();
+        if (typeof sample !== "number" || !Number.isFinite(sample)) {
+          throw new Error("Date.now() لم يعد يعمل بشكل طبيعي بعد الاستعادة");
+        }
+        const iso = new Date().toISOString();
+        if (typeof iso !== "string" || iso.length < 20) {
+          throw new Error("new Date() لم يعد يعمل بعد الاستعادة");
+        }
+        return `✓ install() فشل كما هو مقصود وتمت استعادة Date + الواصفات تلقائيًا`;
+      }),
+    },
   ];
 
   return (
