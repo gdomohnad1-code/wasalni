@@ -83,8 +83,7 @@ function AdminOverview() {
       .channel("admin-overview")
       .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, load)
       .subscribe();
-    const iv = setInterval(load, 1000);
-    return () => { supabase.removeChannel(ch); clearInterval(iv); };
+    return () => { supabase.removeChannel(ch); };
   }, []);
 
   if (loading || !stats) {
