@@ -86,12 +86,11 @@ function RidePage() {
   const endRide = async () => {
     await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
   };
-  const submitRating = async () => {
-    await supabase.from("rides").update({ rating: stars }).eq("id", id);
-    setRated(true);
-    toast.success(t("ride.thank_rating"));
-    setTimeout(() => navigate({ to: "/home" }), 1200);
-  };
+  useEffect(() => {
+    if (ride?.status === "completed" && !ride.rating) {
+      setRateOpen(true);
+    }
+  }, [ride?.status, ride?.rating]);
 
   if (!ride) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
