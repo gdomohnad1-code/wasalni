@@ -9,7 +9,7 @@ import { RideMap } from "@/components/RideMap";
 import { RiderSafetyPanel } from "@/components/RiderSafetyPanel";
 import { AdSlot } from "@/components/AdSlot";
 import { RateDialog } from "@/components/RateDialog";
-import { toast } from "sonner";
+
 import { RIDE_TYPES } from "@/lib/pricing";
 import { useI18n } from "@/lib/i18n";
 
