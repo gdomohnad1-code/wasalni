@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
-import { RateDialog } from "@/components/RateDialog";
 
 export const Route = createFileRoute("/_app/trips")({
   component: TripsPage,
