@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Car, Users, Wallet, MessageSquareWarning, UserCircle, Loader2, TrendingUp } from "lucide-react";
+import { Car, Users, Wallet, MessageSquareWarning, UserCircle, Loader2, TrendingUp, RefreshCw } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
 
@@ -101,6 +101,18 @@ function AdminOverview() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">نظرة عامة</h2>
+        <button
+          onClick={() => { loadedRef.current = false; load(); }}
+          disabled={loading}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          تحديث
+        </button>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         {cards.map((c, i) => {
           const Icon = c.icon;
