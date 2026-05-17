@@ -167,6 +167,13 @@ function RidePage() {
       </div>
 
       <ChatSheet rideId={id} open={chatOpen} onClose={() => setChatOpen(false)} />
+      <RateDialog
+        open={rateOpen}
+        onClose={() => setRateOpen(false)}
+        rideId={id}
+        role="rider"
+        onDone={() => setRide((r) => (r ? { ...r, rating: 5 } : r))}
+      />
 
       {(ride.status === "accepted" || ride.status === "in_progress") &&
         ride.pickup_lat && ride.pickup_lng && ride.destination_lat && ride.destination_lng && (
