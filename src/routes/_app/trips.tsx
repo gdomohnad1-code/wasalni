@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { RIDE_TYPES, type RideTypeKey } from "@/lib/pricing";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+import { RateDialog } from "@/components/RateDialog";
 
 export const Route = createFileRoute("/_app/trips")({
   component: TripsPage,
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/_app/trips")({
 
 function TripsPage() {
   const [rides, setRides] = useState<any[]>([]);
+  const [rateRideId, setRateRideId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { t, locale } = useI18n();
 
@@ -74,14 +76,33 @@ function TripsPage() {
                   {r.rating && <span className="flex items-center gap-0.5 text-xs"><Star className="h-3 w-3 fill-warning text-warning" /> {r.rating}</span>}
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted">{r.status}</span>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => rebook(r)}>
-                  <RotateCcw className="h-3 w-3 ms-1" /> {t("trips.rebook")}
-                </Button>
+                <div className="flex gap-1.5">
+                  {r.status === "completed" && !r.rating && (
+                    <Button size="sm" variant="outline" onClick={() => setRateRideId(r.id)}>
+                      <Star className="h-3 w-3 ms-1" /> قيّم
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" onClick={() => rebook(r)}>
+                    <RotateCcw className="h-3 w-3 ms-1" /> {t("trips.rebook")}
+                  </Button>
+                </div>
               </div>
             </motion.div>
           );
         })}
       </div>
+
+      {rateRideId && (
+        <RateDialog
+          open={!!rateRideId}
+          onClose={() => setRateRideId(null)}
+          rideId={rateRideId}
+          role="rider"
+          onDone={() =>
+            setRides((rs) => rs.map((x) => (x.id === rateRideId ? { ...x, rating: 5 } : x)))
+          }
+        />
+      )}
     </div>
   );
 }

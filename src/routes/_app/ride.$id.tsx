@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { RideMap } from "@/components/RideMap";
 import { RiderSafetyPanel } from "@/components/RiderSafetyPanel";
 import { AdSlot } from "@/components/AdSlot";
-import { toast } from "sonner";
+import { RateDialog } from "@/components/RateDialog";
+
 import { RIDE_TYPES } from "@/lib/pricing";
 import { useI18n } from "@/lib/i18n";
 
@@ -42,8 +43,7 @@ function RidePage() {
   const { t } = useI18n();
   const [ride, setRide] = useState<Ride | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
-  const [rated, setRated] = useState(false);
-  const [stars, setStars] = useState(5);
+  const [rateOpen, setRateOpen] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [etaSec, setEtaSec] = useState(0);
 
@@ -86,12 +86,11 @@ function RidePage() {
   const endRide = async () => {
     await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
   };
-  const submitRating = async () => {
-    await supabase.from("rides").update({ rating: stars }).eq("id", id);
-    setRated(true);
-    toast.success(t("ride.thank_rating"));
-    setTimeout(() => navigate({ to: "/home" }), 1200);
-  };
+  useEffect(() => {
+    if (ride?.status === "completed" && !ride.rating) {
+      setRateOpen(true);
+    }
+  }, [ride?.status, ride?.rating]);
 
   if (!ride) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -150,11 +149,15 @@ function RidePage() {
           {ride.status === "searching" && <Searching key="s" />}
           {ride.status === "accepted" && <Accepted key="a" onStart={startRide} onChat={() => setChatOpen(true)} />}
           {ride.status === "in_progress" && <InProgress key="i" countdown={fmtTime(countdown)} onEnd={endRide} onChat={() => setChatOpen(true)} />}
-          {ride.status === "completed" && !rated && <RateBox key="r" stars={stars} setStars={setStars} onSubmit={submitRating} />}
-          {ride.status === "completed" && rated && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
+          {ride.status === "completed" && (
+            <motion.div key="c" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
               <div className="text-6xl mb-3">✅</div>
               <p className="font-bold text-lg">{t("ride.completed")}</p>
+              {!ride.rating && (
+                <Button onClick={() => setRateOpen(true)} className="mt-4 bg-gradient-primary">
+                  <Star className="h-4 w-4 ms-1" /> قيّم السائق
+                </Button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -164,6 +167,13 @@ function RidePage() {
       </div>
 
       <ChatSheet rideId={id} open={chatOpen} onClose={() => setChatOpen(false)} />
+      <RateDialog
+        open={rateOpen}
+        onClose={() => setRateOpen(false)}
+        rideId={id}
+        role="rider"
+        onDone={() => setRide((r) => (r ? { ...r, rating: 5 } : r))}
+      />
 
       {(ride.status === "accepted" || ride.status === "in_progress") &&
         ride.pickup_lat && ride.pickup_lng && ride.destination_lat && ride.destination_lng && (
@@ -233,25 +243,6 @@ function InProgress({ countdown, onEnd, onChat }: { countdown: string; onEnd: ()
   );
 }
 
-function RateBox({ stars, setStars, onSubmit }: { stars: number; setStars: (n: number) => void; onSubmit: () => void }) {
-  const { t } = useI18n();
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-      className="bg-card rounded-2xl p-6 shadow-card text-center">
-      <div className="text-5xl mb-2">🎉</div>
-      <h3 className="font-bold text-lg mb-1">{t("ride.rate_title")}</h3>
-      <p className="text-sm text-muted-foreground mb-4">{t("ride.rate_sub")}</p>
-      <div className="flex justify-center gap-2 mb-5">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} onClick={() => setStars(n)}>
-            <Star className={`h-9 w-9 ${n <= stars ? "fill-warning text-warning" : "text-muted-foreground"}`} />
-          </button>
-        ))}
-      </div>
-      <Button onClick={onSubmit} className="w-full h-12 bg-gradient-primary font-bold">{t("ride.submit_rating")}</Button>
-    </motion.div>
-  );
-}
 
 function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; onClose: () => void }) {
   const { t } = useI18n();

@@ -836,6 +836,8 @@ export type Database = {
           destination_lng: number | null
           distance_km: number | null
           driver_id: string | null
+          driver_rating: number | null
+          driver_rating_comment: string | null
           duration_min: number | null
           id: string
           pickup_address: string
@@ -859,6 +861,8 @@ export type Database = {
           destination_lng?: number | null
           distance_km?: number | null
           driver_id?: string | null
+          driver_rating?: number | null
+          driver_rating_comment?: string | null
           duration_min?: number | null
           id?: string
           pickup_address: string
@@ -882,6 +886,8 @@ export type Database = {
           destination_lng?: number | null
           distance_km?: number | null
           driver_id?: string | null
+          driver_rating?: number | null
+          driver_rating_comment?: string | null
           duration_min?: number | null
           id?: string
           pickup_address?: string

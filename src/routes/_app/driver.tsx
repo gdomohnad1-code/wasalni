@@ -18,6 +18,7 @@ import { DriverLiveMap, type LL } from "@/components/driver/DriverLiveMap";
 import { IncomingRideModal } from "@/components/driver/IncomingRideModal";
 import { DriverReadyScreen } from "@/components/driver/DriverReadyScreen";
 import { ArrivalConfirmModal } from "@/components/driver/ArrivalConfirmModal";
+import { RateDialog } from "@/components/RateDialog";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
@@ -448,6 +449,8 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const [arrivalPrompt, setArrivalPrompt] = useState<null | "pickup" | "destination">(null);
   const arrivalFiredRef = useRef<Set<string>>(new Set());
   const declinedRef = useRef<Set<string>>(loadDeclined());
+  const [rateRideId, setRateRideId] = useState<string | null>(null);
+  const [unratedRides, setUnratedRides] = useState<any[]>([]);
 
   const isOnline = !!docs.is_online;
   const presence: "available" | "busy" | "offline" =
@@ -481,17 +484,19 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
 
   const load = async () => {
     if (!user) return;
-    const [av, ac, comp, today] = await Promise.all([
+    const [av, ac, comp, today, unrated] = await Promise.all([
       supabase.from("rides").select("*").eq("status", "searching").order("created_at", { ascending: false }).limit(50),
       supabase.from("rides").select("*").eq("driver_id", user.id).in("status", ["accepted", "in_progress"]).maybeSingle(),
       supabase.from("rides").select("price").eq("driver_id", user.id).eq("status", "completed"),
       supabase.from("rides").select("price, completed_at").eq("driver_id", user.id).eq("status", "completed").gte("completed_at", new Date(new Date().setHours(0,0,0,0)).toISOString()),
+      supabase.from("rides").select("id, pickup_address, destination_address, completed_at, price").eq("driver_id", user.id).eq("status", "completed").is("driver_rating", null).order("completed_at", { ascending: false }).limit(10),
     ]);
     setSearchingRides(av.data || []);
     setActiveRide(ac.data || null);
     const totalE = (comp.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8;
     const todayE = (today.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8;
     setEarnings({ today: todayE, total: totalE, rides: (today.data || []).length });
+    setUnratedRides(unrated.data || []);
   };
 
   useEffect(() => {
@@ -542,8 +547,10 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   };
   const endTrip = async () => {
     if (!activeRide) return;
-    await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", activeRide.id);
+    const endedId = activeRide.id;
+    await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", endedId);
     toast.success("تم إنهاء الرحلة 💰");
+    setRateRideId(endedId);
   };
 
   const toggleOnline = async (v: boolean) => {
@@ -712,6 +719,38 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
         onConfirm={confirmArrival}
         onDismiss={() => setArrivalPrompt(null)}
       />
+
+
+      {!activeRide && unratedRides.length > 0 && (
+        <div className="fixed top-20 inset-x-0 z-30 px-3 pointer-events-none">
+          <div className="max-w-md mx-auto bg-amber-50 border border-amber-200 rounded-2xl p-3 shadow-card pointer-events-auto">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs">
+                <div className="font-bold text-amber-900">عندك {unratedRides.length} تقييم معلّق</div>
+                <div className="text-amber-700 truncate max-w-[200px]">
+                  آخر رحلة: {unratedRides[0].destination_address}
+                </div>
+              </div>
+              <Button size="sm" onClick={() => setRateRideId(unratedRides[0].id)} className="bg-gradient-primary">
+                قيّم العميل
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rateRideId && (
+        <RateDialog
+          open={!!rateRideId}
+          onClose={() => setRateRideId(null)}
+          rideId={rateRideId}
+          role="driver"
+          onDone={() => {
+            setUnratedRides((rs) => rs.filter((x) => x.id !== rateRideId));
+            load();
+          }}
+        />
+      )}
 
       {showReady && <DriverReadyScreen onStart={closeReady} name={user?.user_metadata?.full_name?.split(" ")[0]} />}
     </div>
