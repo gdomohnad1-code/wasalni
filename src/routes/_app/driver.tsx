@@ -484,17 +484,19 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
 
   const load = async () => {
     if (!user) return;
-    const [av, ac, comp, today] = await Promise.all([
+    const [av, ac, comp, today, unrated] = await Promise.all([
       supabase.from("rides").select("*").eq("status", "searching").order("created_at", { ascending: false }).limit(50),
       supabase.from("rides").select("*").eq("driver_id", user.id).in("status", ["accepted", "in_progress"]).maybeSingle(),
       supabase.from("rides").select("price").eq("driver_id", user.id).eq("status", "completed"),
       supabase.from("rides").select("price, completed_at").eq("driver_id", user.id).eq("status", "completed").gte("completed_at", new Date(new Date().setHours(0,0,0,0)).toISOString()),
+      supabase.from("rides").select("id, pickup_address, destination_address, completed_at, price").eq("driver_id", user.id).eq("status", "completed").is("driver_rating", null).order("completed_at", { ascending: false }).limit(10),
     ]);
     setSearchingRides(av.data || []);
     setActiveRide(ac.data || null);
     const totalE = (comp.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8;
     const todayE = (today.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8;
     setEarnings({ today: todayE, total: totalE, rides: (today.data || []).length });
+    setUnratedRides(unrated.data || []);
   };
 
   useEffect(() => {
