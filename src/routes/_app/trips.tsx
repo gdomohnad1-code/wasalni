@@ -77,32 +77,55 @@ function TripsPage() {
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted">{r.status}</span>
                 </div>
                 <div className="flex gap-1.5">
-                  {r.status === "completed" && !r.rating && (
-                    <Button size="sm" variant="outline" onClick={() => setRateRideId(r.id)}>
-                      <Star className="h-3 w-3 ms-1" /> قيّم
-                    </Button>
-                  )}
                   <Button size="sm" variant="outline" onClick={() => rebook(r)}>
                     <RotateCcw className="h-3 w-3 ms-1" /> {t("trips.rebook")}
                   </Button>
                 </div>
               </div>
+              {r.status === "completed" && !r.rating && (
+                <div className="mt-3 pt-3 border-t flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1" dir="ltr">
+                    {[1, 2, 3, 4, 5].map((n) => {
+                      const current = pendingRatings[r.id] || 0;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setPendingRatings((p) => ({ ...p, [r.id]: n }))}
+                          className="p-0.5"
+                          aria-label={`${n} stars`}
+                        >
+                          <Star className={`h-5 w-5 ${n <= current ? "fill-warning text-warning" : "text-muted-foreground"}`} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={!pendingRatings[r.id] || submitting === r.id}
+                    onClick={async () => {
+                      const stars = pendingRatings[r.id];
+                      if (!stars) return;
+                      setSubmitting(r.id);
+                      const { error } = await supabase.from("rides").update({ rating: stars }).eq("id", r.id);
+                      setSubmitting(null);
+                      if (error) return toast.error(error.message);
+                      toast.success("شكرًا لتقييمك");
+                      setRides((rs) => rs.map((x) => (x.id === r.id ? { ...x, rating: stars } : x)));
+                      setPendingRatings((p) => {
+                        const { [r.id]: _, ...rest } = p;
+                        return rest;
+                      });
+                    }}
+                  >
+                    قيّم
+                  </Button>
+                </div>
+              )}
             </motion.div>
           );
         })}
       </div>
-
-      {rateRideId && (
-        <RateDialog
-          open={!!rateRideId}
-          onClose={() => setRateRideId(null)}
-          rideId={rateRideId}
-          role="rider"
-          onDone={() =>
-            setRides((rs) => rs.map((x) => (x.id === rateRideId ? { ...x, rating: 5 } : x)))
-          }
-        />
-      )}
     </div>
   );
 }
