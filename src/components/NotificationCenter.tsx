@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Bell, CheckCheck, Trash2, Inbox } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
+import { toast } from "sonner";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -54,8 +55,28 @@ export function NotificationCenter({ className = "" }: { className?: string }) {
       const channel = supabase.channel(`notif-center-${id}-${Math.random().toString(36).slice(2)}`);
       channel.on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${id}` },
-        () => load(id),
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${id}` },
+        (payload) => {
+          const n = payload.new as Notif;
+          setItems((prev) => (prev.some((x) => x.id === n.id) ? prev : [n, ...prev]));
+          toast(n.title, { description: n.body ?? undefined });
+        },
+      );
+      channel.on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${id}` },
+        (payload) => {
+          const n = payload.new as Notif;
+          setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, ...n } : x)));
+        },
+      );
+      channel.on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "notifications", filter: `user_id=eq.${id}` },
+        (payload) => {
+          const oldRow = payload.old as { id: string };
+          setItems((prev) => prev.filter((x) => x.id !== oldRow.id));
+        },
       );
       if (cancelled) { supabase.removeChannel(channel); return; }
       channel.subscribe();
