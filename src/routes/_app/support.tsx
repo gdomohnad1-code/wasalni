@@ -58,7 +58,7 @@ function SupportPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto h-screen flex flex-col">
+    <div className="max-w-md mx-auto h-[calc(100vh-5rem)] -mb-20 flex flex-col">
       <div className="flex items-center gap-2 p-4 border-b border-border bg-card">
         <Link to="/profile" className="p-2 -m-2"><ArrowRight className="h-5 w-5" /></Link>
         <div className="flex-1">
