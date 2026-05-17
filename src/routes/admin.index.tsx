@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Car, Users, Wallet, MessageSquareWarning, UserCircle, Loader2, TrendingUp } from "lucide-react";
+import { Car, Users, Wallet, MessageSquareWarning, UserCircle, Loader2, TrendingUp, RefreshCw } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { motion } from "framer-motion";
 
