@@ -43,8 +43,7 @@ function RidePage() {
   const { t } = useI18n();
   const [ride, setRide] = useState<Ride | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
-  const [rated, setRated] = useState(false);
-  const [stars, setStars] = useState(5);
+  const [rateOpen, setRateOpen] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [etaSec, setEtaSec] = useState(0);
 
