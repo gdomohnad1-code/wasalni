@@ -547,8 +547,10 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   };
   const endTrip = async () => {
     if (!activeRide) return;
-    await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", activeRide.id);
+    const endedId = activeRide.id;
+    await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", endedId);
     toast.success("تم إنهاء الرحلة 💰");
+    setRateRideId(endedId);
   };
 
   const toggleOnline = async (v: boolean) => {
