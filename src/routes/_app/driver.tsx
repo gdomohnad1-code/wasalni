@@ -449,6 +449,8 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const [arrivalPrompt, setArrivalPrompt] = useState<null | "pickup" | "destination">(null);
   const arrivalFiredRef = useRef<Set<string>>(new Set());
   const declinedRef = useRef<Set<string>>(loadDeclined());
+  const [rateRideId, setRateRideId] = useState<string | null>(null);
+  const [unratedRides, setUnratedRides] = useState<any[]>([]);
 
   const isOnline = !!docs.is_online;
   const presence: "available" | "busy" | "offline" =
