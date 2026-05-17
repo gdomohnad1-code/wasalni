@@ -720,6 +720,38 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
         onDismiss={() => setArrivalPrompt(null)}
       />
 
+
+      {!activeRide && unratedRides.length > 0 && (
+        <div className="fixed top-20 inset-x-0 z-30 px-3 pointer-events-none">
+          <div className="max-w-md mx-auto bg-amber-50 border border-amber-200 rounded-2xl p-3 shadow-card pointer-events-auto">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs">
+                <div className="font-bold text-amber-900">عندك {unratedRides.length} تقييم معلّق</div>
+                <div className="text-amber-700 truncate max-w-[200px]">
+                  آخر رحلة: {unratedRides[0].destination_address}
+                </div>
+              </div>
+              <Button size="sm" onClick={() => setRateRideId(unratedRides[0].id)} className="bg-gradient-primary">
+                قيّم العميل
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rateRideId && (
+        <RateDialog
+          open={!!rateRideId}
+          onClose={() => setRateRideId(null)}
+          rideId={rateRideId}
+          role="driver"
+          onDone={() => {
+            setUnratedRides((rs) => rs.filter((x) => x.id !== rateRideId));
+            load();
+          }}
+        />
+      )}
+
       {showReady && <DriverReadyScreen onStart={closeReady} name={user?.user_metadata?.full_name?.split(" ")[0]} />}
     </div>
   );
