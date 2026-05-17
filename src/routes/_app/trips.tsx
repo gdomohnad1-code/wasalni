@@ -15,6 +15,7 @@ export const Route = createFileRoute("/_app/trips")({
 
 function TripsPage() {
   const [rides, setRides] = useState<any[]>([]);
+  const [rateRideId, setRateRideId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { t, locale } = useI18n();
 
