@@ -84,46 +84,76 @@ function TripsPage() {
                   </Button>
                 </div>
               </div>
-              {!r.rating && (
-                <div className="mt-3 pt-3 border-t flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1" dir="ltr">
-                    {[1, 2, 3, 4, 5].map((n) => {
-                      const current = pendingRatings[r.id] || 0;
-                      return (
-                        <button
-                          key={n}
-                          type="button"
-                          onClick={() => setPendingRatings((p) => ({ ...p, [r.id]: n }))}
-                          className="p-0.5"
-                          aria-label={`${n} stars`}
-                        >
-                          <Star className={`h-5 w-5 ${n <= current ? "fill-warning text-warning" : "text-muted-foreground"}`} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <Button
-                    size="sm"
-                    disabled={!pendingRatings[r.id] || submitting === r.id}
-                    onClick={async () => {
-                      const stars = pendingRatings[r.id];
-                      if (!stars) return;
-                      setSubmitting(r.id);
-                      const { error } = await supabase.from("rides").update({ rating: stars }).eq("id", r.id);
-                      setSubmitting(null);
-                      if (error) return toast.error(error.message);
-                      toast.success("شكرًا لتقييمك");
-                      setRides((rs) => rs.map((x) => (x.id === r.id ? { ...x, rating: stars } : x)));
-                      setPendingRatings((p) => {
-                        const { [r.id]: _, ...rest } = p;
-                        return rest;
+              {!r.rating && (() => {
+                const stars = pendingRatings[r.id] || 0;
+                const comment = pendingComments[r.id] || "";
+                const lowRating = stars > 0 && stars < 3;
+                const submitRating = async (asComplaint: boolean) => {
+                  if (!stars) return;
+                  setSubmitting(r.id);
+                  const { error } = await supabase.from("rides").update({ rating: stars, rating_comment: comment || null }).eq("id", r.id);
+                  if (error) { setSubmitting(null); return toast.error(error.message); }
+                  if (asComplaint) {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                      const { error: cErr } = await supabase.from("complaints").insert({
+                        user_id: user.id,
+                        ride_id: r.id,
+                        category: "ride_rating",
+                        subject: `شكوى على رحلة (${stars} نجوم)`,
+                        message: comment || "تقييم منخفض بدون تفاصيل",
+                        priority: stars === 1 ? "high" : "medium",
                       });
-                    }}
-                  >
-                    قيّم
-                  </Button>
-                </div>
-              )}
+                      if (cErr) { setSubmitting(null); return toast.error(cErr.message); }
+                    }
+                  }
+                  setSubmitting(null);
+                  toast.success(asComplaint ? "تم إرسال الشكوى" : "شكرًا لتقييمك");
+                  setRides((rs) => rs.map((x) => (x.id === r.id ? { ...x, rating: stars, rating_comment: comment || null } : x)));
+                  setPendingRatings((p) => { const { [r.id]: _, ...rest } = p; return rest; });
+                  setPendingComments((p) => { const { [r.id]: _, ...rest } = p; return rest; });
+                  if (asComplaint) navigate({ to: "/support" });
+                };
+                return (
+                  <div className="mt-3 pt-3 border-t space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1" dir="ltr">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button key={n} type="button"
+                            onClick={() => setPendingRatings((p) => ({ ...p, [r.id]: n }))}
+                            className="p-0.5" aria-label={`${n} stars`}>
+                            <Star className={`h-5 w-5 ${n <= stars ? "fill-warning text-warning" : "text-muted-foreground"}`} />
+                          </button>
+                        ))}
+                      </div>
+                      {!lowRating && (
+                        <Button size="sm" disabled={!stars || submitting === r.id} onClick={() => submitRating(false)}>
+                          قيّم
+                        </Button>
+                      )}
+                    </div>
+                    {lowRating && (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={comment}
+                          onChange={(e) => setPendingComments((p) => ({ ...p, [r.id]: e.target.value }))}
+                          placeholder="اكتب سبب التقييم المنخفض..."
+                          rows={3}
+                          className="text-sm"
+                        />
+                        <div className="flex gap-2 justify-end">
+                          <Button size="sm" variant="outline" disabled={submitting === r.id} onClick={() => submitRating(false)}>
+                            قيّم
+                          </Button>
+                          <Button size="sm" variant="destructive" disabled={submitting === r.id} onClick={() => submitRating(true)}>
+                            إرسال شكوى
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </motion.div>
           );
         })}
