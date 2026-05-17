@@ -243,25 +243,6 @@ function InProgress({ countdown, onEnd, onChat }: { countdown: string; onEnd: ()
   );
 }
 
-function RateBox({ stars, setStars, onSubmit }: { stars: number; setStars: (n: number) => void; onSubmit: () => void }) {
-  const { t } = useI18n();
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-      className="bg-card rounded-2xl p-6 shadow-card text-center">
-      <div className="text-5xl mb-2">🎉</div>
-      <h3 className="font-bold text-lg mb-1">{t("ride.rate_title")}</h3>
-      <p className="text-sm text-muted-foreground mb-4">{t("ride.rate_sub")}</p>
-      <div className="flex justify-center gap-2 mb-5">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} onClick={() => setStars(n)}>
-            <Star className={`h-9 w-9 ${n <= stars ? "fill-warning text-warning" : "text-muted-foreground"}`} />
-          </button>
-        ))}
-      </div>
-      <Button onClick={onSubmit} className="w-full h-12 bg-gradient-primary font-bold">{t("ride.submit_rating")}</Button>
-    </motion.div>
-  );
-}
 
 function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; onClose: () => void }) {
   const { t } = useI18n();
