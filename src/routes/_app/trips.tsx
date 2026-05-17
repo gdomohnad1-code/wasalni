@@ -82,7 +82,7 @@ function TripsPage() {
                   </Button>
                 </div>
               </div>
-              {r.status === "completed" && !r.rating && (
+              {!r.rating && (
                 <div className="mt-3 pt-3 border-t flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1" dir="ltr">
                     {[1, 2, 3, 4, 5].map((n) => {
