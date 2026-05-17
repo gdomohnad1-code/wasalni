@@ -149,11 +149,15 @@ function RidePage() {
           {ride.status === "searching" && <Searching key="s" />}
           {ride.status === "accepted" && <Accepted key="a" onStart={startRide} onChat={() => setChatOpen(true)} />}
           {ride.status === "in_progress" && <InProgress key="i" countdown={fmtTime(countdown)} onEnd={endRide} onChat={() => setChatOpen(true)} />}
-          {ride.status === "completed" && !rated && <RateBox key="r" stars={stars} setStars={setStars} onSubmit={submitRating} />}
-          {ride.status === "completed" && rated && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
+          {ride.status === "completed" && (
+            <motion.div key="c" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
               <div className="text-6xl mb-3">✅</div>
               <p className="font-bold text-lg">{t("ride.completed")}</p>
+              {!ride.rating && (
+                <Button onClick={() => setRateOpen(true)} className="mt-4 bg-gradient-primary">
+                  <Star className="h-4 w-4 ms-1" /> قيّم السائق
+                </Button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
