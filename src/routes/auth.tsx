@@ -22,9 +22,8 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-function goNext(next: string | undefined, fallback: string): string {
-  return next ?? fallback;
-}
+
+
 
 function AuthPage() {
   const navigate = useNavigate();
