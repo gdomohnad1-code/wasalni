@@ -269,11 +269,16 @@ export function RideMap({
       }).addTo(map);
     }
 
-    // Car
+    // Car — smooth LERP interpolation between GPS pings
     if (driverPos) {
-      if (!L_.car) L_.car = L.marker([driverPos.lat, driverPos.lng], { icon: carIcon, zIndexOffset: 1000 }).addTo(map);
-      else L_.car.setLatLng([driverPos.lat, driverPos.lng]);
+      if (!L_.car) {
+        L_.car = L.marker([driverPos.lat, driverPos.lng], { icon: carIcon, zIndexOffset: 1000 }).addTo(map);
+        carAnimRef.current.from = driverPos;
+      } else {
+        animateMarkerTo(L_.car, driverPos, carAnimRef.current, 1500);
+      }
     } else if (L_.car) {
+      cancelMarkerAnim(carAnimRef.current);
       map.removeLayer(L_.car); L_.car = undefined;
     }
 
