@@ -816,6 +816,16 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
         onSave={saveHomeDest}
         currentAddress={docs?.home_dest_address ?? null}
       />
+
+      <PinVerifyModal
+        open={pinModalOpen}
+        onClose={() => setPinModalOpen(false)}
+        expected={activeRide?.start_pin ?? ""}
+        onVerified={async () => {
+          setPinModalOpen(false);
+          await doStartTrip();
+        }}
+      />
     </div>
   );
 }
