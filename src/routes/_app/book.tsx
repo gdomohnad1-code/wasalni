@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import {
   ArrowRight, MapPin, Navigation, Loader2, Clock, Users, Zap,
-  ShieldCheck, Landmark, VolumeX, Snowflake,
+  ShieldCheck, Landmark, VolumeX, Snowflake, AlertTriangle, X,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -56,6 +57,8 @@ function BookPage() {
   const [acPref, setAcPref] = useState<"any" | "on" | "off">("any");
   const [pricingMode, setPricingMode] = useState<"fixed" | "bid">("fixed");
   const [bidPrice, setBidPrice] = useState<string>("");
+  const [geoBanner, setGeoBanner] = useState<null | "denied" | "unavailable">(null);
+  const pickupInputRef = useRef<HTMLInputElement>(null);
   const destDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const SUGGEST = lang === "ar" ? SUGGEST_AR : SUGGEST_EN;
@@ -65,29 +68,58 @@ function BookPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const focusPickup = () => {
+    // Give the sheet a beat to expand, then focus the pickup field.
+    setSheet((s) => (s === "collapsed" ? "half" : s));
+    setTimeout(() => pickupInputRef.current?.focus(), 200);
+  };
+
   const detectLocation = () => {
     if (!navigator.geolocation) {
-      setPickup(t("book.cairo"));
+      setPickup("");
       setPickupCoords({ lat: 30.0444, lng: 31.2357 });
+      setGeoBanner("unavailable");
+      focusPickup();
       return;
     }
     setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setPickupCoords(coords);
-        const name = await reverseGeocode(coords);
-        setPickup(name ?? `${t("book.your_loc")} (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
-        setGpsLoading(false);
-      },
-      () => {
-        setPickup(t("book.cairo_eg"));
-        setPickupCoords({ lat: 30.0444, lng: 31.2357 });
-        setGpsLoading(false);
-      },
-      { timeout: 8000, enableHighAccuracy: true }
-    );
+    try {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            setPickupCoords(coords);
+            const name = await reverseGeocode(coords);
+            setPickup(name ?? `${t("book.your_loc")} (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
+            setGeoBanner(null);
+          } catch {
+            setPickup("");
+            setPickupCoords({ lat: 30.0444, lng: 31.2357 });
+            setGeoBanner("unavailable");
+            focusPickup();
+          } finally {
+            setGpsLoading(false);
+          }
+        },
+        (err) => {
+          // Never crash — fall back to Cairo center and prompt for manual entry.
+          setPickup("");
+          setPickupCoords({ lat: 30.0444, lng: 31.2357 });
+          setGeoBanner(err?.code === err?.PERMISSION_DENIED ? "denied" : "unavailable");
+          setGpsLoading(false);
+          focusPickup();
+        },
+        { timeout: 8000, enableHighAccuracy: true }
+      );
+    } catch {
+      setPickup("");
+      setPickupCoords({ lat: 30.0444, lng: 31.2357 });
+      setGeoBanner("unavailable");
+      setGpsLoading(false);
+      focusPickup();
+    }
   };
+
 
   useEffect(() => {
     if (destDebounce.current) clearTimeout(destDebounce.current);
@@ -202,12 +234,40 @@ function BookPage() {
         <div className="w-11" />
       </div>
 
+      {/* Geolocation banner (dismissible) */}
+      <AnimatePresence>
+        {geoBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute inset-x-4 top-20 z-30"
+            role="alert"
+          >
+            <div className="flex items-start gap-2 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-300/70 dark:border-amber-700/60 text-amber-900 dark:text-amber-100 px-3 py-2.5 shadow-md">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="text-[12px] leading-snug flex-1 font-medium">
+                {geoBanner === "denied" ? t("book.geo_denied") : t("book.geo_denied_short")}
+              </p>
+              <button
+                onClick={() => setGeoBanner(null)}
+                aria-label={t("book.dismiss")}
+                className="p-1 -m-1 shrink-0 opacity-70 hover:opacity-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Sheet */}
       <BottomSheet state={sheet} onStateChange={setSheet} heights={{ collapsed: 190, half: 480, full: 700 }}>
         <div className="px-5 pb-6 space-y-4">
           {/* Pickup / Destination */}
           <div className="space-y-2.5 pt-1">
             <FieldRow
+              inputRef={pickupInputRef}
               icon={<span className="h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-primary/20" />}
               value={pickup}
               onChange={setPickup}
@@ -218,6 +278,7 @@ function BookPage() {
                 </button>
               }
             />
+
             <div className="ms-4 h-4 border-s-2 border-dashed border-border" />
             <FieldRow
               icon={<span className="h-2.5 w-2.5 rounded-sm bg-success ring-2 ring-success/20" />}
@@ -489,18 +550,20 @@ function BookPage() {
 }
 
 function FieldRow({
-  icon, value, onChange, placeholder, trailing,
+  icon, value, onChange, placeholder, trailing, inputRef,
 }: {
   icon: React.ReactNode;
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
   trailing?: React.ReactNode;
+  inputRef?: React.Ref<HTMLInputElement>;
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-muted/70 border border-border px-3 h-12">
       <div className="shrink-0 grid place-items-center">{icon}</div>
       <Input
+        ref={inputRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -510,6 +573,7 @@ function FieldRow({
     </div>
   );
 }
+
 
 function Row({ k, v, icon }: { k: string; v: string; icon?: React.ReactNode }) {
   return (
