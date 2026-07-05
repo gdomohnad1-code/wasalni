@@ -840,6 +840,7 @@ export type Database = {
           driver_rating_comment: string | null
           duration_min: number | null
           id: string
+          landmark_note: string | null
           pickup_address: string
           pickup_lat: number | null
           pickup_lng: number | null
@@ -865,6 +866,7 @@ export type Database = {
           driver_rating_comment?: string | null
           duration_min?: number | null
           id?: string
+          landmark_note?: string | null
           pickup_address: string
           pickup_lat?: number | null
           pickup_lng?: number | null
@@ -890,6 +892,7 @@ export type Database = {
           driver_rating_comment?: string | null
           duration_min?: number | null
           id?: string
+          landmark_note?: string | null
           pickup_address?: string
           pickup_lat?: number | null
           pickup_lng?: number | null
