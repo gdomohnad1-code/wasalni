@@ -414,7 +414,7 @@ const ShareRideButton = memo(function ShareRideButton({ ride }: { ride: Ride }) 
 
 
 
-function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; onClose: () => void }) {
+const ChatSheet = memo(function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; onClose: () => void }) {
   const { t } = useI18n();
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
