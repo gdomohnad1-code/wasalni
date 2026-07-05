@@ -730,6 +730,7 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
             homeAddress={docs?.home_dest_address ?? null}
             onSetHome={() => setHomeSheetOpen(true)}
             onToggleHome={toggleHomeMode}
+            onShowQR={() => setQrOpen(true)}
           />
         )}
         {activeRide && phase === "to_pickup" && pickup && (
