@@ -44,6 +44,7 @@ function AppLayout() {
     loc.pathname.startsWith("/ride/");
   return (
     <div className={`min-h-screen bg-background ${isImmersive ? "" : "pb-20"}`}>
+      <OfflineBanner />
       <Outlet />
       {!isImmersive && (
         <nav className="fixed bottom-0 inset-x-0 bg-card/90 backdrop-blur-lg border-t border-border z-40">
