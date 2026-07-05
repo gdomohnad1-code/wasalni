@@ -41,11 +41,32 @@ function RidePage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { t } = useI18n();
-  const [ride, setRide] = useState<Ride | null>(null);
+  const cacheKey = `ride:last:${id}`;
+  // Hydrate from localStorage synchronously so the UI survives refresh / brief offline
+  const [ride, setRide] = useState<Ride | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.localStorage.getItem(cacheKey);
+      return raw ? (JSON.parse(raw) as Ride) : null;
+    } catch { return null; }
+  });
   const [chatOpen, setChatOpen] = useState(false);
   const [rateOpen, setRateOpen] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [etaSec, setEtaSec] = useState(0);
+
+  // Persist ride snapshot whenever it updates (survives refresh/offline)
+  useEffect(() => {
+    if (!ride) return;
+    try { window.localStorage.setItem(cacheKey, JSON.stringify(ride)); } catch { /* quota */ }
+    // Clear cache once the ride is fully closed
+    if (ride.status === "completed" || ride.status === "cancelled") {
+      const t = setTimeout(() => {
+        try { window.localStorage.removeItem(cacheKey); } catch { /* noop */ }
+      }, 60_000);
+      return () => clearTimeout(t);
+    }
+  }, [ride, cacheKey]);
 
   useEffect(() => {
     let cancel = false;
@@ -60,6 +81,10 @@ function RidePage() {
         (payload) => setRide(payload.new as Ride))
       .subscribe();
 
+    // Refetch when the browser comes back online so we don't miss updates while disconnected
+    const onOnline = () => { load(); };
+    window.addEventListener("online", onOnline);
+
     // Auto-accept simulation: only triggers for users that are actually approved drivers.
     // The RPC verifies role + active driver_documents server-side and rejects rider self-accept.
     const timer = setTimeout(async () => {
@@ -70,7 +95,12 @@ function RidePage() {
       }
     }, 5000);
 
-    return () => { cancel = true; supabase.removeChannel(ch); clearTimeout(timer); };
+    return () => {
+      cancel = true;
+      supabase.removeChannel(ch);
+      window.removeEventListener("online", onOnline);
+      clearTimeout(timer);
+    };
   }, [id]);
 
   useEffect(() => {
