@@ -70,6 +70,7 @@ export function DriverLiveMap({
     route?: L.Polyline;
     hotspots: L.Circle[];
   }>({ hotspots: [] });
+  const carAnim = useRef<MarkerAnimState>({});
   const followRef = useRef(true);
 
   // init
