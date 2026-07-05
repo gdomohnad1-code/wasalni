@@ -149,6 +149,10 @@ function SettingsPage() {
           <Switch checked={notif} onCheckedChange={toggleNotif} />
         </section>
 
+        {/* Emergency contacts (for SOS button) */}
+        <EmergencyContactsSection />
+
+
         {/* Links */}
         <section className="bg-card rounded-2xl border border-border divide-y divide-border overflow-hidden">
           <RowLink onClick={() => window.open("https://play.google.com/store", "_blank")} icon={Star} label={t("settings.rate_app")} />
