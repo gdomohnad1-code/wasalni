@@ -52,6 +52,8 @@ function BookPage() {
   const [creating, setCreating] = useState(false);
   const [sheet, setSheet] = useState<SheetState>("half");
   const [landmarkNote, setLandmarkNote] = useState("");
+  const [silentRide, setSilentRide] = useState(false);
+  const [acPref, setAcPref] = useState<"any" | "on" | "off">("any");
   const [pricingMode, setPricingMode] = useState<"fixed" | "bid">("fixed");
   const [bidPrice, setBidPrice] = useState<string>("");
   const destDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
