@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RideMap } from "@/components/RideMap";
 import { RiderSafetyPanel } from "@/components/RiderSafetyPanel";
+import { SmartSOSButton } from "@/components/SmartSOSButton";
 import { AdSlot } from "@/components/AdSlot";
 import { RateDialog } from "@/components/RateDialog";
 
