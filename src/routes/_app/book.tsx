@@ -254,6 +254,58 @@ function BookPage() {
             )}
           </div>
 
+          {/* Safe & Silent Mode — silent ride + AC preference */}
+          <div className="rounded-2xl bg-card border border-border p-3 space-y-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-9 w-9 rounded-xl bg-primary/10 grid place-items-center shrink-0">
+                  <VolumeX className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-black leading-tight">{t("book.silent_title")}</div>
+                  <div className="text-[10.5px] text-muted-foreground leading-tight truncate">{t("book.silent_sub")}</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={silentRide}
+                onClick={() => setSilentRide((v) => !v)}
+                className={`relative h-6 w-11 rounded-full transition shrink-0 ${silentRide ? "bg-primary" : "bg-muted-foreground/30"}`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${silentRide ? "start-[calc(100%-1.375rem)]" : "start-0.5"}`}
+                />
+              </button>
+            </div>
+
+            <div className="h-px bg-border/60" />
+
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-9 w-9 rounded-xl bg-primary/10 grid place-items-center shrink-0">
+                  <Snowflake className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-black leading-tight">{t("book.ac_title")}</div>
+                  <div className="text-[10.5px] text-muted-foreground leading-tight truncate">{t("book.ac_sub")}</div>
+                </div>
+              </div>
+              <div className="flex bg-muted rounded-lg p-0.5 shrink-0">
+                {(["any", "on", "off"] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setAcPref(opt)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition ${acPref === opt ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+                  >
+                    {t(`book.ac_${opt}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Trip mode */}
           <Tabs value={tripMode} onValueChange={(v) => setTripMode(v as TripMode)}>
             <TabsList className="grid grid-cols-3 w-full rounded-xl bg-muted p-1 h-10">
