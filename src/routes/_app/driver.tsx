@@ -864,6 +864,14 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
         driverName={user?.user_metadata?.full_name}
         carLabel={`${docs.car_model || ""} · ${docs.car_plate || ""}`}
       />
+
+      <TripCompletionModal
+        open={completionOpen}
+        totalFare={Number(activeRide?.price || 0)}
+        riderName={riderName}
+        onClose={() => setCompletionOpen(false)}
+        onCompleteTrip={finalizeCompletion}
+      />
     </div>
   );
 }
