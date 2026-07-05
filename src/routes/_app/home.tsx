@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import {
   AlertTriangle, Sparkles, Wallet, ChevronLeft, Clock, MapPin, Crown,
-  Bell, Menu, ShieldAlert,
+  Bell, Menu, ShieldAlert, ScanLine,
 } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { AdSlot } from "@/components/AdSlot";
