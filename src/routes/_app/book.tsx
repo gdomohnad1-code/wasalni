@@ -68,29 +68,58 @@ function BookPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const focusPickup = () => {
+    // Give the sheet a beat to expand, then focus the pickup field.
+    setSheet((s) => (s === "collapsed" ? "half" : s));
+    setTimeout(() => pickupInputRef.current?.focus(), 200);
+  };
+
   const detectLocation = () => {
     if (!navigator.geolocation) {
-      setPickup(t("book.cairo"));
+      setPickup("");
       setPickupCoords({ lat: 30.0444, lng: 31.2357 });
+      setGeoBanner("unavailable");
+      focusPickup();
       return;
     }
     setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setPickupCoords(coords);
-        const name = await reverseGeocode(coords);
-        setPickup(name ?? `${t("book.your_loc")} (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
-        setGpsLoading(false);
-      },
-      () => {
-        setPickup(t("book.cairo_eg"));
-        setPickupCoords({ lat: 30.0444, lng: 31.2357 });
-        setGpsLoading(false);
-      },
-      { timeout: 8000, enableHighAccuracy: true }
-    );
+    try {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            setPickupCoords(coords);
+            const name = await reverseGeocode(coords);
+            setPickup(name ?? `${t("book.your_loc")} (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
+            setGeoBanner(null);
+          } catch {
+            setPickup("");
+            setPickupCoords({ lat: 30.0444, lng: 31.2357 });
+            setGeoBanner("unavailable");
+            focusPickup();
+          } finally {
+            setGpsLoading(false);
+          }
+        },
+        (err) => {
+          // Never crash — fall back to Cairo center and prompt for manual entry.
+          setPickup("");
+          setPickupCoords({ lat: 30.0444, lng: 31.2357 });
+          setGeoBanner(err?.code === err?.PERMISSION_DENIED ? "denied" : "unavailable");
+          setGpsLoading(false);
+          focusPickup();
+        },
+        { timeout: 8000, enableHighAccuracy: true }
+      );
+    } catch {
+      setPickup("");
+      setPickupCoords({ lat: 30.0444, lng: 31.2357 });
+      setGeoBanner("unavailable");
+      setGpsLoading(false);
+      focusPickup();
+    }
   };
+
 
   useEffect(() => {
     if (destDebounce.current) clearTimeout(destDebounce.current);
