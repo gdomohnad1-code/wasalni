@@ -122,6 +122,48 @@ export function DriverLiveMap({
     );
   }, [JSON.stringify(hotspots)]);
 
+  // road alerts (community icons)
+  useEffect(() => {
+    const map = mapRef.current; if (!map) return;
+    layers.current.alerts.forEach((m) => map.removeLayer(m));
+    layers.current.alerts = roadAlerts.map((a) => {
+      const meta = ALERT_META[a.type];
+      const icon = L.divIcon({
+        html: `
+          <div style="position:relative;">
+            <div style="background:${meta.color}; color:#fff; width:38px; height:38px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,.35);">${meta.emoji}</div>
+            ${a.confirms > 1 ? `<div style="position:absolute; top:-4px; right:-4px; background:#059669; color:#fff; font-size:10px; font-weight:900; padding:1px 5px; border-radius:9999px; border:2px solid #fff;">${a.confirms}</div>` : ""}
+          </div>`,
+        className: "",
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
+      });
+      const marker = L.marker([a.lat, a.lng], { icon, zIndexOffset: 800 }).addTo(map);
+      const ageMin = Math.max(0, Math.floor((Date.now() - new Date(a.created_at).getTime()) / 60000));
+      marker.bindPopup(`
+        <div style="text-align:center; font-family:inherit; min-width:160px;">
+          <div style="font-size:14px; font-weight:900;">${meta.emoji} ${meta.label}</div>
+          <div style="font-size:11px; color:#6b7280; margin-top:2px;">من ${ageMin} دقيقة · ${a.confirms} تأكيد</div>
+          <button data-confirm-id="${a.id}" style="margin-top:8px; width:100%; padding:6px 10px; background:#059669; color:#fff; border:none; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer;">
+            ✓ تأكيد — لسه موجود
+          </button>
+        </div>
+      `);
+      marker.on("popupopen", (e: any) => {
+        const btn = (e.popup?.getElement() as HTMLElement | null)?.querySelector(`[data-confirm-id="${a.id}"]`);
+        if (!btn) return;
+        btn.addEventListener("click", async () => {
+          const { error } = await supabase.rpc("confirm_road_alert", { p_id: a.id });
+          if (error) toast.error("تعذّر تأكيد التنبيه");
+          else { toast.success("تم التأكيد"); marker.closePopup(); }
+        }, { once: true });
+      });
+      return marker;
+    });
+  }, [JSON.stringify(roadAlerts.map((a) => [a.id, a.confirms]))]);
+
+
+
   // pickup / dest markers
   useEffect(() => {
     const map = mapRef.current; if (!map) return;
