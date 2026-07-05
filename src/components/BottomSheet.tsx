@@ -1,5 +1,6 @@
-import { motion, useMotionValue, animate, PanInfo } from "framer-motion";
-import { useEffect, useRef, type ReactNode } from "react";
+import { motion, useMotionValue, animate, useDragControls, PanInfo } from "framer-motion";
+import { useEffect, useRef, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
+
 import { cn } from "@/lib/utils";
 
 /**
@@ -30,6 +31,20 @@ export function BottomSheet({
 }: Props) {
   const y = useMotionValue(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dragControls = useDragControls();
+
+  // Stop touch/pointer/wheel events on the sheet from reaching the map underneath.
+  const stopTouch = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+  };
+
+  // Only the handle initiates a sheet drag — inner scroll & buttons stay untouched.
+  const startDrag = (e: ReactPointerEvent<HTMLElement>) => {
+    e.stopPropagation();
+    dragControls.start(e, { snapToCursor: false });
+  };
+
+
 
   const heightFor = (s: SheetState) => heights[s];
 
@@ -80,8 +95,12 @@ export function BottomSheet({
         y,
         height: heights.full,
         top: "auto",
+        // Prevent the browser from routing gestures on the sheet to the map behind it
+        touchAction: "pan-y",
       }}
       drag="y"
+      dragListener={false}
+      dragControls={dragControls}
       dragConstraints={{
         top: window.innerHeight - heights.full,
         bottom: window.innerHeight - heights.collapsed,
@@ -89,21 +108,36 @@ export function BottomSheet({
       dragElastic={0.02}
       dragMomentum={false}
       onDragEnd={handleDragEnd}
+      // Isolate all touch/pointer/wheel events from the underlying Google Map
+      onPointerDown={stopTouch}
+      onPointerMove={stopTouch}
+      onPointerUp={stopTouch}
+      onTouchStart={stopTouch}
+      onTouchMove={stopTouch}
+      onTouchEnd={stopTouch}
+      onWheel={stopTouch}
     >
       <button
+        type="button"
+        onPointerDown={startDrag}
         onClick={() => {
           const order: SheetState[] = ["collapsed", "half", "full"];
           const i = order.indexOf(state);
           onStateChange(order[Math.min(i + 1, 2)]);
         }}
-        className="w-full pt-3 pb-2 grid place-items-center cursor-grab active:cursor-grabbing"
+        className="w-full pt-3 pb-2 grid place-items-center cursor-grab active:cursor-grabbing select-none"
+        style={{ touchAction: "none" }}
         aria-label="اسحب للتبديل"
       >
         <span className="block h-1.5 w-12 rounded-full bg-muted-foreground/30" />
       </button>
-      <div className="flex-1 overflow-y-auto scrollbar-hide overscroll-contain">
+      <div
+        className="flex-1 overflow-y-auto scrollbar-hide overscroll-contain"
+        style={{ touchAction: "pan-y" }}
+      >
         {children}
       </div>
     </motion.div>
   );
 }
+
