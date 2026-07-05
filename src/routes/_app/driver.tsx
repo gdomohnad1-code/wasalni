@@ -670,11 +670,16 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
         driver={pos}
         heading={heading}
         hotspots={isOnline && !activeRide ? hotspots : []}
+        roadAlerts={roadAlerts}
         pickup={pickup}
         destination={phase === "in_progress" ? destination : null}
         routeTo={routeTo}
         className="absolute inset-0"
       />
+
+      {/* Community road alerts — floating report button */}
+      <RoadAlertReporter position={pos} />
+
 
       <div className="absolute top-0 inset-x-0 z-20 p-4 pointer-events-none">
         <div className="flex justify-between items-start gap-3 pointer-events-auto">
