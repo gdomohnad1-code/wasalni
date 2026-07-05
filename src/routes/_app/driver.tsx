@@ -829,6 +829,14 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
           await doStartTrip();
         }}
       />
+
+      <DriverQRCode
+        open={qrOpen}
+        onClose={() => setQrOpen(false)}
+        driverId={user?.id ?? ""}
+        driverName={user?.user_metadata?.full_name}
+        carLabel={`${docs.car_model || ""} · ${docs.car_plate || ""}`}
+      />
     </div>
   );
 }
