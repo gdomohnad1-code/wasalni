@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { animateMarkerTo, cancelMarkerAnim, type MarkerAnimState } from "@/lib/marker-lerp";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { ALERT_META, type RoadAlert } from "@/hooks/use-road-alerts";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -16,6 +19,7 @@ type Props = {
   driver: LL | null;
   heading?: number | null;
   hotspots?: { lat: number; lng: number; weight: number }[];
+  roadAlerts?: RoadAlert[];
   pickup?: LL | null;
   destination?: LL | null;
   routeTo?: LL | null; // current navigation target (pickup or destination)
