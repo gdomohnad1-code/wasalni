@@ -501,6 +501,7 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
     const totalE = (comp.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8;
     const todayE = (today.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8;
     setEarnings({ today: todayE, total: totalE, rides: (today.data || []).length });
+    setTotalCompleted((comp.data || []).length);
     setUnratedRides(unrated.data || []);
   };
 
