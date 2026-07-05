@@ -13,12 +13,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Mail, Phone, Lock, User as UserIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
 
+type AuthSearch = { next?: string };
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//")
-      ? s.next
-      : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): AuthSearch => {
+    if (typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//")) {
+      return { next: s.next };
+    }
+    return {};
+  },
   component: AuthPage,
 });
 
