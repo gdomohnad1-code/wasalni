@@ -559,10 +559,22 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
     setIncoming(null);
   };
 
-  const startTrip = async () => {
+  const PIN_REQUIRED_AFTER = 20;
+  const pinRequired = totalCompleted >= PIN_REQUIRED_AFTER && !!activeRide?.start_pin;
+
+  const doStartTrip = async () => {
     if (!activeRide) return;
     await supabase.from("rides").update({ status: "in_progress", started_at: new Date().toISOString() }).eq("id", activeRide.id);
     toast.success("بدأت الرحلة");
+  };
+
+  const startTrip = async () => {
+    if (!activeRide) return;
+    if (pinRequired) {
+      setPinModalOpen(true);
+      return;
+    }
+    await doStartTrip();
   };
   const endTrip = async () => {
     if (!activeRide) return;
