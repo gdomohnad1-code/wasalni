@@ -117,6 +117,13 @@ const dict = {
     "book.your_loc": "موقعك",
     "book.landmark_ph": "علامة مميزة (اختياري) — مثال: قدام سوبر ماركت الأمانة",
     "book.landmark_label": "علامة مميزة",
+    "book.silent_title": "🔇 رحلة هادئة",
+    "book.silent_sub": "من غير أحاديث ولا راديو عالي",
+    "book.ac_title": "❄️ التكييف",
+    "book.ac_sub": "اختار تفضيلك قبل الركوب",
+    "book.ac_any": "بدون تفضيل",
+    "book.ac_on": "شغّال",
+    "book.ac_off": "مطفي",
 
     // ride
     "ride.title": "رحلتك",
