@@ -582,6 +582,7 @@ const dict = {
     "notif.ride_completed": "Ride completed",
     "notif.ride_cancelled": "Ride cancelled",
     "notif.new_ride_request": "New ride request",
+    "notif.open": "Open",
     "notif.center": "Notifications",
     "notif.mark_all": "Mark all as read",
     "notif.clear": "Clear all",
