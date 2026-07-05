@@ -52,6 +52,8 @@ function BookPage() {
   const [creating, setCreating] = useState(false);
   const [sheet, setSheet] = useState<SheetState>("half");
   const [landmarkNote, setLandmarkNote] = useState("");
+  const [pricingMode, setPricingMode] = useState<"fixed" | "bid">("fixed");
+  const [bidPrice, setBidPrice] = useState<string>("");
   const destDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const SUGGEST = lang === "ar" ? SUGGEST_AR : SUGGEST_EN;
