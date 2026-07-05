@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Siren, Activity, BatteryFull, BatteryLow, BatteryCharging, Power, Navigation2, Flag, PhoneCall, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { retryMutation } from "@/lib/network";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -572,8 +573,16 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
 
   const doStartTrip = async () => {
     if (!activeRide) return;
-    await supabase.from("rides").update({ status: "in_progress", started_at: new Date().toISOString() }).eq("id", activeRide.id);
+    const rideId = activeRide.id;
+    const startedAt = new Date().toISOString();
+    // Optimistic: flip local state immediately so the UI feels instant on 3G/Edge.
+    setActiveRide((r: any) => (r && r.id === rideId ? { ...r, status: "in_progress", started_at: startedAt } : r));
     toast.success("بدأت الرحلة");
+    // Background retry — never throws; realtime channel will reconcile on success.
+    retryMutation(
+      () => supabase.from("rides").update({ status: "in_progress", started_at: startedAt }).eq("id", rideId),
+      { label: "بدء الرحلة" },
+    );
   };
 
   const startTrip = async () => {
@@ -595,16 +604,30 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const finalizeCompletion = async (_received: number, changeToWallet: number) => {
     if (!activeRide) return;
     const endedId = activeRide.id;
-    const { error } = await supabase.rpc("complete_ride_with_change", {
-      p_ride_id: endedId,
-      p_received_cash: _received,
-      p_change_to_wallet: changeToWallet,
-    });
-    if (error) { toast.error("تعذّر إنهاء الرحلة"); return; }
+    // Optimistic close — UI reflects completion instantly.
+    setActiveRide((r: any) => (r && r.id === endedId ? { ...r, status: "completed" } : r));
     setCompletionOpen(false);
     if (changeToWallet > 0) toast.success(`تم إيداع ${changeToWallet} ج.م في محفظة العميل ⚡`);
     else toast.success("تم إنهاء الرحلة 💰");
     setRateRideId(endedId);
+    // Background retry of the server-side RPC; on final failure we roll the ride back.
+    retryMutation(
+      async () => {
+        const res = await supabase.rpc("complete_ride_with_change", {
+          p_ride_id: endedId,
+          p_received_cash: _received,
+          p_change_to_wallet: changeToWallet,
+        });
+        return res;
+      },
+      {
+        label: "إنهاء الرحلة",
+        onFinalFail: () => {
+          toast.error("تعذّر إنهاء الرحلة — من فضلك حاول مرة أخرى");
+          setActiveRide((r: any) => (r && r.id === endedId ? { ...r, status: "in_progress" } : r));
+        },
+      },
+    );
   };
 
 

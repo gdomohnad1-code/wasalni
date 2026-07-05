@@ -10,6 +10,7 @@ import {
 
 import { Toaster } from "@/components/ui/sonner";
 import { I18nProvider } from "@/lib/i18n";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 import appCss from "../styles.css?url";
 
@@ -125,6 +126,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
+        <OfflineBanner />
         <Outlet />
         <Toaster richColors position="top-center" />
       </I18nProvider>

@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Phone, MessageCircle, Star, Send, X, ArrowRight, Car, Share2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { retryMutation } from "@/lib/network";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RideMap } from "@/components/RideMap";
@@ -117,10 +118,21 @@ function RidePage() {
   }, [id]);
 
   const startRide = useCallback(async () => {
-    await supabase.from("rides").update({ status: "in_progress", started_at: new Date().toISOString() }).eq("id", id);
+    const startedAt = new Date().toISOString();
+    // Optimistic — realtime UPDATE will reconcile once the server confirms.
+    setRide((r) => (r ? { ...r, status: "in_progress", started_at: startedAt } as Ride : r));
+    retryMutation(
+      () => supabase.from("rides").update({ status: "in_progress", started_at: startedAt }).eq("id", id),
+      { label: "بدء الرحلة" },
+    );
   }, [id]);
   const endRide = useCallback(async () => {
-    await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
+    const completedAt = new Date().toISOString();
+    setRide((r) => (r ? { ...r, status: "completed", completed_at: completedAt } as Ride : r));
+    retryMutation(
+      () => supabase.from("rides").update({ status: "completed", completed_at: completedAt }).eq("id", id),
+      { label: "إنهاء الرحلة" },
+    );
   }, [id]);
   const openChat = useCallback(() => setChatOpen(true), []);
   const closeChat = useCallback(() => setChatOpen(false), []);
