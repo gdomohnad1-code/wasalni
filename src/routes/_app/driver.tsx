@@ -457,6 +457,7 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const [homeSheetOpen, setHomeSheetOpen] = useState(false);
   const [totalCompleted, setTotalCompleted] = useState(0);
   const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const isOnline = !!docs.is_online;
   const presence: "available" | "busy" | "offline" =
