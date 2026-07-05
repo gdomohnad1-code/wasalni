@@ -38,6 +38,7 @@ import { Route as AppTripsRouteImport } from './routes/_app/trips'
 import { Route as AppTermsRouteImport } from './routes/_app/terms'
 import { Route as AppSupportRouteImport } from './routes/_app/support'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppScanRouteImport } from './routes/_app/scan'
 import { Route as AppReferralRouteImport } from './routes/_app/referral'
 import { Route as AppQaTestRouteImport } from './routes/_app/qa-test'
 import { Route as AppPushTestRouteImport } from './routes/_app/push-test'
@@ -198,6 +199,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppScanRoute = AppScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppReferralRoute = AppReferralRouteImport.update({
   id: '/referral',
   path: '/referral',
@@ -293,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/push-test': typeof AppPushTestRoute
   '/qa-test': typeof AppQaTestRoute
   '/referral': typeof AppReferralRoute
+  '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/support': typeof AppSupportRoute
   '/terms': typeof AppTermsRoute
@@ -337,6 +344,7 @@ export interface FileRoutesByTo {
   '/push-test': typeof AppPushTestRoute
   '/qa-test': typeof AppQaTestRoute
   '/referral': typeof AppReferralRoute
+  '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/support': typeof AppSupportRoute
   '/terms': typeof AppTermsRoute
@@ -384,6 +392,7 @@ export interface FileRoutesById {
   '/_app/push-test': typeof AppPushTestRoute
   '/_app/qa-test': typeof AppQaTestRoute
   '/_app/referral': typeof AppReferralRoute
+  '/_app/scan': typeof AppScanRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/support': typeof AppSupportRoute
   '/_app/terms': typeof AppTermsRoute
@@ -431,6 +440,7 @@ export interface FileRouteTypes {
     | '/push-test'
     | '/qa-test'
     | '/referral'
+    | '/scan'
     | '/settings'
     | '/support'
     | '/terms'
@@ -475,6 +485,7 @@ export interface FileRouteTypes {
     | '/push-test'
     | '/qa-test'
     | '/referral'
+    | '/scan'
     | '/settings'
     | '/support'
     | '/terms'
@@ -521,6 +532,7 @@ export interface FileRouteTypes {
     | '/_app/push-test'
     | '/_app/qa-test'
     | '/_app/referral'
+    | '/_app/scan'
     | '/_app/settings'
     | '/_app/support'
     | '/_app/terms'
@@ -771,6 +783,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/scan': {
+      id: '/_app/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AppScanRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/referral': {
       id: '/_app/referral'
       path: '/referral'
@@ -888,6 +907,7 @@ interface AppRouteChildren {
   AppPushTestRoute: typeof AppPushTestRoute
   AppQaTestRoute: typeof AppQaTestRoute
   AppReferralRoute: typeof AppReferralRoute
+  AppScanRoute: typeof AppScanRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSupportRoute: typeof AppSupportRoute
   AppTermsRoute: typeof AppTermsRoute
@@ -905,6 +925,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPushTestRoute: AppPushTestRoute,
   AppQaTestRoute: AppQaTestRoute,
   AppReferralRoute: AppReferralRoute,
+  AppScanRoute: AppScanRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSupportRoute: AppSupportRoute,
   AppTermsRoute: AppTermsRoute,
