@@ -358,7 +358,8 @@ const Accepted = memo(function Accepted({ ride, onStart, onChat }: { ride: Ride;
       </Button>
     </motion.div>
   );
-}
+});
+
 
 function InProgress({ ride, countdown, onEnd, onChat }: { ride: Ride; countdown: string; onEnd: () => void; onChat: () => void }) {
   const { t } = useI18n();
