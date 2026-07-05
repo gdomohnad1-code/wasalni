@@ -575,6 +575,27 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
     toast.success(v ? "أنت الآن متاح للعمل" : "تم إيقاف الاستقبال");
   };
 
+  const saveHomeDest = async ({ address, coords }: { address: string; coords: LL }) => {
+    if (!user) return;
+    const { error } = await supabase.from("driver_documents").update({
+      home_dest_address: address,
+      home_dest_lat: coords.lat,
+      home_dest_lng: coords.lng,
+      home_mode_active: true,
+    }).eq("driver_id", user.id);
+    if (error) { toast.error("تعذر الحفظ"); return; }
+    setDocs({ ...docs, home_dest_address: address, home_dest_lat: coords.lat, home_dest_lng: coords.lng, home_mode_active: true });
+  };
+
+  const toggleHomeMode = async () => {
+    if (!user) return;
+    if (!docs?.home_dest_lat) { setHomeSheetOpen(true); return; }
+    const next = !docs.home_mode_active;
+    await supabase.from("driver_documents").update({ home_mode_active: next }).eq("driver_id", user.id);
+    setDocs({ ...docs, home_mode_active: next });
+    toast.success(next ? "تم تفعيل وضع مروّح لبيتي 🏠" : "تم إيقاف وضع مروّح لبيتي");
+  };
+
   const sendSOS = async () => {
     if (!confirm("سيتم إرسال إشارة طوارئ إلى الإدارة. هل أنت متأكد؟")) return;
     setSosLoading(true);
