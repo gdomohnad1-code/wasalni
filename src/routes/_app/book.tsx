@@ -137,6 +137,7 @@ function BookPage() {
         duration_min: duration,
         price,
         round_trip: tripMode === "roundtrip",
+        landmark_note: landmarkNote.trim() || null,
         status: "searching",
       }).select().single();
       if (error) throw error;
