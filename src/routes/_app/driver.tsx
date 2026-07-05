@@ -514,13 +514,26 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
 
   useEffect(() => {
     if (!isOnline || activeRide || incoming || !pos) return;
+    const homeOn = !!docs?.home_mode_active && docs?.home_dest_lat != null && docs?.home_dest_lng != null;
+    const home: LL | null = homeOn ? { lat: Number(docs.home_dest_lat), lng: Number(docs.home_dest_lng) } : null;
     const candidates = searchingRides
       .filter((r) => !declinedRef.current.has(r.id) && r.pickup_lat && r.pickup_lng && r.rider_id !== user?.id)
       .map((r) => ({ r, d: distKm(pos, { lat: Number(r.pickup_lat), lng: Number(r.pickup_lng) }) }))
       .filter((x) => x.d < 15)
+      .filter(({ r }) => {
+        // Destination-match filter: only rides that move driver closer to home
+        if (!home || !r.destination_lat || !r.destination_lng) return true;
+        const pickup: LL = { lat: Number(r.pickup_lat), lng: Number(r.pickup_lng) };
+        const dest: LL = { lat: Number(r.destination_lat), lng: Number(r.destination_lng) };
+        const dPickupHome = distKm(pickup, home);
+        const dDestHome = distKm(dest, home);
+        // Ride is "on the way home" if the destination is at least 2km closer to home than the pickup,
+        // OR the destination is already within 5km of home (final leg).
+        return dPickupHome - dDestHome > 2 || dDestHome < 5;
+      })
       .sort((a, b) => a.d - b.d);
     if (candidates.length) setIncoming(candidates[0].r);
-  }, [searchingRides, isOnline, activeRide, incoming, pos, user?.id]);
+  }, [searchingRides, isOnline, activeRide, incoming, pos, user?.id, docs?.home_mode_active, docs?.home_dest_lat, docs?.home_dest_lng]);
 
   const acceptIncoming = async () => {
     if (!incoming || !user) return;
