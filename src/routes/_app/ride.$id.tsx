@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Phone, MessageCircle, Star, Send, X, ArrowRight, Car, Share2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { retryMutation } from "@/lib/network";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RideMap } from "@/components/RideMap";
