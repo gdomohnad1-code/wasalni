@@ -586,11 +586,27 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   };
   const endTrip = async () => {
     if (!activeRide) return;
+    // Fetch rider name for the completion modal
+    const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", activeRide.rider_id).maybeSingle();
+    setRiderName(prof?.full_name || "الراكب");
+    setCompletionOpen(true);
+  };
+
+  const finalizeCompletion = async (_received: number, changeToWallet: number) => {
+    if (!activeRide) return;
     const endedId = activeRide.id;
-    await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", endedId);
-    toast.success("تم إنهاء الرحلة 💰");
+    const { error } = await supabase.rpc("complete_ride_with_change", {
+      p_ride_id: endedId,
+      p_received_cash: _received,
+      p_change_to_wallet: changeToWallet,
+    });
+    if (error) { toast.error("تعذّر إنهاء الرحلة"); return; }
+    setCompletionOpen(false);
+    if (changeToWallet > 0) toast.success(`تم إيداع ${changeToWallet} ج.م في محفظة العميل ⚡`);
+    else toast.success("تم إنهاء الرحلة 💰");
     setRateRideId(endedId);
   };
+
 
   const toggleOnline = async (v: boolean) => {
     if (!user) return;
