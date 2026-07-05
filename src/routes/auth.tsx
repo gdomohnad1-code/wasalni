@@ -28,6 +28,7 @@ function goNext(next: string | undefined, fallback: string): string {
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const { t } = useI18n();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
@@ -54,11 +55,15 @@ function AuthPage() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (data.session) {
+        if (next) {
+          window.location.href = next;
+          return;
+        }
         const to = await destinationForUser(data.session.user.id);
         navigate({ to });
       }
     });
-  }, [navigate]);
+  }, [navigate, next]);
 
   const handleAvatar = (f: File | null) => {
     setAvatarFile(f);
@@ -90,7 +95,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/home`,
+            emailRedirectTo: `${window.location.origin}${next ?? "/home"}`,
             data: { full_name: fullName, phone },
           },
         });
@@ -109,6 +114,7 @@ function AuthPage() {
             else if ((r as any)?.error === "invalid_code") toast.error("كود المؤثر غير صالح");
           }
           toast.success("تم إنشاء حسابك بنجاح! 🎉");
+          if (next) { window.location.href = next; return; }
           const to = await destinationForUser(data.user.id);
           navigate({ to });
         }
@@ -116,6 +122,7 @@ function AuthPage() {
         const { data: signin, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("أهلاً بعودتك!");
+        if (next) { window.location.href = next; return; }
         const to = signin.user ? await destinationForUser(signin.user.id) : "/home";
         navigate({ to });
       }
@@ -129,8 +136,9 @@ function AuthPage() {
   const handleGoogle = async () => {
     setLoading(true);
     try {
+      const redirectTarget = next ?? "/complete-profile";
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/complete-profile`,
+        redirect_uri: `${window.location.origin}${redirectTarget}`,
       });
       if (result.error) {
         toast.error("فشل تسجيل الدخول عبر Google");
@@ -139,7 +147,10 @@ function AuthPage() {
       }
       if (result.redirected) return;
       const { data: s } = await supabase.auth.getSession();
-      if (s.session) navigate({ to: "/complete-profile" });
+      if (s.session) {
+        if (next) window.location.href = next;
+        else navigate({ to: "/complete-profile" });
+      }
     } catch (err: any) {
       toast.error(err.message || "حدث خطأ");
       setLoading(false);
@@ -149,8 +160,9 @@ function AuthPage() {
   const handleApple = async () => {
     setLoading(true);
     try {
+      const redirectTarget = next ?? "/complete-profile";
       const result = await lovable.auth.signInWithOAuth("apple", {
-        redirect_uri: `${window.location.origin}/complete-profile`,
+        redirect_uri: `${window.location.origin}${redirectTarget}`,
       });
       if (result.error) {
         toast.error("فشل تسجيل الدخول عبر Apple");
@@ -159,7 +171,10 @@ function AuthPage() {
       }
       if (result.redirected) return;
       const { data: s } = await supabase.auth.getSession();
-      if (s.session) navigate({ to: "/complete-profile" });
+      if (s.session) {
+        if (next) window.location.href = next;
+        else navigate({ to: "/complete-profile" });
+      }
     } catch (err: any) {
       toast.error(err.message || "حدث خطأ");
       setLoading(false);
