@@ -417,6 +417,10 @@ export type Database = {
           driver_license_url: string | null
           dues_since: string | null
           fields_to_fix: string[]
+          home_dest_address: string | null
+          home_dest_lat: number | null
+          home_dest_lng: number | null
+          home_mode_active: boolean
           id: string
           id_card_back_url: string | null
           id_card_front_url: string | null
@@ -445,6 +449,10 @@ export type Database = {
           driver_license_url?: string | null
           dues_since?: string | null
           fields_to_fix?: string[]
+          home_dest_address?: string | null
+          home_dest_lat?: number | null
+          home_dest_lng?: number | null
+          home_mode_active?: boolean
           id?: string
           id_card_back_url?: string | null
           id_card_front_url?: string | null
@@ -473,6 +481,10 @@ export type Database = {
           driver_license_url?: string | null
           dues_since?: string | null
           fields_to_fix?: string[]
+          home_dest_address?: string | null
+          home_dest_lat?: number | null
+          home_dest_lng?: number | null
+          home_mode_active?: boolean
           id?: string
           id_card_back_url?: string | null
           id_card_front_url?: string | null
