@@ -411,7 +411,7 @@ function BookPage() {
                 <div className="flex justify-between items-center pt-3 mt-1 border-t border-border">
                   <span className="font-black">{t("book.total")}</span>
                   <span className="text-3xl font-black tracking-tight text-primary">
-                    {price}
+                    {finalPrice || price}
                     <span className="text-sm text-muted-foreground mr-1">{t("c.currency")}</span>
                   </span>
                 </div>
