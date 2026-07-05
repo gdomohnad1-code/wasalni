@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import {
   ArrowRight, MapPin, Navigation, Loader2, Clock, Users, Zap,
-  ShieldCheck, Landmark, VolumeX, Snowflake,
+  ShieldCheck, Landmark, VolumeX, Snowflake, AlertTriangle, X,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
