@@ -21,6 +21,7 @@ import { ArrivalConfirmModal } from "@/components/driver/ArrivalConfirmModal";
 import { RateDialog } from "@/components/RateDialog";
 import { HomeDestSheet } from "@/components/driver/HomeDestSheet";
 import { PinVerifyModal } from "@/components/driver/PinVerifyModal";
+import { DriverQRCode } from "@/components/driver/DriverQRCode";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
