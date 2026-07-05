@@ -178,8 +178,8 @@ function RidePage() {
       <div className="px-4 flex-1">
         <AnimatePresence mode="wait">
           {ride.status === "searching" && <Searching key="s" />}
-          {ride.status === "accepted" && <Accepted key="a" onStart={startRide} onChat={() => setChatOpen(true)} />}
-          {ride.status === "in_progress" && <InProgress key="i" countdown={fmtTime(countdown)} onEnd={endRide} onChat={() => setChatOpen(true)} />}
+          {ride.status === "accepted" && <Accepted key="a" ride={ride} onStart={startRide} onChat={() => setChatOpen(true)} />}
+          {ride.status === "in_progress" && <InProgress key="i" ride={ride} countdown={fmtTime(countdown)} onEnd={endRide} onChat={() => setChatOpen(true)} />}
           {ride.status === "completed" && (
             <motion.div key="c" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
               <div className="text-6xl mb-3">✅</div>
