@@ -550,18 +550,20 @@ function BookPage() {
 }
 
 function FieldRow({
-  icon, value, onChange, placeholder, trailing,
+  icon, value, onChange, placeholder, trailing, inputRef,
 }: {
   icon: React.ReactNode;
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
   trailing?: React.ReactNode;
+  inputRef?: React.Ref<HTMLInputElement>;
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-muted/70 border border-border px-3 h-12">
       <div className="shrink-0 grid place-items-center">{icon}</div>
       <Input
+        ref={inputRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -571,6 +573,7 @@ function FieldRow({
     </div>
   );
 }
+
 
 function Row({ k, v, icon }: { k: string; v: string; icon?: React.ReactNode }) {
   return (
