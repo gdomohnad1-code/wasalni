@@ -166,16 +166,16 @@ function RidePage() {
       </div>
 
       <div className={`${ride.status === "in_progress" || ride.status === "accepted" ? "h-[60vh]" : "h-80"} mx-4 mt-4 mb-2 rounded-2xl overflow-hidden shadow-card transition-all`}>
-        {ride.pickup_lat && ride.pickup_lng && ride.destination_lat && ride.destination_lng ? (
+        {pickupLL && destLL ? (
           <RideMap
-            pickup={{ lat: Number(ride.pickup_lat), lng: Number(ride.pickup_lng) }}
-            destination={{ lat: Number(ride.destination_lat), lng: Number(ride.destination_lng) }}
+            pickup={pickupLL}
+            destination={destLL}
             driverId={ride.driver_id}
             phase={ride.status as any}
             acceptedAt={ride.accepted_at}
             startedAt={ride.started_at}
             durationMin={ride.duration_min}
-            onEta={setEtaSec}
+            onEta={onEta}
             className="w-full h-full"
           />
         ) : (
@@ -185,33 +185,21 @@ function RidePage() {
         )}
       </div>
 
-      {(ride.status === "accepted" || ride.status === "in_progress") && etaSec > 0 && (
-        <div className="mx-4 mb-2 rounded-2xl bg-foreground text-background px-4 py-3 flex items-center justify-between shadow-card">
-          <div>
-            <div className="text-[11px] opacity-70 uppercase tracking-wide">
-              {ride.status === "accepted" ? t("ride.driver_eta") : t("ride.arrival_eta")}
-            </div>
-            <div className="text-2xl font-black leading-tight">
-              {Math.ceil(etaSec / 60)} {t("ride.min")}
-            </div>
-          </div>
-          <div className="text-xs opacity-70">
-            {ride.status === "accepted" ? t("ride.on_the_way") : t("ride.in_route")}
-          </div>
-        </div>
+      {(ride.status === "accepted" || ride.status === "in_progress") && (
+        <EtaBanner status={ride.status} setterRef={etaSetterRef} />
       )}
 
       <div className="px-4 flex-1">
         <AnimatePresence mode="wait">
           {ride.status === "searching" && <Searching key="s" />}
-          {ride.status === "accepted" && <Accepted key="a" ride={ride} onStart={startRide} onChat={() => setChatOpen(true)} />}
-          {ride.status === "in_progress" && <InProgress key="i" ride={ride} countdown={fmtTime(countdown)} onEnd={endRide} onChat={() => setChatOpen(true)} />}
+          {ride.status === "accepted" && <Accepted key="a" ride={ride} onStart={startRide} onChat={openChat} />}
+          {ride.status === "in_progress" && <InProgress key="i" ride={ride} onEnd={endRide} onChat={openChat} />}
           {ride.status === "completed" && (
             <motion.div key="c" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
               <div className="text-6xl mb-3">✅</div>
               <p className="font-bold text-lg">{t("ride.completed")}</p>
               {!ride.rating && (
-                <Button onClick={() => setRateOpen(true)} className="mt-4 bg-gradient-primary">
+                <Button onClick={openRate} className="mt-4 bg-gradient-primary">
                   <Star className="h-4 w-4 ms-1" /> قيّم السائق
                 </Button>
               )}
@@ -223,11 +211,12 @@ function RidePage() {
         {ride.status === "completed" && <AdSlot placement="post_ride" className="mt-3" />}
       </div>
 
-      <ChatSheet rideId={id} open={chatOpen} onClose={() => setChatOpen(false)} />
+      <ChatSheet rideId={id} open={chatOpen} onClose={closeChat} />
       <RateDialog
         open={rateOpen}
-        onClose={() => setRateOpen(false)}
+        onClose={closeRate}
         rideId={id}
+
         role="rider"
         onDone={() => setRide((r) => (r ? { ...r, rating: 5 } : r))}
       />
