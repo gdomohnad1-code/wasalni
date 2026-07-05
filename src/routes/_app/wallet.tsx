@@ -11,23 +11,63 @@ export const Route = createFileRoute("/_app/wallet")({
 });
 
 function WalletPage() {
-  const { profile } = useAuth();
+  const { profile, refresh } = useAuth();
   const { t, locale } = useI18n();
   const [txs, setTxs] = useState<any[]>([]);
 
-  const load = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  const load = async (uid?: string) => {
+    let userId = uid;
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      userId = user.id;
+    }
     const { data } = await supabase
       .from("wallet_transactions")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(50);
     setTxs(data || []);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    let userId: string | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      userId = user.id;
+      await load(userId);
+
+      channel = supabase
+        .channel(`wallet-${userId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "wallet_transactions", filter: `user_id=eq.${userId}` },
+          (payload) => {
+            setTxs((prev) => {
+              if (prev.some((t) => t.id === (payload.new as any).id)) return prev;
+              return [payload.new as any, ...prev].slice(0, 50);
+            });
+            refresh?.();
+          },
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
+          () => { refresh?.(); },
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [refresh]);
+
+
 
   return (
     <div className="max-w-md mx-auto">
