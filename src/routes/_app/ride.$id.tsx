@@ -261,6 +261,7 @@ function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; 
         <Button variant="outline" className="flex-1"><Phone className="h-4 w-4 ms-1" /> {t("ride.call")}</Button>
       </div>
       <ShareRideButton ride={ride} />
+      <SmartSOSButton rideId={ride.id} pickup={{ lat: Number(ride.pickup_lat) || 30.0444, lng: Number(ride.pickup_lng) || 31.2357 }} />
       <Button onClick={onStart} className="w-full h-12 bg-gradient-primary font-bold">
         <Car className="h-5 w-5 ms-2" /> {t("ride.start")}
       </Button>
