@@ -96,6 +96,8 @@ export function GoogleMap({
   const polyline = useRef<google.maps.Polyline | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasPositionClass = /\b(absolute|relative|fixed|sticky)\b/.test(className ?? "");
+  const rootClassName = `${hasPositionClass ? "" : "relative"} overflow-hidden bg-muted ${className ?? ""}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -229,20 +231,20 @@ export function GoogleMap({
 
   if (error) {
     return (
-      <div className={"grid place-items-center bg-muted text-muted-foreground text-sm " + (className ?? "")}>
+      <div className={`${rootClassName} grid place-items-center text-muted-foreground text-sm`}>
         تعذّر تحميل الخريطة
       </div>
     );
   }
   if (!BROWSER_KEY) {
     return (
-      <div className={"grid place-items-center bg-muted text-muted-foreground text-sm " + (className ?? "")}>
+      <div className={`${rootClassName} grid place-items-center text-muted-foreground text-sm`}>
         الخريطة غير مهيّأة
       </div>
     );
   }
   return (
-    <div className={"relative overflow-hidden bg-muted " + (className ?? "")}>
+    <div className={rootClassName}>
       <div ref={el} className="absolute inset-0 map-fade-in" />
       {!ready && <div className="absolute inset-0 shimmer" />}
     </div>
