@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import {
   ArrowRight, MapPin, Navigation, Loader2, Clock, Users, Zap,
-  ShieldCheck,
+  ShieldCheck, Landmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,7 @@ function BookPage() {
   const [confirming, setConfirming] = useState(false);
   const [creating, setCreating] = useState(false);
   const [sheet, setSheet] = useState<SheetState>("half");
+  const [landmarkNote, setLandmarkNote] = useState("");
   const destDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const SUGGEST = lang === "ar" ? SUGGEST_AR : SUGGEST_EN;
@@ -136,6 +137,7 @@ function BookPage() {
         duration_min: duration,
         price,
         round_trip: tripMode === "roundtrip",
+        landmark_note: landmarkNote.trim() || null,
         status: "searching",
       }).select().single();
       if (error) throw error;
@@ -218,6 +220,20 @@ function BookPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Landmark note — optional quick hint for the driver */}
+          <div className="flex items-center gap-3 rounded-xl bg-muted/70 border border-border px-3 h-12">
+            <Landmark className="h-4 w-4 text-primary shrink-0" />
+            <Input
+              value={landmarkNote}
+              onChange={(e) => setLandmarkNote(e.target.value.slice(0, 120))}
+              placeholder={t("book.landmark_ph")}
+              className="h-full bg-transparent border-0 px-0 focus-visible:ring-0 shadow-none text-sm font-semibold"
+            />
+            {landmarkNote && (
+              <span className="text-[10px] text-muted-foreground font-semibold">{landmarkNote.length}/120</span>
+            )}
           </div>
 
           {/* Trip mode */}

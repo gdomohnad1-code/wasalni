@@ -115,6 +115,8 @@ const dict = {
     "book.cairo": "القاهرة",
     "book.cairo_eg": "القاهرة، مصر",
     "book.your_loc": "موقعك",
+    "book.landmark_ph": "علامة مميزة (اختياري) — مثال: قدام سوبر ماركت الأمانة",
+    "book.landmark_label": "علامة مميزة",
 
     // ride
     "ride.title": "رحلتك",
@@ -140,6 +142,12 @@ const dict = {
     "ride.min": "دقيقة",
     "ride.on_the_way": "في الطريق إليك",
     "ride.in_route": "نحو وجهتك",
+    "ride.quick_here": "أنا في موقعي الحالي 📍",
+    "ride.quick_jacket": "أرتدي جاكيت أسود 🧥",
+    "ride.quick_5min": "خمس دقايق وأكون عندك ⏱️",
+    "ride.share_wa": "شارك رحلتك على واتساب",
+    "ride.share_msg": "أنا راكب حالياً مع وصلني. السائق: {driver}، السيارة: {car}. تابع موقعي لايف من هنا: {link}",
+    "ride.landmark_hint": "علامة الراكب",
 
     // wallet
     "wallet.title": "المحفظة",
@@ -435,6 +443,8 @@ const dict = {
     "book.cairo": "Cairo",
     "book.cairo_eg": "Cairo, Egypt",
     "book.your_loc": "Your location",
+    "book.landmark_ph": "Landmark (optional) — e.g. next to the red-brick building",
+    "book.landmark_label": "Landmark",
 
     // ride
     "ride.title": "Your ride",
@@ -460,6 +470,12 @@ const dict = {
     "ride.min": "min",
     "ride.on_the_way": "On the way",
     "ride.in_route": "To destination",
+    "ride.quick_here": "I'm at my pickup spot 📍",
+    "ride.quick_jacket": "I'm wearing a black jacket 🧥",
+    "ride.quick_5min": "5 minutes and I'll be there ⏱️",
+    "ride.share_wa": "Share ride on WhatsApp",
+    "ride.share_msg": "I'm currently riding with Wasalny. Driver: {driver}, Car: {car}. Track my ride live here: {link}",
+    "ride.landmark_hint": "Rider landmark",
 
     // wallet
     "wallet.title": "Wallet",
