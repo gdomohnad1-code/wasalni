@@ -310,6 +310,34 @@ function BookPage() {
             </div>
           </div>
 
+          {/* Pricing mode: fixed vs bidding (InDrive-style) */}
+          {isRoutePricing && (
+            <div className="rounded-2xl bg-card border border-border p-3 space-y-2">
+              <Tabs value={pricingMode} onValueChange={(v) => setPricingMode(v as "fixed" | "bid")}>
+                <TabsList className="grid grid-cols-2 w-full rounded-xl bg-muted p-1 h-10">
+                  <TabsTrigger value="fixed" className="rounded-lg text-[12px] font-bold">{t("book.price_fixed")}</TabsTrigger>
+                  <TabsTrigger value="bid" className="rounded-lg text-[12px] font-bold">{t("book.price_bid")}</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              {pricingMode === "bid" && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 rounded-xl bg-muted/70 border border-border px-3 h-11">
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      value={bidPrice}
+                      onChange={(e) => setBidPrice(e.target.value)}
+                      placeholder={`${t("book.bid_ph")} — ≥ ${bidFloor}`}
+                      className="h-full bg-transparent border-0 px-0 focus-visible:ring-0 shadow-none text-sm font-bold"
+                    />
+                    <span className="text-xs text-muted-foreground font-semibold shrink-0">{t("c.currency")}</span>
+                  </div>
+                  <p className="text-[10.5px] text-muted-foreground">{t("book.bid_hint")}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Fare breakdown */}
           {isRoutePricing ? (
             <motion.div
@@ -319,12 +347,14 @@ function BookPage() {
             >
               <div className="flex items-center gap-2 mb-2">
                 <Zap className="h-4 w-4 text-vip" />
-                <span className="text-[11px] font-bold opacity-90">{t("book.final_price")}</span>
+                <span className="text-[11px] font-bold opacity-90">
+                  {pricingMode === "bid" ? t("book.price_bid") : t("book.final_price")}
+                </span>
               </div>
               <div className="flex items-end justify-between">
                 <span className="text-[10px] opacity-70">{RIDE_TYPES[rideType].label} • {tripMode === "roundtrip" ? "ذهاب وعودة" : tripMode === "multistop" ? "بالساعة" : "ذهاب فقط"}</span>
                 <span className="text-3xl font-black tracking-tight">
-                  {price}
+                  {finalPrice || price}
                   <span className="text-sm font-bold opacity-80 mr-1">ج.م</span>
                 </span>
               </div>
@@ -336,6 +366,7 @@ function BookPage() {
           ) : destination ? (
             <SkeletonFare />
           ) : null}
+
 
           {/* Confirm CTA */}
           <Button
