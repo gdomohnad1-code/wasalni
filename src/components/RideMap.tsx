@@ -102,6 +102,7 @@ export function RideMap({
     pickup?: L.Marker; dest?: L.Marker; car?: L.Marker;
     routeMain?: L.Polyline; routeApproach?: L.Polyline;
   }>({});
+  const carAnimRef = useRef<MarkerAnimState>({});
 
   const [tripPath, setTripPath] = useState<LL[]>([]);
   const [approachPath, setApproachPath] = useState<LL[]>([]);
