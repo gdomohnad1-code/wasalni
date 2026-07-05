@@ -58,8 +58,15 @@ function RidePage() {
   });
   const [chatOpen, setChatOpen] = useState(false);
   const [rateOpen, setRateOpen] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [etaSec, setEtaSec] = useState(0);
+
+  // Countdown & ETA state are OWNED by leaf sub-components. Parent only stores
+  // stable setter refs so high-frequency ticks from RideMap don't re-render
+  // the whole route.
+  const etaSetterRef = useRef<((n: number) => void) | null>(null);
+  const onEta = useCallback((n: number) => {
+    etaSetterRef.current?.(n);
+  }, []);
+
 
   // Persist ride snapshot whenever it updates (survives refresh/offline)
   useEffect(() => {
