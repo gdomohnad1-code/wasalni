@@ -14,6 +14,9 @@ function WalletPage() {
   const { profile, refresh } = useAuth();
   const { t, locale } = useI18n();
   const [txs, setTxs] = useState<any[]>([]);
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+
 
   const load = async (uid?: string) => {
     let userId = uid;
