@@ -52,6 +52,7 @@ function WalletPage() {
           )}
           {txs.map((tx, i) => {
             const positive = tx.type === "topup" || tx.type === "refund" || tx.type === "referral_bonus";
+            const isChange = tx.type === "refund" && tx.ride_id;
             return (
               <motion.div
                 key={tx.id}
@@ -63,16 +64,28 @@ function WalletPage() {
                 <div className={`h-10 w-10 rounded-full flex items-center justify-center ${positive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
                   {positive ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
                 </div>
-                <div className="flex-1">
-                  <div className="text-sm font-semibold">{tx.description || tx.type}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="text-sm font-semibold">{tx.description || tx.type}</div>
+                    {isChange && (
+                      <span className="text-[10px] bg-success/15 text-success font-bold px-2 py-0.5 rounded-full">
+                        باقي فكة
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleString(locale)}</div>
+                  <div className="text-[10px] text-muted-foreground/80 font-mono mt-0.5 flex gap-2 flex-wrap">
+                    <span>#{String(tx.id).slice(0, 8)}</span>
+                    {tx.ride_id && <span>رحلة: {String(tx.ride_id).slice(0, 8)}</span>}
+                  </div>
                 </div>
-                <div className={`font-bold ${positive ? "text-success" : "text-destructive"}`}>
+                <div className={`font-bold whitespace-nowrap ${positive ? "text-success" : "text-destructive"}`}>
                   {positive ? "+" : "-"}{tx.amount} {t("c.currency")}
                 </div>
               </motion.div>
             );
           })}
+
         </div>
       </div>
     </div>
