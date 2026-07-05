@@ -232,7 +232,7 @@ function Searching() {
   );
 }
 
-function Accepted({ onStart, onChat }: { onStart: () => void; onChat: () => void }) {
+function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; onChat: () => void }) {
   const { t } = useI18n();
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -246,10 +246,20 @@ function Accepted({ onStart, onChat }: { onStart: () => void; onChat: () => void
           </div>
         </div>
       </div>
+      {ride.landmark_note && (
+        <div className="flex items-start gap-2 rounded-xl bg-primary/5 border border-primary/20 p-3 text-[13px]">
+          <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wide text-primary/80">{t("ride.landmark_hint")}</div>
+            <div className="font-semibold">{ride.landmark_note}</div>
+          </div>
+        </div>
+      )}
       <div className="flex gap-2">
         <Button variant="outline" className="flex-1" onClick={onChat}><MessageCircle className="h-4 w-4 ms-1" /> {t("ride.chat")}</Button>
         <Button variant="outline" className="flex-1"><Phone className="h-4 w-4 ms-1" /> {t("ride.call")}</Button>
       </div>
+      <ShareRideButton ride={ride} />
       <Button onClick={onStart} className="w-full h-12 bg-gradient-primary font-bold">
         <Car className="h-5 w-5 ms-2" /> {t("ride.start")}
       </Button>
@@ -257,7 +267,7 @@ function Accepted({ onStart, onChat }: { onStart: () => void; onChat: () => void
   );
 }
 
-function InProgress({ countdown, onEnd, onChat }: { countdown: string; onEnd: () => void; onChat: () => void }) {
+function InProgress({ ride, countdown, onEnd, onChat }: { ride: Ride; countdown: string; onEnd: () => void; onChat: () => void }) {
   const { t } = useI18n();
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -269,10 +279,36 @@ function InProgress({ countdown, onEnd, onChat }: { countdown: string; onEnd: ()
       <Button variant="outline" className="w-full" onClick={onChat}>
         <MessageCircle className="h-4 w-4 ms-1" /> {t("ride.msg_driver")}
       </Button>
+      <ShareRideButton ride={ride} />
       <Button onClick={onEnd} variant="destructive" className="w-full h-12 font-bold">{t("ride.end")}</Button>
     </motion.div>
   );
 }
+
+function ShareRideButton({ ride }: { ride: Ride }) {
+  const { t } = useI18n();
+  const share = () => {
+    const link = `${window.location.origin}/ride/${ride.id}`;
+    const driver = t("ride.driver_name");
+    const car = "Hyundai Accent - ABC 1234";
+    const msg = t("ride.share_msg")
+      .replace("{driver}", driver)
+      .replace("{car}", car)
+      .replace("{link}", link);
+    const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+  return (
+    <Button
+      variant="outline"
+      onClick={share}
+      className="w-full h-11 rounded-xl border-success/40 text-success hover:bg-success/10 font-bold"
+    >
+      <Share2 className="h-4 w-4 ms-2" /> {t("ride.share_wa")}
+    </Button>
+  );
+}
+
 
 
 function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; onClose: () => void }) {
