@@ -12,9 +12,9 @@ declare global {
   interface Window {
     __wasalny_maps_ready?: Promise<void>;
     __wasalny_maps_init?: () => void;
-    google?: typeof google;
   }
 }
+
 
 export type LatLng = { lat: number; lng: number };
 
