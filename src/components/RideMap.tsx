@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
+import { animateMarkerTo, cancelMarkerAnim, type MarkerAnimState } from "@/lib/marker-lerp";
 
 // Fix default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
