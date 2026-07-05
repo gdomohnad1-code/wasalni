@@ -797,9 +797,11 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   );
 }
 
-function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car }: {
+function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car, homeMode, homeAddress, onSetHome, onToggleHome }: {
   isOnline: boolean; searchingCount: number; hotspotCount: number;
   todayEarnings: number; totalRides: number; car: string;
+  homeMode: boolean; homeAddress: string | null;
+  onSetHome: () => void; onToggleHome: () => void;
 }) {
   return (
     <motion.div
@@ -823,7 +825,9 @@ function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car }: 
               <Activity className="h-6 w-6 text-emerald-600" />
             </motion.div>
             <div className="flex-1">
-              <p className="font-black text-base">في انتظار طلبات الرحلات...</p>
+              <p className="font-black text-base">
+                {homeMode ? "🏠 مروّح لبيتي — طلبات على الطريق بس" : "في انتظار طلبات الرحلات..."}
+              </p>
               <p className="text-xs text-gray-500">{car}</p>
             </div>
           </div>
@@ -832,6 +836,36 @@ function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car }: 
             <Pill icon={<MapPin className="h-3.5 w-3.5" />} label="مناطق مزدحمة" value={String(hotspotCount)} accent="red" />
             <Pill icon={<DollarSign className="h-3.5 w-3.5" />} label="رحلات اليوم" value={String(totalRides)} />
           </div>
+
+          {/* وجهة مروّح — Destination match toggle */}
+          <div className={`mt-3 rounded-2xl p-3 border flex items-center gap-3 ${homeMode ? "bg-primary/5 border-primary/30" : "bg-gray-50 border-gray-200"}`}>
+            <button
+              type="button"
+              onClick={onToggleHome}
+              className={`h-11 w-11 rounded-2xl grid place-items-center shrink-0 transition ${homeMode ? "bg-primary text-primary-foreground shadow-md" : "bg-white text-gray-500 border border-gray-200"}`}
+              aria-label="وجهة مروّح"
+            >
+              <Home className="h-5 w-5" />
+            </button>
+            <div className="flex-1 min-w-0">
+              <div className="font-black text-[13px] leading-tight">
+                {homeMode ? "وضع مروّح لبيتي شغّال" : "وجهة مروّح"}
+              </div>
+              <div className="text-[11px] text-gray-500 leading-tight truncate">
+                {homeAddress
+                  ? homeAddress
+                  : "حدد بيتك — هنبعتلك الطلبات اللي على الطريق بس"}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onSetHome}
+              className="text-[11px] font-bold text-primary underline underline-offset-2 shrink-0"
+            >
+              {homeAddress ? "تغيير" : "حدد"}
+            </button>
+          </div>
+
           {hotspotCount > 0 && (
             <div className="mt-3 bg-red-50 border border-red-100 rounded-xl p-2.5 text-xs text-red-700 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
