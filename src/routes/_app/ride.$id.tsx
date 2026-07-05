@@ -287,7 +287,7 @@ const Searching = memo(function Searching() {
 });
 
 
-function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; onChat: () => void }) {
+const Accepted = memo(function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; onChat: () => void }) {
   const { t } = useI18n();
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
