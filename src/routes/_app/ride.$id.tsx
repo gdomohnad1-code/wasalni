@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Phone, MessageCircle, Star, Send, X, ArrowRight, Car } from "lucide-react";
+import { Loader2, Phone, MessageCircle, Star, Send, X, ArrowRight, Car, Share2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
