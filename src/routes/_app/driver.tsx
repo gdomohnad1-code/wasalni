@@ -22,6 +22,8 @@ import { RateDialog } from "@/components/RateDialog";
 import { HomeDestSheet } from "@/components/driver/HomeDestSheet";
 import { PinVerifyModal } from "@/components/driver/PinVerifyModal";
 import { DriverQRCode } from "@/components/driver/DriverQRCode";
+import { RoadAlertReporter } from "@/components/RoadAlertReporter";
+import { useRoadAlerts } from "@/hooks/use-road-alerts";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
