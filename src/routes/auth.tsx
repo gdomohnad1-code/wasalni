@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
+import { z } from "zod";
 import { useI18n } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -13,12 +14,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Mail, Phone, Lock, User as UserIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
 
+const authSearchSchema = z.object({
+  next: z
+    .string()
+    .refine((v) => v.startsWith("/") && !v.startsWith("//"), "invalid next path")
+    .optional(),
+});
+
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//")
-      ? s.next
-      : undefined,
-  }),
+  validateSearch: authSearchSchema,
   component: AuthPage,
 });
 
