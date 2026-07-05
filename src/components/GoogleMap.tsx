@@ -229,6 +229,40 @@ export function GoogleMap({
     }
   }, [driver, ready]);
 
+  // Unmount cleanup: tear down every Google Maps object + listeners so
+  // no detached DOM nodes or event handlers leak on route change.
+  useEffect(() => {
+    const container = el.current;
+    return () => {
+      try {
+        pickupMarker.current?.setMap(null);
+        destMarker.current?.setMap(null);
+        driverMarker.current?.setMap(null);
+        polyline.current?.setMap(null);
+      } catch { /* ignore */ }
+      pickupMarker.current = null;
+      destMarker.current = null;
+      driverMarker.current = null;
+      polyline.current = null;
+
+      if (mapRef.current && window.google?.maps?.event) {
+        try { window.google.maps.event.clearInstanceListeners(mapRef.current); } catch { /* ignore */ }
+      }
+      mapRef.current = null;
+
+      // Detach any Google-attached DOM children so the container can GC
+      if (container) {
+        try {
+          if (window.google?.maps?.event) {
+            window.google.maps.event.clearInstanceListeners(container);
+          }
+          while (container.firstChild) container.removeChild(container.firstChild);
+        } catch { /* ignore */ }
+      }
+    };
+  }, []);
+
+
   if (error) {
     return (
       <div className={`${rootClassName} grid place-items-center text-muted-foreground text-sm`}>
