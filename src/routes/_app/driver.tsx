@@ -461,6 +461,8 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const [totalCompleted, setTotalCompleted] = useState(0);
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
+  const [riderName, setRiderName] = useState<string>("");
 
   const isOnline = !!docs.is_online;
   const presence: "available" | "busy" | "offline" =
