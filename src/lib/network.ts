@@ -7,7 +7,7 @@ import { toast } from "sonner";
  * silently in the background. Only surfaces a soft toast after final failure.
  */
 export async function retryMutation<T>(
-  fn: () => Promise<T>,
+  fn: () => PromiseLike<T>,
   opts: {
     retries?: number;
     baseDelayMs?: number;
