@@ -116,30 +116,44 @@ function RidePage() {
     };
   }, [id]);
 
-  useEffect(() => {
-    if (ride?.status !== "in_progress") return;
-    setCountdown(ride.duration_min * 60);
-    const i = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
-    return () => clearInterval(i);
-  }, [ride?.status, ride?.duration_min]);
-
-  const startRide = async () => {
+  const startRide = useCallback(async () => {
     await supabase.from("rides").update({ status: "in_progress", started_at: new Date().toISOString() }).eq("id", id);
-  };
-  const endRide = async () => {
+  }, [id]);
+  const endRide = useCallback(async () => {
     await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
-  };
+  }, [id]);
+  const openChat = useCallback(() => setChatOpen(true), []);
+  const closeChat = useCallback(() => setChatOpen(false), []);
+  const openRate = useCallback(() => setRateOpen(true), []);
+  const closeRate = useCallback(() => setRateOpen(false), []);
+  const onRated = useCallback(() => setRide((r) => (r ? { ...r, rating: 5 } : r)), []);
+
   useEffect(() => {
     if (ride?.status === "completed" && !ride.rating) {
       setRateOpen(true);
     }
   }, [ride?.status, ride?.rating]);
 
+  // Memoize map coordinate objects so RideMap's referential prop identity is
+  // stable across parent renders (prevents re-mount / spurious effect churn).
+  const pickupLL = useMemo(
+    () => (ride?.pickup_lat != null && ride?.pickup_lng != null
+      ? { lat: Number(ride.pickup_lat), lng: Number(ride.pickup_lng) }
+      : null),
+    [ride?.pickup_lat, ride?.pickup_lng],
+  );
+  const destLL = useMemo(
+    () => (ride?.destination_lat != null && ride?.destination_lng != null
+      ? { lat: Number(ride.destination_lat), lng: Number(ride.destination_lng) }
+      : null),
+    [ride?.destination_lat, ride?.destination_lng],
+  );
+
   if (!ride) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col bg-background">
