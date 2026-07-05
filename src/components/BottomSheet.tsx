@@ -31,6 +31,20 @@ export function BottomSheet({
 }: Props) {
   const y = useMotionValue(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dragControls = useDragControls();
+
+  // Stop touch/pointer/wheel events on the sheet from reaching the map underneath.
+  const stopTouch = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+  };
+
+  // Only the handle initiates a sheet drag — inner scroll & buttons stay untouched.
+  const startDrag = (e: ReactPointerEvent<HTMLElement>) => {
+    e.stopPropagation();
+    dragControls.start(e, { snapToCursor: false });
+  };
+
+
 
   const heightFor = (s: SheetState) => heights[s];
 
