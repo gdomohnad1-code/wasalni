@@ -454,6 +454,8 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const [rateRideId, setRateRideId] = useState<string | null>(null);
   const [unratedRides, setUnratedRides] = useState<any[]>([]);
   const [homeSheetOpen, setHomeSheetOpen] = useState(false);
+  const [totalCompleted, setTotalCompleted] = useState(0);
+  const [pinModalOpen, setPinModalOpen] = useState(false);
 
   const isOnline = !!docs.is_online;
   const presence: "available" | "busy" | "offline" =
