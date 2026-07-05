@@ -817,6 +817,15 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
             : 0
         }
         rideDistanceKm={Number(incoming?.distance_km || 0)}
+        pickupAddress={incoming?.pickup_address}
+        dropoffAddress={incoming?.destination_address}
+        fare={Number(incoming?.price || 0)}
+        vehicleType={
+          incoming?.ride_type === "economy" ? "وصلني اقتصادي"
+          : incoming?.ride_type === "comfort" ? "وصلني كومفورت"
+          : incoming?.ride_type === "xl" ? "وصلني XL"
+          : "وصلني اقتصادي"
+        }
         onAccept={acceptIncoming}
         onDismiss={dismissIncoming}
       />
