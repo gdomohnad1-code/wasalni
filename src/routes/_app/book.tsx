@@ -57,6 +57,8 @@ function BookPage() {
   const [acPref, setAcPref] = useState<"any" | "on" | "off">("any");
   const [pricingMode, setPricingMode] = useState<"fixed" | "bid">("fixed");
   const [bidPrice, setBidPrice] = useState<string>("");
+  const [geoBanner, setGeoBanner] = useState<null | "denied" | "unavailable">(null);
+  const pickupInputRef = useRef<HTMLInputElement>(null);
   const destDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const SUGGEST = lang === "ar" ? SUGGEST_AR : SUGGEST_EN;
