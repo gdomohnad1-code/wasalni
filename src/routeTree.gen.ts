@@ -46,6 +46,7 @@ import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppBookRouteImport } from './routes/_app/book'
 import { Route as AppRideIdRouteImport } from './routes/_app/ride.$id'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHooksCheckDuesRouteImport } from './routes/api/public/hooks/check-dues'
 import { Route as ApiPublicHooksAdsTickRouteImport } from './routes/api/public/hooks/ads-tick'
 
@@ -233,6 +234,11 @@ const AppRideIdRoute = AppRideIdRouteImport.update({
   path: '/ride/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksCheckDuesRoute = ApiPublicHooksCheckDuesRouteImport.update({
   id: '/api/public/hooks/check-dues',
   path: '/api/public/hooks/check-dues',
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rides': typeof AdminRidesRoute
   '/admin/': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/ride/$id': typeof AppRideIdRoute
   '/api/public/hooks/ads-tick': typeof ApiPublicHooksAdsTickRoute
   '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByTo {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rides': typeof AdminRidesRoute
   '/admin': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/ride/$id': typeof AppRideIdRoute
   '/api/public/hooks/ads-tick': typeof ApiPublicHooksAdsTickRoute
   '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
@@ -361,6 +369,7 @@ export interface FileRoutesById {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rides': typeof AdminRidesRoute
   '/admin/': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_app/ride/$id': typeof AppRideIdRoute
   '/api/public/hooks/ads-tick': typeof ApiPublicHooksAdsTickRoute
   '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
@@ -403,6 +412,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rides'
     | '/admin/'
+    | '/.lovable/oauth/consent'
     | '/ride/$id'
     | '/api/public/hooks/ads-tick'
     | '/api/public/hooks/check-dues'
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rides'
     | '/admin'
+    | '/.lovable/oauth/consent'
     | '/ride/$id'
     | '/api/public/hooks/ads-tick'
     | '/api/public/hooks/check-dues'
@@ -483,6 +494,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rides'
     | '/admin/'
+    | '/.lovable/oauth/consent'
     | '/_app/ride/$id'
     | '/api/public/hooks/ads-tick'
     | '/api/public/hooks/check-dues'
@@ -494,6 +506,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   CompleteProfileRoute: typeof CompleteProfileRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHooksAdsTickRoute: typeof ApiPublicHooksAdsTickRoute
   ApiPublicHooksCheckDuesRoute: typeof ApiPublicHooksCheckDuesRoute
 }
@@ -759,6 +772,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRideIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/check-dues': {
       id: '/api/public/hooks/check-dues'
       path: '/api/public/hooks/check-dues'
@@ -862,6 +882,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   CompleteProfileRoute: CompleteProfileRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHooksAdsTickRoute: ApiPublicHooksAdsTickRoute,
   ApiPublicHooksCheckDuesRoute: ApiPublicHooksCheckDuesRoute,
 }
