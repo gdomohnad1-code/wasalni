@@ -109,6 +109,22 @@ function HomePage() {
             <ChevronLeft className="h-5 w-5 opacity-80" />
           </motion.button>
 
+          {/* Street Hail — Scan driver QR to start instantly */}
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate({ to: "/scan" })}
+            className="w-full rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-4 flex items-center gap-3 shadow-elevated"
+          >
+            <div className="h-11 w-11 rounded-xl bg-white/15 grid place-items-center">
+              <ScanLine className="h-5 w-5" />
+            </div>
+            <div className="flex-1 text-start">
+              <div className="text-[11px] opacity-90">استلام مباشر — Street Hail</div>
+              <div className="text-[15px] font-black tracking-tight">امسح كود السائق وابدأ الرحلة فوراً</div>
+            </div>
+            <ChevronLeft className="h-5 w-5 opacity-80" />
+          </motion.button>
+
           {/* Wallet */}
           <button
             onClick={() => navigate({ to: "/wallet" })}
