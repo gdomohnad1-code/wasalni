@@ -117,9 +117,19 @@ function BookPage() {
 
   const isRoutePricing = !!pickupCoords && !!destCoords && !geoLoading;
 
+  // Bid floor = 70% of fixed price (drivers usually won't accept below)
+  const bidNum = Number(bidPrice);
+  const bidFloor = price ? Math.max(20, Math.round(price * 0.7)) : 0;
+  const bidValid = pricingMode === "fixed" || (Number.isFinite(bidNum) && bidNum >= bidFloor);
+  const finalPrice = pricingMode === "bid" && bidValid ? Math.round(bidNum) : price;
+
   const handleConfirm = async () => {
     if (!pickupCoords || !destCoords) {
       toast.error(t("book.coords_err"));
+      return;
+    }
+    if (pricingMode === "bid" && !bidValid) {
+      toast.error(`${t("book.bid_min")} (${bidFloor} ${t("c.currency")})`);
       return;
     }
     setCreating(true);
@@ -137,9 +147,11 @@ function BookPage() {
         ride_type: rideType,
         distance_km: distance,
         duration_min: duration,
-        price,
+        price: finalPrice,
         round_trip: tripMode === "roundtrip",
         landmark_note: landmarkNote.trim() || null,
+        pricing_mode: pricingMode,
+        custom_price: pricingMode === "bid" ? Math.round(bidNum) : null,
         status: "searching",
       }).select().single();
       if (error) throw error;
