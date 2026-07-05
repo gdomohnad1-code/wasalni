@@ -519,6 +519,7 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   }, [user?.id]);
 
   const hotspots = useMemo(() => aggregateHotspots(searchingRides), [searchingRides]);
+  const roadAlerts = useRoadAlerts(pos, 15);
 
   useEffect(() => {
     if (!isOnline || activeRide || incoming || !pos) return;
