@@ -51,6 +51,7 @@ function BookPage() {
   const [confirming, setConfirming] = useState(false);
   const [creating, setCreating] = useState(false);
   const [sheet, setSheet] = useState<SheetState>("half");
+  const [landmarkNote, setLandmarkNote] = useState("");
   const destDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const SUGGEST = lang === "ar" ? SUGGEST_AR : SUGGEST_EN;
