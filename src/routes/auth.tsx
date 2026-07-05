@@ -14,8 +14,17 @@ import { Loader2, Mail, Phone, Lock, User as UserIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//")
+      ? s.next
+      : undefined,
+  }),
   component: AuthPage,
 });
+
+function goNext(next: string | undefined, fallback: string): string {
+  return next ?? fallback;
+}
 
 function AuthPage() {
   const navigate = useNavigate();
