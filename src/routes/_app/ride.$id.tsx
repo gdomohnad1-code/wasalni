@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RideMap } from "@/components/RideMap";
 import { RiderSafetyPanel } from "@/components/RiderSafetyPanel";
+import { SmartSOSButton } from "@/components/SmartSOSButton";
 import { AdSlot } from "@/components/AdSlot";
 import { RateDialog } from "@/components/RateDialog";
 
@@ -260,6 +261,7 @@ function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; 
         <Button variant="outline" className="flex-1"><Phone className="h-4 w-4 ms-1" /> {t("ride.call")}</Button>
       </div>
       <ShareRideButton ride={ride} />
+      <SmartSOSButton rideId={ride.id} pickup={{ lat: Number(ride.pickup_lat) || 30.0444, lng: Number(ride.pickup_lng) || 31.2357 }} />
       <Button onClick={onStart} className="w-full h-12 bg-gradient-primary font-bold">
         <Car className="h-5 w-5 ms-2" /> {t("ride.start")}
       </Button>
@@ -280,6 +282,7 @@ function InProgress({ ride, countdown, onEnd, onChat }: { ride: Ride; countdown:
         <MessageCircle className="h-4 w-4 ms-1" /> {t("ride.msg_driver")}
       </Button>
       <ShareRideButton ride={ride} />
+      <SmartSOSButton rideId={ride.id} pickup={{ lat: Number(ride.pickup_lat) || 30.0444, lng: Number(ride.pickup_lng) || 31.2357 }} />
       <Button onClick={onEnd} variant="destructive" className="w-full h-12 font-bold">{t("ride.end")}</Button>
     </motion.div>
   );

@@ -766,6 +766,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          emergency_contacts: string[]
           full_name: string
           id: string
           phone: string | null
@@ -779,6 +780,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          emergency_contacts?: string[]
           full_name?: string
           id: string
           phone?: string | null
@@ -792,6 +794,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          emergency_contacts?: string[]
           full_name?: string
           id?: string
           phone?: string | null
@@ -831,6 +834,7 @@ export type Database = {
           accepted_at: string | null
           completed_at: string | null
           created_at: string
+          custom_price: number | null
           destination_address: string
           destination_lat: number | null
           destination_lng: number | null
@@ -845,6 +849,7 @@ export type Database = {
           pickup_lat: number | null
           pickup_lng: number | null
           price: number
+          pricing_mode: string
           rating: number | null
           rating_comment: string | null
           ride_type: Database["public"]["Enums"]["ride_type"]
@@ -857,6 +862,7 @@ export type Database = {
           accepted_at?: string | null
           completed_at?: string | null
           created_at?: string
+          custom_price?: number | null
           destination_address: string
           destination_lat?: number | null
           destination_lng?: number | null
@@ -871,6 +877,7 @@ export type Database = {
           pickup_lat?: number | null
           pickup_lng?: number | null
           price: number
+          pricing_mode?: string
           rating?: number | null
           rating_comment?: string | null
           ride_type?: Database["public"]["Enums"]["ride_type"]
@@ -883,6 +890,7 @@ export type Database = {
           accepted_at?: string | null
           completed_at?: string | null
           created_at?: string
+          custom_price?: number | null
           destination_address?: string
           destination_lat?: number | null
           destination_lng?: number | null
@@ -897,6 +905,7 @@ export type Database = {
           pickup_lat?: number | null
           pickup_lng?: number | null
           price?: number
+          pricing_mode?: string
           rating?: number | null
           rating_comment?: string | null
           ride_type?: Database["public"]["Enums"]["ride_type"]
