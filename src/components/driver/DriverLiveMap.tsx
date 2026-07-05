@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { animateMarkerTo, cancelMarkerAnim, type MarkerAnimState } from "@/lib/marker-lerp";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -69,6 +70,7 @@ export function DriverLiveMap({
     route?: L.Polyline;
     hotspots: L.Circle[];
   }>({ hotspots: [] });
+  const carAnim = useRef<MarkerAnimState>({});
   const followRef = useRef(true);
 
   // init
@@ -84,16 +86,18 @@ export function DriverLiveMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // car marker + auto-follow
+  // car marker + auto-follow (smooth LERP between GPS pings)
   useEffect(() => {
     const map = mapRef.current; if (!map || !driver) return;
     if (!layers.current.car) {
       layers.current.car = L.marker([driver.lat, driver.lng], { icon: carIcon(heading ?? 0), zIndexOffset: 2000 }).addTo(map);
+      carAnim.current.from = driver;
     } else {
-      layers.current.car.setLatLng([driver.lat, driver.lng]);
+      animateMarkerTo(layers.current.car, driver, carAnim.current, 1500);
       layers.current.car.setIcon(carIcon(heading ?? 0));
     }
     if (followRef.current) map.setView([driver.lat, driver.lng], Math.max(map.getZoom(), 14), { animate: true });
+    return () => { cancelMarkerAnim(carAnim.current); };
   }, [driver?.lat, driver?.lng, heading]);
 
   // hotspots (red circles)

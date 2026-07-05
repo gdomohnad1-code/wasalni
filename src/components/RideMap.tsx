@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
+import { animateMarkerTo, cancelMarkerAnim, type MarkerAnimState } from "@/lib/marker-lerp";
 
 // Fix default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -101,6 +102,7 @@ export function RideMap({
     pickup?: L.Marker; dest?: L.Marker; car?: L.Marker;
     routeMain?: L.Polyline; routeApproach?: L.Polyline;
   }>({});
+  const carAnimRef = useRef<MarkerAnimState>({});
 
   const [tripPath, setTripPath] = useState<LL[]>([]);
   const [approachPath, setApproachPath] = useState<LL[]>([]);
@@ -267,11 +269,16 @@ export function RideMap({
       }).addTo(map);
     }
 
-    // Car
+    // Car — smooth LERP interpolation between GPS pings
     if (driverPos) {
-      if (!L_.car) L_.car = L.marker([driverPos.lat, driverPos.lng], { icon: carIcon, zIndexOffset: 1000 }).addTo(map);
-      else L_.car.setLatLng([driverPos.lat, driverPos.lng]);
+      if (!L_.car) {
+        L_.car = L.marker([driverPos.lat, driverPos.lng], { icon: carIcon, zIndexOffset: 1000 }).addTo(map);
+        carAnimRef.current.from = driverPos;
+      } else {
+        animateMarkerTo(L_.car, driverPos, carAnimRef.current, 1500);
+      }
     } else if (L_.car) {
+      cancelMarkerAnim(carAnimRef.current);
       map.removeLayer(L_.car); L_.car = undefined;
     }
 
