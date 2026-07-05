@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDown, ArrowUp, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,9 @@ function WalletPage() {
   const { profile, refresh } = useAuth();
   const { t, locale } = useI18n();
   const [txs, setTxs] = useState<any[]>([]);
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+
 
   const load = async (uid?: string) => {
     let userId = uid;
@@ -47,17 +50,19 @@ function WalletPage() {
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "wallet_transactions", filter: `user_id=eq.${userId}` },
           (payload) => {
+            const row = payload.new as any;
+            if (!row?.id) return;
             setTxs((prev) => {
-              if (prev.some((t) => t.id === (payload.new as any).id)) return prev;
-              return [payload.new as any, ...prev].slice(0, 50);
+              if (prev.some((t) => t.id === row.id)) return prev;
+              return [row, ...prev].slice(0, 50);
             });
-            refresh?.();
+            refreshRef.current?.();
           },
         )
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
-          () => { refresh?.(); },
+          () => { refreshRef.current?.(); },
         )
         .subscribe();
     })();
@@ -65,7 +70,8 @@ function WalletPage() {
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
-  }, [refresh]);
+  }, []);
+
 
 
 
