@@ -115,6 +115,10 @@ const dict = {
     "book.cairo": "القاهرة",
     "book.cairo_eg": "القاهرة، مصر",
     "book.your_loc": "موقعك",
+    "book.geo_denied": "فعّل خدمة الموقع للحصول على دقة أفضل واستلام أسرع",
+    "book.geo_denied_short": "تعذّر تحديد موقعك — يمكنك كتابة عنوان الاستلام يدوياً",
+    "book.dismiss": "إغلاق",
+
     "book.landmark_ph": "علامة مميزة (اختياري) — مثال: قدام سوبر ماركت الأمانة",
     "book.landmark_label": "علامة مميزة",
     "book.silent_title": "🔇 رحلة هادئة",
