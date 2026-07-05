@@ -164,7 +164,7 @@ function BookPage() {
     }
   };
 
-  const canContinue = !!pickup && !!destination && !!pickupCoords && !!destCoords;
+  const canContinue = !!pickup && !!destination && !!pickupCoords && !!destCoords && (pricingMode === "fixed" || bidValid);
 
   return (
     <div className="fixed inset-0 mx-auto max-w-md bg-background overflow-hidden">
