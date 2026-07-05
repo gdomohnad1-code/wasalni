@@ -39,6 +39,7 @@ interface Ride {
   landmark_note: string | null;
   silent_ride: boolean | null;
   ac_preference: string | null;
+  start_pin: string | null;
 }
 
 function RidePage() {
