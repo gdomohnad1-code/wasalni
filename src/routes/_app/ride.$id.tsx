@@ -388,7 +388,7 @@ const InProgress = memo(function InProgress({ ride, onEnd, onChat }: { ride: Rid
 });
 
 
-function ShareRideButton({ ride }: { ride: Ride }) {
+const ShareRideButton = memo(function ShareRideButton({ ride }: { ride: Ride }) {
   const { t } = useI18n();
   const share = () => {
     const link = `${window.location.origin}/ride/${ride.id}`;
