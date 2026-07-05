@@ -227,6 +227,71 @@ function ChangePasswordSection() {
   );
 }
 
+function EmergencyContactsSection() {
+  const { t } = useI18n();
+  const { user } = useAuth();
+  const [contacts, setContacts] = useState<string[]>([]);
+  const [draft, setDraft] = useState("");
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("emergency_contacts").eq("id", user.id).maybeSingle().then(({ data }) => {
+      setContacts(((data as any)?.emergency_contacts ?? []) as string[]);
+      setLoaded(true);
+    });
+  }, [user]);
+
+  const persist = async (next: string[]) => {
+    setContacts(next);
+    if (!user) return;
+    const { error } = await supabase.from("profiles").update({ emergency_contacts: next } as any).eq("id", user.id);
+    if (error) toast.error(error.message); else toast.success(t("settings.emergency_saved"));
+  };
+
+  const add = () => {
+    const v = draft.trim();
+    if (!v) return;
+    if (contacts.length >= 3) { toast.error(t("settings.emergency_max")); return; }
+    if (contacts.includes(v)) { setDraft(""); return; }
+    setDraft("");
+    void persist([...contacts, v]);
+  };
+
+  const remove = (n: string) => void persist(contacts.filter((c) => c !== n));
+
+  return (
+    <section className="bg-card rounded-2xl p-4 border border-border">
+      <h2 className="font-bold mb-1 flex items-center gap-2">
+        <Shield className="h-4 w-4 text-destructive" /> {t("settings.emergency")}
+      </h2>
+      <p className="text-xs text-muted-foreground mb-3">{t("settings.emergency_sub")}</p>
+      <div className="flex gap-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={t("settings.emergency_ph")}
+          dir="ltr"
+          inputMode="tel"
+          onKeyDown={(e) => e.key === "Enter" && add()}
+        />
+        <Button onClick={add} disabled={!loaded || contacts.length >= 3}>{t("settings.emergency_add")}</Button>
+      </div>
+      {contacts.length > 0 && (
+        <ul className="mt-3 space-y-1.5">
+          {contacts.map((c) => (
+            <li key={c} className="flex items-center justify-between bg-muted/60 rounded-xl px-3 py-2">
+              <span dir="ltr" className="text-sm font-bold">{c}</span>
+              <button onClick={() => remove(c)} className="text-xs text-destructive font-semibold">✕</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+
 function RowLink({ icon: Icon, label, to, onClick }: { icon: any; label: string; to?: string; onClick?: () => void }) {
   const inner = (
     <div className="flex items-center gap-3 p-4 hover:bg-muted/40 transition cursor-pointer">
