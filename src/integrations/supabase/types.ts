@@ -1095,6 +1095,14 @@ export type Database = {
     Functions: {
       ads_tick: { Args: never; Returns: Json }
       apply_influencer_code: { Args: { p_code: string }; Returns: Json }
+      complete_ride_with_change: {
+        Args: {
+          p_change_to_wallet: number
+          p_received_cash: number
+          p_ride_id: string
+        }
+        Returns: undefined
+      }
       confirm_road_alert: { Args: { p_id: string }; Returns: number }
       detect_idle_drivers: { Args: { p_minutes?: number }; Returns: number }
       driver_accept_ride: { Args: { p_ride_id: string }; Returns: boolean }
