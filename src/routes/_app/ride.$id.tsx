@@ -336,11 +336,15 @@ function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; o
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  const send = async () => {
-    if (!text.trim()) return;
-    await supabase.from("chat_messages").insert({ ride_id: rideId, sender_id: me, content: text });
-    setText("");
+  const send = async (override?: string) => {
+    const body = (override ?? text).trim();
+    if (!body) return;
+    await supabase.from("chat_messages").insert({ ride_id: rideId, sender_id: me, content: body });
+    if (!override) setText("");
   };
+
+  const quickReplies = [t("ride.quick_here"), t("ride.quick_jacket"), t("ride.quick_5min")];
+
 
   if (!open) return null;
   return (
