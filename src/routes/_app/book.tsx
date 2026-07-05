@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import {
   ArrowRight, MapPin, Navigation, Loader2, Clock, Users, Zap,
-  ShieldCheck,
+  ShieldCheck, Landmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
