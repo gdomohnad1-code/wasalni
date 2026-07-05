@@ -793,6 +793,13 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
       )}
 
       {showReady && <DriverReadyScreen onStart={closeReady} name={user?.user_metadata?.full_name?.split(" ")[0]} />}
+
+      <HomeDestSheet
+        open={homeSheetOpen}
+        onClose={() => setHomeSheetOpen(false)}
+        onSave={saveHomeDest}
+        currentAddress={docs?.home_dest_address ?? null}
+      />
     </div>
   );
 }
