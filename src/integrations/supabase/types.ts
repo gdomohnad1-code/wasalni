@@ -1095,6 +1095,10 @@ export type Database = {
     Functions: {
       ads_tick: { Args: never; Returns: Json }
       apply_influencer_code: { Args: { p_code: string }; Returns: Json }
+      can_driver_see_pending_ride: {
+        Args: { _driver_id: string; _ride_id: string }
+        Returns: boolean
+      }
       complete_ride_with_change: {
         Args: {
           p_change_to_wallet: number
@@ -1130,6 +1134,10 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      km_between: {
+        Args: { a_lat: number; a_lng: number; b_lat: number; b_lng: number }
+        Returns: number
+      }
       mark_all_overdue_paid: {
         Args: { p_min_amount?: number }
         Returns: number
