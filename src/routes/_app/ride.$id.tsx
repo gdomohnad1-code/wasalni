@@ -258,6 +258,25 @@ function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; 
           </div>
         </div>
       )}
+      {(ride.silent_ride || (ride.ac_preference && ride.ac_preference !== "any")) && (
+        <div className="flex flex-wrap gap-2">
+          {ride.silent_ride && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary/10 text-primary rounded-full px-2.5 py-1">
+              🔇 {t("book.silent_title").replace("🔇 ", "")}
+            </span>
+          )}
+          {ride.ac_preference === "on" && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary/10 text-primary rounded-full px-2.5 py-1">
+              ❄️ {t("book.ac_on")}
+            </span>
+          )}
+          {ride.ac_preference === "off" && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-muted text-foreground rounded-full px-2.5 py-1">
+              ❄️ {t("book.ac_off")}
+            </span>
+          )}
+        </div>
+      )}
       <div className="flex gap-2">
         <Button variant="outline" className="flex-1" onClick={onChat}><MessageCircle className="h-4 w-4 ms-1" /> {t("ride.chat")}</Button>
         <Button variant="outline" className="flex-1"><Phone className="h-4 w-4 ms-1" /> {t("ride.call")}</Button>
