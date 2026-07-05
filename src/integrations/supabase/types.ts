@@ -869,6 +869,7 @@ export type Database = {
           rider_id: string
           round_trip: boolean | null
           silent_ride: boolean
+          start_pin: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["ride_status"]
         }
@@ -899,6 +900,7 @@ export type Database = {
           rider_id: string
           round_trip?: boolean | null
           silent_ride?: boolean
+          start_pin?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
         }
@@ -929,6 +931,7 @@ export type Database = {
           rider_id?: string
           round_trip?: boolean | null
           silent_ride?: boolean
+          start_pin?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
         }
