@@ -474,6 +474,10 @@ const dict = {
     "book.cairo": "Cairo",
     "book.cairo_eg": "Cairo, Egypt",
     "book.your_loc": "Your location",
+    "book.geo_denied": "Please enable location services for better accuracy and faster pickup",
+    "book.geo_denied_short": "Couldn't detect your location — please type your pickup address",
+    "book.dismiss": "Dismiss",
+
     "book.landmark_ph": "Landmark (optional) — e.g. next to the red-brick building",
     "book.landmark_label": "Landmark",
     "book.silent_title": "🔇 Silent Ride",
