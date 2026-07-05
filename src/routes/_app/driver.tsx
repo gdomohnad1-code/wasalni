@@ -21,6 +21,7 @@ import { ArrivalConfirmModal } from "@/components/driver/ArrivalConfirmModal";
 import { RateDialog } from "@/components/RateDialog";
 import { HomeDestSheet } from "@/components/driver/HomeDestSheet";
 import { PinVerifyModal } from "@/components/driver/PinVerifyModal";
+import { DriverQRCode } from "@/components/driver/DriverQRCode";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
@@ -456,6 +457,7 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const [homeSheetOpen, setHomeSheetOpen] = useState(false);
   const [totalCompleted, setTotalCompleted] = useState(0);
   const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const isOnline = !!docs.is_online;
   const presence: "available" | "busy" | "offline" =
@@ -728,6 +730,7 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
             homeAddress={docs?.home_dest_address ?? null}
             onSetHome={() => setHomeSheetOpen(true)}
             onToggleHome={toggleHomeMode}
+            onShowQR={() => setQrOpen(true)}
           />
         )}
         {activeRide && phase === "to_pickup" && pickup && (
@@ -826,15 +829,24 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
           await doStartTrip();
         }}
       />
+
+      <DriverQRCode
+        open={qrOpen}
+        onClose={() => setQrOpen(false)}
+        driverId={user?.id ?? ""}
+        driverName={user?.user_metadata?.full_name}
+        carLabel={`${docs.car_model || ""} · ${docs.car_plate || ""}`}
+      />
     </div>
   );
 }
 
-function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car, homeMode, homeAddress, onSetHome, onToggleHome }: {
+function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car, homeMode, homeAddress, onSetHome, onToggleHome, onShowQR }: {
   isOnline: boolean; searchingCount: number; hotspotCount: number;
   todayEarnings: number; totalRides: number; car: string;
   homeMode: boolean; homeAddress: string | null;
   onSetHome: () => void; onToggleHome: () => void;
+  onShowQR: () => void;
 }) {
   return (
     <motion.div
@@ -898,6 +910,22 @@ function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car, ho
               {homeAddress ? "تغيير" : "حدد"}
             </button>
           </div>
+
+          {/* Street Hail — show QR to passenger */}
+          <button
+            type="button"
+            onClick={onShowQR}
+            className="mt-3 w-full rounded-2xl p-3 bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center gap-3 shadow-md active:scale-[0.98] transition-transform"
+          >
+            <div className="h-11 w-11 rounded-2xl bg-white/15 grid place-items-center shrink-0">
+              <Car className="h-5 w-5" />
+            </div>
+            <div className="flex-1 text-start min-w-0">
+              <div className="font-black text-[13px] leading-tight">استلام مباشر — عرض QR للراكب</div>
+              <div className="text-[11px] opacity-90 leading-tight">لما راكب يوقفك في الشارع، اعرضله الكود ليبدأ الرحلة</div>
+            </div>
+          </button>
+
 
           {hotspotCount > 0 && (
             <div className="mt-3 bg-red-50 border border-red-100 rounded-xl p-2.5 text-xs text-red-700 flex items-center gap-2">

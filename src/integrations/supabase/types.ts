@@ -1061,6 +1061,15 @@ export type Database = {
       apply_influencer_code: { Args: { p_code: string }; Returns: Json }
       detect_idle_drivers: { Args: { p_minutes?: number }; Returns: number }
       driver_accept_ride: { Args: { p_ride_id: string }; Returns: boolean }
+      hail_instant_ride: {
+        Args: {
+          p_destination_address?: string
+          p_destination_lat?: number
+          p_destination_lng?: number
+          p_driver_id: string
+        }
+        Returns: string
+      }
       has_admin_permission: {
         Args: {
           _perm: Database["public"]["Enums"]["admin_permission"]
