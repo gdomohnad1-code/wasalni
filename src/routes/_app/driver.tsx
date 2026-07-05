@@ -24,6 +24,7 @@ import { PinVerifyModal } from "@/components/driver/PinVerifyModal";
 import { DriverQRCode } from "@/components/driver/DriverQRCode";
 import { RoadAlertReporter } from "@/components/RoadAlertReporter";
 import { useRoadAlerts } from "@/hooks/use-road-alerts";
+import { TripCompletionModal } from "@/components/driver/TripCompletionModal";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
