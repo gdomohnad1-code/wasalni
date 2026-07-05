@@ -35,6 +35,7 @@ interface Ride {
   rating: number | null;
   accepted_at: string | null;
   started_at: string | null;
+  landmark_note: string | null;
 }
 
 function RidePage() {
