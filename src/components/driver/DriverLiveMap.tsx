@@ -60,6 +60,7 @@ export function DriverLiveMap({
   driver,
   heading,
   hotspots = [],
+  roadAlerts = [],
   pickup,
   destination,
   routeTo,
@@ -73,7 +74,8 @@ export function DriverLiveMap({
     dest?: L.Marker;
     route?: L.Polyline;
     hotspots: L.Circle[];
-  }>({ hotspots: [] });
+    alerts: L.Marker[];
+  }>({ hotspots: [], alerts: [] });
   const carAnim = useRef<MarkerAnimState>({});
   const followRef = useRef(true);
 
@@ -86,7 +88,7 @@ export function DriverLiveMap({
     L.control.zoom({ position: "bottomright" }).addTo(map);
     map.on("dragstart", () => { followRef.current = false; });
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; layers.current = { hotspots: [] }; };
+    return () => { map.remove(); mapRef.current = null; layers.current = { hotspots: [], alerts: [] }; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
