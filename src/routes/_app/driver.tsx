@@ -708,6 +708,10 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
             todayEarnings={earnings.today}
             totalRides={earnings.rides}
             car={`${docs.car_model || ""} · ${docs.car_plate || ""}`}
+            homeMode={!!docs?.home_mode_active}
+            homeAddress={docs?.home_dest_address ?? null}
+            onSetHome={() => setHomeSheetOpen(true)}
+            onToggleHome={toggleHomeMode}
           />
         )}
         {activeRide && phase === "to_pickup" && pickup && (
