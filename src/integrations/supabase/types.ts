@@ -937,6 +937,42 @@ export type Database = {
         }
         Relationships: []
       }
+      road_alerts: {
+        Row: {
+          confirms: number
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          lat: number
+          lng: number
+          note: string | null
+          type: Database["public"]["Enums"]["road_alert_type"]
+        }
+        Insert: {
+          confirms?: number
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          id?: string
+          lat: number
+          lng: number
+          note?: string | null
+          type: Database["public"]["Enums"]["road_alert_type"]
+        }
+        Update: {
+          confirms?: number
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          note?: string | null
+          type?: Database["public"]["Enums"]["road_alert_type"]
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1059,6 +1095,7 @@ export type Database = {
     Functions: {
       ads_tick: { Args: never; Returns: Json }
       apply_influencer_code: { Args: { p_code: string }; Returns: Json }
+      confirm_road_alert: { Args: { p_id: string }; Returns: number }
       detect_idle_drivers: { Args: { p_minutes?: number }; Returns: number }
       driver_accept_ride: { Args: { p_ride_id: string }; Returns: boolean }
       hail_instant_ride: {
@@ -1164,6 +1201,13 @@ export type Database = {
         | "completed"
         | "cancelled"
       ride_type: "private" | "shared" | "package" | "female" | "vip"
+      road_alert_type:
+        | "bump"
+        | "police"
+        | "accident"
+        | "traffic"
+        | "hazard"
+        | "closure"
       tx_type: "topup" | "ride_payment" | "refund" | "referral_bonus"
       withdrawal_status: "pending" | "approved" | "rejected"
     }
@@ -1351,6 +1395,14 @@ export const Constants = {
         "cancelled",
       ],
       ride_type: ["private", "shared", "package", "female", "vip"],
+      road_alert_type: [
+        "bump",
+        "police",
+        "accident",
+        "traffic",
+        "hazard",
+        "closure",
+      ],
       tx_type: ["topup", "ride_payment", "refund", "referral_bonus"],
       withdrawal_status: ["pending", "approved", "rejected"],
     },
