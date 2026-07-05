@@ -37,6 +37,8 @@ interface Ride {
   accepted_at: string | null;
   started_at: string | null;
   landmark_note: string | null;
+  silent_ride: boolean | null;
+  ac_preference: string | null;
 }
 
 function RidePage() {
