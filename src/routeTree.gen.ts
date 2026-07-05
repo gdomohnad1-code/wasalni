@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as CompleteProfileRouteImport } from './routes/complete-profile'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -45,10 +46,19 @@ import { Route as AppPrivacyRouteImport } from './routes/_app/privacy'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppBookRouteImport } from './routes/_app/book'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AppRideIdRouteImport } from './routes/_app/ride.$id'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHooksCheckDuesRouteImport } from './routes/api/public/hooks/check-dues'
 import { Route as ApiPublicHooksAdsTickRouteImport } from './routes/api/public/hooks/ads-tick'
 
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompleteProfileRoute = CompleteProfileRouteImport.update({
   id: '/complete-profile',
   path: '/complete-profile',
@@ -228,10 +238,33 @@ const AppBookRoute = AppBookRouteImport.update({
   path: '/book',
   getParentRoute: () => AppRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppRideIdRoute = AppRideIdRouteImport.update({
   id: '/ride/$id',
   path: '/ride/$id',
   getParentRoute: () => AppRoute,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHooksCheckDuesRoute = ApiPublicHooksCheckDuesRouteImport.update({
   id: '/api/public/hooks/check-dues',
@@ -249,6 +282,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/complete-profile': typeof CompleteProfileRoute
+  '/mcp': typeof McpRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/book': typeof AppBookRoute
   '/driver': typeof AppDriverRoute
   '/home': typeof AppHomeRoute
@@ -280,6 +316,8 @@ export interface FileRoutesByFullPath {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rides': typeof AdminRidesRoute
   '/admin/': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/ride/$id': typeof AppRideIdRoute
   '/api/public/hooks/ads-tick': typeof ApiPublicHooksAdsTickRoute
   '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
@@ -288,6 +326,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/complete-profile': typeof CompleteProfileRoute
+  '/mcp': typeof McpRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/book': typeof AppBookRoute
   '/driver': typeof AppDriverRoute
   '/home': typeof AppHomeRoute
@@ -319,6 +360,8 @@ export interface FileRoutesByTo {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rides': typeof AdminRidesRoute
   '/admin': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/ride/$id': typeof AppRideIdRoute
   '/api/public/hooks/ads-tick': typeof ApiPublicHooksAdsTickRoute
   '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
@@ -330,6 +373,9 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/complete-profile': typeof CompleteProfileRoute
+  '/mcp': typeof McpRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_app/book': typeof AppBookRoute
   '/_app/driver': typeof AppDriverRoute
   '/_app/home': typeof AppHomeRoute
@@ -361,6 +407,8 @@ export interface FileRoutesById {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rides': typeof AdminRidesRoute
   '/admin/': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_app/ride/$id': typeof AppRideIdRoute
   '/api/public/hooks/ads-tick': typeof ApiPublicHooksAdsTickRoute
   '/api/public/hooks/check-dues': typeof ApiPublicHooksCheckDuesRoute
@@ -372,6 +420,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/complete-profile'
+    | '/mcp'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/book'
     | '/driver'
     | '/home'
@@ -403,6 +454,8 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rides'
     | '/admin/'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/ride/$id'
     | '/api/public/hooks/ads-tick'
     | '/api/public/hooks/check-dues'
@@ -411,6 +464,9 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/complete-profile'
+    | '/mcp'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/book'
     | '/driver'
     | '/home'
@@ -442,6 +498,8 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rides'
     | '/admin'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/ride/$id'
     | '/api/public/hooks/ads-tick'
     | '/api/public/hooks/check-dues'
@@ -452,6 +510,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/complete-profile'
+    | '/mcp'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_app/book'
     | '/_app/driver'
     | '/_app/home'
@@ -483,6 +544,8 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rides'
     | '/admin/'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/_app/ride/$id'
     | '/api/public/hooks/ads-tick'
     | '/api/public/hooks/check-dues'
@@ -494,12 +557,24 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   CompleteProfileRoute: typeof CompleteProfileRoute
+  McpRoute: typeof McpRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicHooksAdsTickRoute: typeof ApiPublicHooksAdsTickRoute
   ApiPublicHooksCheckDuesRoute: typeof ApiPublicHooksCheckDuesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/complete-profile': {
       id: '/complete-profile'
       path: '/complete-profile'
@@ -752,12 +827,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBookRouteImport
       parentRoute: typeof AppRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/ride/$id': {
       id: '/_app/ride/$id'
       path: '/ride/$id'
       fullPath: '/ride/$id'
       preLoaderRoute: typeof AppRideIdRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/check-dues': {
       id: '/api/public/hooks/check-dues'
@@ -862,9 +965,25 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   CompleteProfileRoute: CompleteProfileRoute,
+  McpRoute: McpRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicHooksAdsTickRoute: ApiPublicHooksAdsTickRoute,
   ApiPublicHooksCheckDuesRoute: ApiPublicHooksCheckDuesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
