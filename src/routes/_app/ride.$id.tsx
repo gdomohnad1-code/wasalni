@@ -365,11 +365,23 @@ function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; o
           ))}
           <div ref={endRef} />
         </div>
+        <div className="px-3 pt-2 flex gap-2 overflow-x-auto scrollbar-hide">
+          {quickReplies.map((q) => (
+            <button
+              key={q}
+              onClick={() => send(q)}
+              className="shrink-0 text-[12px] font-semibold bg-muted hover:bg-primary hover:text-primary-foreground px-3 py-1.5 rounded-full transition"
+            >
+              {q}
+            </button>
+          ))}
+        </div>
         <div className="flex gap-2 p-3 border-t">
           <Input value={text} onChange={(e) => setText(e.target.value)} placeholder={t("ride.chat_ph")}
             onKeyDown={(e) => e.key === "Enter" && send()} />
-          <Button onClick={send} size="icon" className="bg-gradient-primary"><Send className="h-4 w-4" /></Button>
+          <Button onClick={() => send()} size="icon" className="bg-gradient-primary"><Send className="h-4 w-4" /></Button>
         </div>
+
       </motion.div>
     </motion.div>
   );
