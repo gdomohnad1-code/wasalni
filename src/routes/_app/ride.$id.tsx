@@ -234,7 +234,46 @@ function RidePage() {
   );
 }
 
-function Searching() {
+const fmtTime = (s: number) =>
+  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+// -----------------------------------------------------------------------------
+// Leaf components below own their own high-frequency state so parent route
+// stays inert against countdown & ETA ticks.
+// -----------------------------------------------------------------------------
+
+const EtaBanner = memo(function EtaBanner({
+  status,
+  setterRef,
+}: {
+  status: string;
+  setterRef: React.MutableRefObject<((n: number) => void) | null>;
+}) {
+  const { t } = useI18n();
+  const [etaSec, setEtaSec] = useState(0);
+  useEffect(() => {
+    setterRef.current = setEtaSec;
+    return () => { setterRef.current = null; };
+  }, [setterRef]);
+  if (etaSec <= 0) return null;
+  return (
+    <div className="mx-4 mb-2 rounded-2xl bg-foreground text-background px-4 py-3 flex items-center justify-between shadow-card">
+      <div>
+        <div className="text-[11px] opacity-70 uppercase tracking-wide">
+          {status === "accepted" ? t("ride.driver_eta") : t("ride.arrival_eta")}
+        </div>
+        <div className="text-2xl font-black leading-tight">
+          {Math.ceil(etaSec / 60)} {t("ride.min")}
+        </div>
+      </div>
+      <div className="text-xs opacity-70">
+        {status === "accepted" ? t("ride.on_the_way") : t("ride.in_route")}
+      </div>
+    </div>
+  );
+});
+
+const Searching = memo(function Searching() {
   const { t } = useI18n();
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -245,7 +284,8 @@ function Searching() {
       <p className="text-sm text-muted-foreground mt-1">{t("ride.searching_sub")}</p>
     </motion.div>
   );
-}
+});
+
 
 function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; onChat: () => void }) {
   const { t } = useI18n();
