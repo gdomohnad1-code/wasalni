@@ -50,17 +50,19 @@ function WalletPage() {
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "wallet_transactions", filter: `user_id=eq.${userId}` },
           (payload) => {
+            const row = payload.new as any;
+            if (!row?.id) return;
             setTxs((prev) => {
-              if (prev.some((t) => t.id === (payload.new as any).id)) return prev;
-              return [payload.new as any, ...prev].slice(0, 50);
+              if (prev.some((t) => t.id === row.id)) return prev;
+              return [row, ...prev].slice(0, 50);
             });
-            refresh?.();
+            refreshRef.current?.();
           },
         )
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
-          () => { refresh?.(); },
+          () => { refreshRef.current?.(); },
         )
         .subscribe();
     })();
@@ -68,7 +70,8 @@ function WalletPage() {
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
-  }, [refresh]);
+  }, []);
+
 
 
 
