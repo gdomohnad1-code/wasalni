@@ -37,6 +37,8 @@ interface Ride {
   accepted_at: string | null;
   started_at: string | null;
   landmark_note: string | null;
+  silent_ride: boolean | null;
+  ac_preference: string | null;
 }
 
 function RidePage() {
@@ -254,6 +256,25 @@ function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; 
             <div className="text-[10px] font-bold uppercase tracking-wide text-primary/80">{t("ride.landmark_hint")}</div>
             <div className="font-semibold">{ride.landmark_note}</div>
           </div>
+        </div>
+      )}
+      {(ride.silent_ride || (ride.ac_preference && ride.ac_preference !== "any")) && (
+        <div className="flex flex-wrap gap-2">
+          {ride.silent_ride && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary/10 text-primary rounded-full px-2.5 py-1">
+              🔇 {t("book.silent_title").replace("🔇 ", "")}
+            </span>
+          )}
+          {ride.ac_preference === "on" && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary/10 text-primary rounded-full px-2.5 py-1">
+              ❄️ {t("book.ac_on")}
+            </span>
+          )}
+          {ride.ac_preference === "off" && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-muted text-foreground rounded-full px-2.5 py-1">
+              ❄️ {t("book.ac_off")}
+            </span>
+          )}
         </div>
       )}
       <div className="flex gap-2">

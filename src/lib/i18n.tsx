@@ -117,6 +117,13 @@ const dict = {
     "book.your_loc": "موقعك",
     "book.landmark_ph": "علامة مميزة (اختياري) — مثال: قدام سوبر ماركت الأمانة",
     "book.landmark_label": "علامة مميزة",
+    "book.silent_title": "🔇 رحلة هادئة",
+    "book.silent_sub": "من غير أحاديث ولا راديو عالي",
+    "book.ac_title": "❄️ التكييف",
+    "book.ac_sub": "اختار تفضيلك قبل الركوب",
+    "book.ac_any": "بدون تفضيل",
+    "book.ac_on": "شغّال",
+    "book.ac_off": "مطفي",
 
     // ride
     "ride.title": "رحلتك",
@@ -465,6 +472,13 @@ const dict = {
     "book.your_loc": "Your location",
     "book.landmark_ph": "Landmark (optional) — e.g. next to the red-brick building",
     "book.landmark_label": "Landmark",
+    "book.silent_title": "🔇 Silent Ride",
+    "book.silent_sub": "No chatter, no loud radio",
+    "book.ac_title": "❄️ Air Conditioning",
+    "book.ac_sub": "Set your AC preference",
+    "book.ac_any": "Any",
+    "book.ac_on": "On",
+    "book.ac_off": "Off",
 
     // ride
     "ride.title": "Your ride",
