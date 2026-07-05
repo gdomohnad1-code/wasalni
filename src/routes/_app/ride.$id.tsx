@@ -488,4 +488,4 @@ const ChatSheet = memo(function ChatSheet({ rideId, open, onClose }: { rideId: s
       </motion.div>
     </motion.div>
   );
-}
+});
