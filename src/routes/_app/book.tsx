@@ -222,6 +222,20 @@ function BookPage() {
             </div>
           </div>
 
+          {/* Landmark note — optional quick hint for the driver */}
+          <div className="flex items-center gap-3 rounded-xl bg-muted/70 border border-border px-3 h-12">
+            <Landmark className="h-4 w-4 text-primary shrink-0" />
+            <Input
+              value={landmarkNote}
+              onChange={(e) => setLandmarkNote(e.target.value.slice(0, 120))}
+              placeholder={t("book.landmark_ph")}
+              className="h-full bg-transparent border-0 px-0 focus-visible:ring-0 shadow-none text-sm font-semibold"
+            />
+            {landmarkNote && (
+              <span className="text-[10px] text-muted-foreground font-semibold">{landmarkNote.length}/120</span>
+            )}
+          </div>
+
           {/* Trip mode */}
           <Tabs value={tripMode} onValueChange={(v) => setTripMode(v as TripMode)}>
             <TabsList className="grid grid-cols-3 w-full rounded-xl bg-muted p-1 h-10">
