@@ -1,5 +1,6 @@
-import { motion, useMotionValue, animate, PanInfo } from "framer-motion";
-import { useEffect, useRef, type ReactNode } from "react";
+import { motion, useMotionValue, animate, useDragControls, PanInfo } from "framer-motion";
+import { useEffect, useRef, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
+
 import { cn } from "@/lib/utils";
 
 /**
