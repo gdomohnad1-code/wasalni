@@ -234,12 +234,40 @@ function BookPage() {
         <div className="w-11" />
       </div>
 
+      {/* Geolocation banner (dismissible) */}
+      <AnimatePresence>
+        {geoBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute inset-x-4 top-20 z-30"
+            role="alert"
+          >
+            <div className="flex items-start gap-2 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-300/70 dark:border-amber-700/60 text-amber-900 dark:text-amber-100 px-3 py-2.5 shadow-md">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="text-[12px] leading-snug flex-1 font-medium">
+                {geoBanner === "denied" ? t("book.geo_denied") : t("book.geo_denied_short")}
+              </p>
+              <button
+                onClick={() => setGeoBanner(null)}
+                aria-label={t("book.dismiss")}
+                className="p-1 -m-1 shrink-0 opacity-70 hover:opacity-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Sheet */}
       <BottomSheet state={sheet} onStateChange={setSheet} heights={{ collapsed: 190, half: 480, full: 700 }}>
         <div className="px-5 pb-6 space-y-4">
           {/* Pickup / Destination */}
           <div className="space-y-2.5 pt-1">
             <FieldRow
+              inputRef={pickupInputRef}
               icon={<span className="h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-primary/20" />}
               value={pickup}
               onChange={setPickup}
@@ -250,6 +278,7 @@ function BookPage() {
                 </button>
               }
             />
+
             <div className="ms-4 h-4 border-s-2 border-dashed border-border" />
             <FieldRow
               icon={<span className="h-2.5 w-2.5 rounded-sm bg-success ring-2 ring-success/20" />}
