@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Phone, MessageCircle, Star, Send, X, ArrowRight, Car, Share2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,8 +58,15 @@ function RidePage() {
   });
   const [chatOpen, setChatOpen] = useState(false);
   const [rateOpen, setRateOpen] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [etaSec, setEtaSec] = useState(0);
+
+  // Countdown & ETA state are OWNED by leaf sub-components. Parent only stores
+  // stable setter refs so high-frequency ticks from RideMap don't re-render
+  // the whole route.
+  const etaSetterRef = useRef<((n: number) => void) | null>(null);
+  const onEta = useCallback((n: number) => {
+    etaSetterRef.current?.(n);
+  }, []);
+
 
   // Persist ride snapshot whenever it updates (survives refresh/offline)
   useEffect(() => {
@@ -108,30 +116,44 @@ function RidePage() {
     };
   }, [id]);
 
-  useEffect(() => {
-    if (ride?.status !== "in_progress") return;
-    setCountdown(ride.duration_min * 60);
-    const i = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
-    return () => clearInterval(i);
-  }, [ride?.status, ride?.duration_min]);
-
-  const startRide = async () => {
+  const startRide = useCallback(async () => {
     await supabase.from("rides").update({ status: "in_progress", started_at: new Date().toISOString() }).eq("id", id);
-  };
-  const endRide = async () => {
+  }, [id]);
+  const endRide = useCallback(async () => {
     await supabase.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
-  };
+  }, [id]);
+  const openChat = useCallback(() => setChatOpen(true), []);
+  const closeChat = useCallback(() => setChatOpen(false), []);
+  const openRate = useCallback(() => setRateOpen(true), []);
+  const closeRate = useCallback(() => setRateOpen(false), []);
+  const onRated = useCallback(() => setRide((r) => (r ? { ...r, rating: 5 } : r)), []);
+
   useEffect(() => {
     if (ride?.status === "completed" && !ride.rating) {
       setRateOpen(true);
     }
   }, [ride?.status, ride?.rating]);
 
+  // Memoize map coordinate objects so RideMap's referential prop identity is
+  // stable across parent renders (prevents re-mount / spurious effect churn).
+  const pickupLL = useMemo(
+    () => (ride?.pickup_lat != null && ride?.pickup_lng != null
+      ? { lat: Number(ride.pickup_lat), lng: Number(ride.pickup_lng) }
+      : null),
+    [ride?.pickup_lat, ride?.pickup_lng],
+  );
+  const destLL = useMemo(
+    () => (ride?.destination_lat != null && ride?.destination_lng != null
+      ? { lat: Number(ride.destination_lat), lng: Number(ride.destination_lng) }
+      : null),
+    [ride?.destination_lat, ride?.destination_lng],
+  );
+
   if (!ride) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col bg-background">
@@ -144,16 +166,16 @@ function RidePage() {
       </div>
 
       <div className={`${ride.status === "in_progress" || ride.status === "accepted" ? "h-[60vh]" : "h-80"} mx-4 mt-4 mb-2 rounded-2xl overflow-hidden shadow-card transition-all`}>
-        {ride.pickup_lat && ride.pickup_lng && ride.destination_lat && ride.destination_lng ? (
+        {pickupLL && destLL ? (
           <RideMap
-            pickup={{ lat: Number(ride.pickup_lat), lng: Number(ride.pickup_lng) }}
-            destination={{ lat: Number(ride.destination_lat), lng: Number(ride.destination_lng) }}
+            pickup={pickupLL}
+            destination={destLL}
             driverId={ride.driver_id}
             phase={ride.status as any}
             acceptedAt={ride.accepted_at}
             startedAt={ride.started_at}
             durationMin={ride.duration_min}
-            onEta={setEtaSec}
+            onEta={onEta}
             className="w-full h-full"
           />
         ) : (
@@ -163,33 +185,21 @@ function RidePage() {
         )}
       </div>
 
-      {(ride.status === "accepted" || ride.status === "in_progress") && etaSec > 0 && (
-        <div className="mx-4 mb-2 rounded-2xl bg-foreground text-background px-4 py-3 flex items-center justify-between shadow-card">
-          <div>
-            <div className="text-[11px] opacity-70 uppercase tracking-wide">
-              {ride.status === "accepted" ? t("ride.driver_eta") : t("ride.arrival_eta")}
-            </div>
-            <div className="text-2xl font-black leading-tight">
-              {Math.ceil(etaSec / 60)} {t("ride.min")}
-            </div>
-          </div>
-          <div className="text-xs opacity-70">
-            {ride.status === "accepted" ? t("ride.on_the_way") : t("ride.in_route")}
-          </div>
-        </div>
+      {(ride.status === "accepted" || ride.status === "in_progress") && (
+        <EtaBanner status={ride.status} setterRef={etaSetterRef} />
       )}
 
       <div className="px-4 flex-1">
         <AnimatePresence mode="wait">
           {ride.status === "searching" && <Searching key="s" />}
-          {ride.status === "accepted" && <Accepted key="a" ride={ride} onStart={startRide} onChat={() => setChatOpen(true)} />}
-          {ride.status === "in_progress" && <InProgress key="i" ride={ride} countdown={fmtTime(countdown)} onEnd={endRide} onChat={() => setChatOpen(true)} />}
+          {ride.status === "accepted" && <Accepted key="a" ride={ride} onStart={startRide} onChat={openChat} />}
+          {ride.status === "in_progress" && <InProgress key="i" ride={ride} onEnd={endRide} onChat={openChat} />}
           {ride.status === "completed" && (
             <motion.div key="c" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
               <div className="text-6xl mb-3">✅</div>
               <p className="font-bold text-lg">{t("ride.completed")}</p>
               {!ride.rating && (
-                <Button onClick={() => setRateOpen(true)} className="mt-4 bg-gradient-primary">
+                <Button onClick={openRate} className="mt-4 bg-gradient-primary">
                   <Star className="h-4 w-4 ms-1" /> قيّم السائق
                 </Button>
               )}
@@ -201,11 +211,12 @@ function RidePage() {
         {ride.status === "completed" && <AdSlot placement="post_ride" className="mt-3" />}
       </div>
 
-      <ChatSheet rideId={id} open={chatOpen} onClose={() => setChatOpen(false)} />
+      <ChatSheet rideId={id} open={chatOpen} onClose={closeChat} />
       <RateDialog
         open={rateOpen}
-        onClose={() => setRateOpen(false)}
+        onClose={closeRate}
         rideId={id}
+
         role="rider"
         onDone={() => setRide((r) => (r ? { ...r, rating: 5 } : r))}
       />
@@ -223,7 +234,46 @@ function RidePage() {
   );
 }
 
-function Searching() {
+const fmtTime = (s: number) =>
+  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+// -----------------------------------------------------------------------------
+// Leaf components below own their own high-frequency state so parent route
+// stays inert against countdown & ETA ticks.
+// -----------------------------------------------------------------------------
+
+const EtaBanner = memo(function EtaBanner({
+  status,
+  setterRef,
+}: {
+  status: string;
+  setterRef: React.MutableRefObject<((n: number) => void) | null>;
+}) {
+  const { t } = useI18n();
+  const [etaSec, setEtaSec] = useState(0);
+  useEffect(() => {
+    setterRef.current = setEtaSec;
+    return () => { setterRef.current = null; };
+  }, [setterRef]);
+  if (etaSec <= 0) return null;
+  return (
+    <div className="mx-4 mb-2 rounded-2xl bg-foreground text-background px-4 py-3 flex items-center justify-between shadow-card">
+      <div>
+        <div className="text-[11px] opacity-70 uppercase tracking-wide">
+          {status === "accepted" ? t("ride.driver_eta") : t("ride.arrival_eta")}
+        </div>
+        <div className="text-2xl font-black leading-tight">
+          {Math.ceil(etaSec / 60)} {t("ride.min")}
+        </div>
+      </div>
+      <div className="text-xs opacity-70">
+        {status === "accepted" ? t("ride.on_the_way") : t("ride.in_route")}
+      </div>
+    </div>
+  );
+});
+
+const Searching = memo(function Searching() {
   const { t } = useI18n();
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -234,9 +284,10 @@ function Searching() {
       <p className="text-sm text-muted-foreground mt-1">{t("ride.searching_sub")}</p>
     </motion.div>
   );
-}
+});
 
-function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; onChat: () => void }) {
+
+const Accepted = memo(function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; onChat: () => void }) {
   const { t } = useI18n();
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -307,16 +358,24 @@ function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; 
       </Button>
     </motion.div>
   );
-}
+});
 
-function InProgress({ ride, countdown, onEnd, onChat }: { ride: Ride; countdown: string; onEnd: () => void; onChat: () => void }) {
+
+const InProgress = memo(function InProgress({ ride, onEnd, onChat }: { ride: Ride; onEnd: () => void; onChat: () => void }) {
   const { t } = useI18n();
+  // Countdown lives HERE — 1-second ticks never reach the parent route.
+  const [countdown, setCountdown] = useState(() => (ride.duration_min ?? 0) * 60);
+  useEffect(() => {
+    setCountdown((ride.duration_min ?? 0) * 60);
+    const i = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(i);
+  }, [ride.duration_min]);
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="bg-card rounded-2xl p-5 shadow-card space-y-4">
       <div className="text-center">
         <p className="text-sm text-muted-foreground">{t("ride.remaining")}</p>
-        <div className="text-4xl font-black text-primary tracking-wider">{countdown}</div>
+        <div className="text-4xl font-black text-primary tracking-wider">{fmtTime(countdown)}</div>
       </div>
       <Button variant="outline" className="w-full" onClick={onChat}>
         <MessageCircle className="h-4 w-4 ms-1" /> {t("ride.msg_driver")}
@@ -326,9 +385,10 @@ function InProgress({ ride, countdown, onEnd, onChat }: { ride: Ride; countdown:
       <Button onClick={onEnd} variant="destructive" className="w-full h-12 font-bold">{t("ride.end")}</Button>
     </motion.div>
   );
-}
+});
 
-function ShareRideButton({ ride }: { ride: Ride }) {
+
+const ShareRideButton = memo(function ShareRideButton({ ride }: { ride: Ride }) {
   const { t } = useI18n();
   const share = () => {
     const link = `${window.location.origin}/ride/${ride.id}`;
@@ -350,11 +410,11 @@ function ShareRideButton({ ride }: { ride: Ride }) {
       <Share2 className="h-4 w-4 ms-2" /> {t("ride.share_wa")}
     </Button>
   );
-}
+});
 
 
 
-function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; onClose: () => void }) {
+const ChatSheet = memo(function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; onClose: () => void }) {
   const { t } = useI18n();
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
@@ -428,4 +488,4 @@ function ChatSheet({ rideId, open, onClose }: { rideId: string; open: boolean; o
       </motion.div>
     </motion.div>
   );
-}
+});
