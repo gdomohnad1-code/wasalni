@@ -833,11 +833,12 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   );
 }
 
-function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car, homeMode, homeAddress, onSetHome, onToggleHome }: {
+function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car, homeMode, homeAddress, onSetHome, onToggleHome, onShowQR }: {
   isOnline: boolean; searchingCount: number; hotspotCount: number;
   todayEarnings: number; totalRides: number; car: string;
   homeMode: boolean; homeAddress: string | null;
   onSetHome: () => void; onToggleHome: () => void;
+  onShowQR: () => void;
 }) {
   return (
     <motion.div
