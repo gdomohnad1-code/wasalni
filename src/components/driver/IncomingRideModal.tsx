@@ -12,7 +12,7 @@ type Props = {
   onDismiss: () => void;       // عند الرفض أو انتهاء الوقت
 };
 
-const TIMEOUT_SEC = 25;
+const TIMEOUT_SEC = 30;
 
 export function IncomingRideModal({ open, etaToPickupSec, distanceToPickupKm, rideDistanceKm, onAccept, onDismiss }: Props) {
   const [remaining, setRemaining] = useState(TIMEOUT_SEC);
@@ -26,24 +26,58 @@ export function IncomingRideModal({ open, etaToPickupSec, distanceToPickupKm, ri
         return r - 1;
       });
     }, 1000);
-    // beep loop
+
+    // High-priority two-tone siren + vibration loop
     let audioCtx: AudioContext | null = null;
+    let alarmInt: ReturnType<typeof setInterval> | null = null;
+    let vibrateInt: ReturnType<typeof setInterval> | null = null;
     try {
       audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const beep = () => {
+      // Resume in case browser autoplay policy suspended it
+      audioCtx.resume?.().catch(() => {});
+
+      const tone = (freq: number, start: number, dur: number, gain = 0.28) => {
         if (!audioCtx) return;
         const o = audioCtx.createOscillator();
         const g = audioCtx.createGain();
-        o.frequency.value = 880; g.gain.value = 0.06;
+        o.type = "square";
+        o.frequency.value = freq;
+        // Attack/release envelope to avoid clicks
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.exponentialRampToValueAtTime(gain, start + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
         o.connect(g); g.connect(audioCtx.destination);
-        o.start(); o.stop(audioCtx.currentTime + 0.15);
+        o.start(start); o.stop(start + dur + 0.02);
       };
-      beep();
-      const beepInt = setInterval(beep, 1500);
-      return () => { clearInterval(i); clearInterval(beepInt); audioCtx?.close().catch(() => {}); };
-    } catch {
-      return () => clearInterval(i);
-    }
+
+      const playPattern = () => {
+        if (!audioCtx) return;
+        const t0 = audioCtx.currentTime;
+        // Two-tone urgent pattern (like an ambulance / dispatch alarm)
+        tone(1100, t0, 0.22);
+        tone(760, t0 + 0.26, 0.22);
+        tone(1100, t0 + 0.52, 0.22);
+        tone(760, t0 + 0.78, 0.22);
+      };
+      playPattern();
+      alarmInt = setInterval(playPattern, 1200);
+
+      // Haptic feedback loop (if supported)
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate?.([300, 150, 300]);
+        vibrateInt = setInterval(() => navigator.vibrate?.([300, 150, 300]), 1200);
+      }
+    } catch { /* ignore audio errors */ }
+
+    return () => {
+      clearInterval(i);
+      if (alarmInt) clearInterval(alarmInt);
+      if (vibrateInt) clearInterval(vibrateInt);
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        try { navigator.vibrate?.(0); } catch { /* noop */ }
+      }
+      audioCtx?.close().catch(() => {});
+    };
   }, [open]);
 
   const pct = (remaining / TIMEOUT_SEC) * 100;
