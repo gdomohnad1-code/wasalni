@@ -152,6 +152,8 @@ function BookPage() {
         price: finalPrice,
         round_trip: tripMode === "roundtrip",
         landmark_note: landmarkNote.trim() || null,
+        silent_ride: silentRide,
+        ac_preference: acPref,
         pricing_mode: pricingMode,
         custom_price: pricingMode === "bid" ? Math.round(bidNum) : null,
         status: "searching",
