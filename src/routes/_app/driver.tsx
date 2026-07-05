@@ -719,34 +719,69 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
         className="absolute inset-0"
       />
 
+      {/* Offline darken/blur overlay */}
+      <AnimatePresence>
+        {!isOnline && !activeRide && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 z-10 bg-[#0A192F]/70 backdrop-blur-md flex items-center justify-center px-6 pointer-events-none"
+          >
+            <div className="text-center max-w-xs pointer-events-auto">
+              <motion.div
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 2.4, repeat: Infinity }}
+                className="mx-auto h-20 w-20 rounded-full bg-white/10 border border-white/20 grid place-items-center backdrop-blur-lg mb-4"
+              >
+                <Power className="h-9 w-9 text-white/80" />
+              </motion.div>
+              <p className="text-white font-black text-lg leading-snug">أنت غير متصل الآن</p>
+              <p className="text-white/70 text-sm mt-1 leading-relaxed">
+                قم بتفعيل الاتصال لاستقبال الرحلات
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Community road alerts — floating report button */}
       <RoadAlertReporter position={pos} />
 
 
       <div className="absolute top-0 inset-x-0 z-20 p-4 pointer-events-none">
         <div className="flex justify-between items-start gap-3 pointer-events-auto">
-          <div className="bg-black/80 backdrop-blur-md text-white rounded-2xl px-4 py-3 shadow-xl flex items-center gap-3">
+          <div
+            className="backdrop-blur-xl text-white rounded-2xl px-3 py-2.5 shadow-xl flex items-center gap-3 border border-white/10"
+            style={{ background: "rgba(10, 25, 47, 0.78)" }}
+          >
             <button
               onClick={() => toggleOnline(!isOnline)}
-              className={`h-11 w-11 rounded-full grid place-items-center transition ${isOnline ? "bg-emerald-500" : "bg-gray-700"}`}
+              className={`h-11 w-11 rounded-full grid place-items-center transition shrink-0 ${isOnline ? "bg-emerald-500 shadow-lg shadow-emerald-500/40" : "bg-gray-700"}`}
               aria-label="toggle online"
             >
               <Power className="h-5 w-5" />
             </button>
-            <div>
-              <div className="text-[10px] uppercase opacity-60 tracking-widest">الحالة</div>
-              <div className="font-black text-sm flex items-center gap-1.5">
+            <div className="min-w-0">
+              <div className="font-black text-sm leading-tight truncate max-w-[140px]">
+                {user?.user_metadata?.full_name?.split(" ").slice(0, 2).join(" ") || "السائق"}
+              </div>
+              <div className="text-[10px] opacity-70 leading-tight truncate max-w-[140px]">
+                {docs.car_model || "—"} · {docs.car_plate || ""}
+              </div>
+              <div className="text-[10px] font-bold flex items-center gap-1 mt-0.5">
                 {isOnline ? (
-                  <><span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> متاح</>
-                ) : "غير متاح"}
+                  <><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /><span className="text-emerald-400">متاح</span></>
+                ) : <span className="text-white/50">غير متاح</span>}
               </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-2 items-end">
-            <div className="bg-black/80 backdrop-blur-md text-white rounded-2xl px-4 py-2 shadow-xl text-end">
+            <div
+              className="backdrop-blur-xl text-white rounded-2xl px-4 py-2 shadow-xl text-end border border-white/10"
+              style={{ background: "rgba(10, 25, 47, 0.78)" }}
+            >
               <div className="text-[10px] uppercase opacity-60 tracking-widest">أرباح اليوم</div>
-              <div className="font-black text-lg leading-tight">{earnings.today.toFixed(0)} ج.م</div>
+              <div className="font-black text-lg leading-tight text-emerald-400">{earnings.today.toFixed(0)} ج.م</div>
               <div className="text-[10px] opacity-70">{earnings.rides} رحلة</div>
             </div>
             <button
