@@ -831,6 +831,7 @@ export type Database = {
       }
       rides: {
         Row: {
+          ac_preference: string
           accepted_at: string | null
           completed_at: string | null
           created_at: string
@@ -855,10 +856,12 @@ export type Database = {
           ride_type: Database["public"]["Enums"]["ride_type"]
           rider_id: string
           round_trip: boolean | null
+          silent_ride: boolean
           started_at: string | null
           status: Database["public"]["Enums"]["ride_status"]
         }
         Insert: {
+          ac_preference?: string
           accepted_at?: string | null
           completed_at?: string | null
           created_at?: string
@@ -883,10 +886,12 @@ export type Database = {
           ride_type?: Database["public"]["Enums"]["ride_type"]
           rider_id: string
           round_trip?: boolean | null
+          silent_ride?: boolean
           started_at?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
         }
         Update: {
+          ac_preference?: string
           accepted_at?: string | null
           completed_at?: string | null
           created_at?: string
@@ -911,6 +916,7 @@ export type Database = {
           ride_type?: Database["public"]["Enums"]["ride_type"]
           rider_id?: string
           round_trip?: boolean | null
+          silent_ride?: boolean
           started_at?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
         }
