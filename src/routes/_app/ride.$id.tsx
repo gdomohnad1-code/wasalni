@@ -361,14 +361,21 @@ const Accepted = memo(function Accepted({ ride, onStart, onChat }: { ride: Ride;
 });
 
 
-function InProgress({ ride, countdown, onEnd, onChat }: { ride: Ride; countdown: string; onEnd: () => void; onChat: () => void }) {
+const InProgress = memo(function InProgress({ ride, onEnd, onChat }: { ride: Ride; onEnd: () => void; onChat: () => void }) {
   const { t } = useI18n();
+  // Countdown lives HERE — 1-second ticks never reach the parent route.
+  const [countdown, setCountdown] = useState(() => (ride.duration_min ?? 0) * 60);
+  useEffect(() => {
+    setCountdown((ride.duration_min ?? 0) * 60);
+    const i = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(i);
+  }, [ride.duration_min]);
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="bg-card rounded-2xl p-5 shadow-card space-y-4">
       <div className="text-center">
         <p className="text-sm text-muted-foreground">{t("ride.remaining")}</p>
-        <div className="text-4xl font-black text-primary tracking-wider">{countdown}</div>
+        <div className="text-4xl font-black text-primary tracking-wider">{fmtTime(countdown)}</div>
       </div>
       <Button variant="outline" className="w-full" onClick={onChat}>
         <MessageCircle className="h-4 w-4 ms-1" /> {t("ride.msg_driver")}
@@ -378,7 +385,8 @@ function InProgress({ ride, countdown, onEnd, onChat }: { ride: Ride; countdown:
       <Button onClick={onEnd} variant="destructive" className="w-full h-12 font-bold">{t("ride.end")}</Button>
     </motion.div>
   );
-}
+});
+
 
 function ShareRideButton({ ride }: { ride: Ride }) {
   const { t } = useI18n();
