@@ -36,8 +36,17 @@ const dot = (color: string, size = 16, ring = 6) =>
     iconAnchor: [(size + ring * 2) / 2, (size + ring * 2) / 2],
   });
 
+// Rotatable car icon — inner `.rot` div is rotated via marker-lerp based on heading.
+// Base SVG points UP (heading 0 = north), so heading in degrees maps directly.
 const carIcon = L.divIcon({
-  html: `<div style="background:#000;color:#fff;width:38px;height:38px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:20px;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.35);">🚗</div>`,
+  html: `
+    <div class="rot" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;transition:transform 400ms cubic-bezier(.22,.61,.36,1);will-change:transform;">
+      <div style="background:#0F172A;color:#fff;width:38px;height:38px;border-radius:9999px;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,.35);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l7 8h-3v9h-8v-9H5l7-8z"/>
+        </svg>
+      </div>
+    </div>`,
   className: "",
   iconSize: [44, 44],
   iconAnchor: [22, 22],
