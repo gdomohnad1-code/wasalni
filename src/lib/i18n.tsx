@@ -264,6 +264,7 @@ const dict = {
     "notif.ride_cancelled": "تم إلغاء الرحلة",
     "notif.new_ride_request": "طلب رحلة جديد",
     "notif.open": "فتح",
+    "offline.reconnecting": "لا يوجد اتصال — نحاول إعادة الاتصال...",
     "notif.center": "الإشعارات",
     "notif.mark_all": "تعليم الكل كمقروء",
     "notif.clear": "مسح الكل",
