@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Siren, Activity, BatteryFull, BatteryLow, BatteryCharging, Power, Navigation2, Flag, PhoneCall } from "lucide-react";
+import { Car, MapPin, DollarSign, Loader2, CheckCircle2, Clock, XCircle, AlertTriangle, Camera, Siren, Activity, BatteryFull, BatteryLow, BatteryCharging, Power, Navigation2, Flag, PhoneCall, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { IncomingRideModal } from "@/components/driver/IncomingRideModal";
 import { DriverReadyScreen } from "@/components/driver/DriverReadyScreen";
 import { ArrivalConfirmModal } from "@/components/driver/ArrivalConfirmModal";
 import { RateDialog } from "@/components/RateDialog";
+import { HomeDestSheet } from "@/components/driver/HomeDestSheet";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
@@ -451,6 +452,7 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const declinedRef = useRef<Set<string>>(loadDeclined());
   const [rateRideId, setRateRideId] = useState<string | null>(null);
   const [unratedRides, setUnratedRides] = useState<any[]>([]);
+  const [homeSheetOpen, setHomeSheetOpen] = useState(false);
 
   const isOnline = !!docs.is_online;
   const presence: "available" | "busy" | "offline" =
@@ -512,13 +514,26 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
 
   useEffect(() => {
     if (!isOnline || activeRide || incoming || !pos) return;
+    const homeOn = !!docs?.home_mode_active && docs?.home_dest_lat != null && docs?.home_dest_lng != null;
+    const home: LL | null = homeOn ? { lat: Number(docs.home_dest_lat), lng: Number(docs.home_dest_lng) } : null;
     const candidates = searchingRides
       .filter((r) => !declinedRef.current.has(r.id) && r.pickup_lat && r.pickup_lng && r.rider_id !== user?.id)
       .map((r) => ({ r, d: distKm(pos, { lat: Number(r.pickup_lat), lng: Number(r.pickup_lng) }) }))
       .filter((x) => x.d < 15)
+      .filter(({ r }) => {
+        // Destination-match filter: only rides that move driver closer to home
+        if (!home || !r.destination_lat || !r.destination_lng) return true;
+        const pickup: LL = { lat: Number(r.pickup_lat), lng: Number(r.pickup_lng) };
+        const dest: LL = { lat: Number(r.destination_lat), lng: Number(r.destination_lng) };
+        const dPickupHome = distKm(pickup, home);
+        const dDestHome = distKm(dest, home);
+        // Ride is "on the way home" if the destination is at least 2km closer to home than the pickup,
+        // OR the destination is already within 5km of home (final leg).
+        return dPickupHome - dDestHome > 2 || dDestHome < 5;
+      })
       .sort((a, b) => a.d - b.d);
     if (candidates.length) setIncoming(candidates[0].r);
-  }, [searchingRides, isOnline, activeRide, incoming, pos, user?.id]);
+  }, [searchingRides, isOnline, activeRide, incoming, pos, user?.id, docs?.home_mode_active, docs?.home_dest_lat, docs?.home_dest_lng]);
 
   const acceptIncoming = async () => {
     if (!incoming || !user) return;
@@ -558,6 +573,27 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
     await supabase.from("driver_documents").update({ is_online: v }).eq("driver_id", user.id);
     setDocs({ ...docs, is_online: v });
     toast.success(v ? "أنت الآن متاح للعمل" : "تم إيقاف الاستقبال");
+  };
+
+  const saveHomeDest = async ({ address, coords }: { address: string; coords: LL }) => {
+    if (!user) return;
+    const { error } = await supabase.from("driver_documents").update({
+      home_dest_address: address,
+      home_dest_lat: coords.lat,
+      home_dest_lng: coords.lng,
+      home_mode_active: true,
+    }).eq("driver_id", user.id);
+    if (error) { toast.error("تعذر الحفظ"); return; }
+    setDocs({ ...docs, home_dest_address: address, home_dest_lat: coords.lat, home_dest_lng: coords.lng, home_mode_active: true });
+  };
+
+  const toggleHomeMode = async () => {
+    if (!user) return;
+    if (!docs?.home_dest_lat) { setHomeSheetOpen(true); return; }
+    const next = !docs.home_mode_active;
+    await supabase.from("driver_documents").update({ home_mode_active: next }).eq("driver_id", user.id);
+    setDocs({ ...docs, home_mode_active: next });
+    toast.success(next ? "تم تفعيل وضع مروّح لبيتي 🏠" : "تم إيقاف وضع مروّح لبيتي");
   };
 
   const sendSOS = async () => {
@@ -672,6 +708,10 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
             todayEarnings={earnings.today}
             totalRides={earnings.rides}
             car={`${docs.car_model || ""} · ${docs.car_plate || ""}`}
+            homeMode={!!docs?.home_mode_active}
+            homeAddress={docs?.home_dest_address ?? null}
+            onSetHome={() => setHomeSheetOpen(true)}
+            onToggleHome={toggleHomeMode}
           />
         )}
         {activeRide && phase === "to_pickup" && pickup && (
@@ -753,13 +793,22 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
       )}
 
       {showReady && <DriverReadyScreen onStart={closeReady} name={user?.user_metadata?.full_name?.split(" ")[0]} />}
+
+      <HomeDestSheet
+        open={homeSheetOpen}
+        onClose={() => setHomeSheetOpen(false)}
+        onSave={saveHomeDest}
+        currentAddress={docs?.home_dest_address ?? null}
+      />
     </div>
   );
 }
 
-function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car }: {
+function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car, homeMode, homeAddress, onSetHome, onToggleHome }: {
   isOnline: boolean; searchingCount: number; hotspotCount: number;
   todayEarnings: number; totalRides: number; car: string;
+  homeMode: boolean; homeAddress: string | null;
+  onSetHome: () => void; onToggleHome: () => void;
 }) {
   return (
     <motion.div
@@ -783,7 +832,9 @@ function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car }: 
               <Activity className="h-6 w-6 text-emerald-600" />
             </motion.div>
             <div className="flex-1">
-              <p className="font-black text-base">في انتظار طلبات الرحلات...</p>
+              <p className="font-black text-base">
+                {homeMode ? "🏠 مروّح لبيتي — طلبات على الطريق بس" : "في انتظار طلبات الرحلات..."}
+              </p>
               <p className="text-xs text-gray-500">{car}</p>
             </div>
           </div>
@@ -792,6 +843,36 @@ function IdlePanel({ isOnline, searchingCount, hotspotCount, totalRides, car }: 
             <Pill icon={<MapPin className="h-3.5 w-3.5" />} label="مناطق مزدحمة" value={String(hotspotCount)} accent="red" />
             <Pill icon={<DollarSign className="h-3.5 w-3.5" />} label="رحلات اليوم" value={String(totalRides)} />
           </div>
+
+          {/* وجهة مروّح — Destination match toggle */}
+          <div className={`mt-3 rounded-2xl p-3 border flex items-center gap-3 ${homeMode ? "bg-primary/5 border-primary/30" : "bg-gray-50 border-gray-200"}`}>
+            <button
+              type="button"
+              onClick={onToggleHome}
+              className={`h-11 w-11 rounded-2xl grid place-items-center shrink-0 transition ${homeMode ? "bg-primary text-primary-foreground shadow-md" : "bg-white text-gray-500 border border-gray-200"}`}
+              aria-label="وجهة مروّح"
+            >
+              <Home className="h-5 w-5" />
+            </button>
+            <div className="flex-1 min-w-0">
+              <div className="font-black text-[13px] leading-tight">
+                {homeMode ? "وضع مروّح لبيتي شغّال" : "وجهة مروّح"}
+              </div>
+              <div className="text-[11px] text-gray-500 leading-tight truncate">
+                {homeAddress
+                  ? homeAddress
+                  : "حدد بيتك — هنبعتلك الطلبات اللي على الطريق بس"}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onSetHome}
+              className="text-[11px] font-bold text-primary underline underline-offset-2 shrink-0"
+            >
+              {homeAddress ? "تغيير" : "حدد"}
+            </button>
+          </div>
+
           {hotspotCount > 0 && (
             <div className="mt-3 bg-red-50 border border-red-100 rounded-xl p-2.5 text-xs text-red-700 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
