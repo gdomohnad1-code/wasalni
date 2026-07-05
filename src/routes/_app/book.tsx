@@ -138,6 +138,7 @@ function BookPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t("c.must_signin"));
+      const pin = String(Math.floor(1000 + Math.random() * 9000));
       const { data, error } = await supabase.from("rides").insert({
         rider_id: user.id,
         pickup_address: pickup,
@@ -156,6 +157,7 @@ function BookPage() {
         ac_preference: acPref,
         pricing_mode: pricingMode,
         custom_price: pricingMode === "bid" ? Math.round(bidNum) : null,
+        start_pin: pin,
         status: "searching",
       }).select().single();
       if (error) throw error;

@@ -20,6 +20,7 @@ import { DriverReadyScreen } from "@/components/driver/DriverReadyScreen";
 import { ArrivalConfirmModal } from "@/components/driver/ArrivalConfirmModal";
 import { RateDialog } from "@/components/RateDialog";
 import { HomeDestSheet } from "@/components/driver/HomeDestSheet";
+import { PinVerifyModal } from "@/components/driver/PinVerifyModal";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
@@ -453,6 +454,8 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
   const [rateRideId, setRateRideId] = useState<string | null>(null);
   const [unratedRides, setUnratedRides] = useState<any[]>([]);
   const [homeSheetOpen, setHomeSheetOpen] = useState(false);
+  const [totalCompleted, setTotalCompleted] = useState(0);
+  const [pinModalOpen, setPinModalOpen] = useState(false);
 
   const isOnline = !!docs.is_online;
   const presence: "available" | "busy" | "offline" =
@@ -498,6 +501,7 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
     const totalE = (comp.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8;
     const todayE = (today.data || []).reduce((s: number, r: any) => s + Number(r.price || 0), 0) * 0.8;
     setEarnings({ today: todayE, total: totalE, rides: (today.data || []).length });
+    setTotalCompleted((comp.data || []).length);
     setUnratedRides(unrated.data || []);
   };
 
@@ -555,10 +559,22 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
     setIncoming(null);
   };
 
-  const startTrip = async () => {
+  const PIN_REQUIRED_AFTER = 20;
+  const pinRequired = totalCompleted >= PIN_REQUIRED_AFTER && !!activeRide?.start_pin;
+
+  const doStartTrip = async () => {
     if (!activeRide) return;
     await supabase.from("rides").update({ status: "in_progress", started_at: new Date().toISOString() }).eq("id", activeRide.id);
     toast.success("بدأت الرحلة");
+  };
+
+  const startTrip = async () => {
+    if (!activeRide) return;
+    if (pinRequired) {
+      setPinModalOpen(true);
+      return;
+    }
+    await doStartTrip();
   };
   const endTrip = async () => {
     if (!activeRide) return;
@@ -799,6 +815,16 @@ function DriverDashboard({ docs, setDocs }: { docs: any; setDocs: (d: any) => vo
         onClose={() => setHomeSheetOpen(false)}
         onSave={saveHomeDest}
         currentAddress={docs?.home_dest_address ?? null}
+      />
+
+      <PinVerifyModal
+        open={pinModalOpen}
+        onClose={() => setPinModalOpen(false)}
+        expected={activeRide?.start_pin ?? ""}
+        onVerified={async () => {
+          setPinModalOpen(false);
+          await doStartTrip();
+        }}
       />
     </div>
   );

@@ -39,6 +39,7 @@ interface Ride {
   landmark_note: string | null;
   silent_ride: boolean | null;
   ac_preference: string | null;
+  start_pin: string | null;
 }
 
 function RidePage() {
@@ -249,6 +250,24 @@ function Accepted({ ride, onStart, onChat }: { ride: Ride; onStart: () => void; 
           </div>
         </div>
       </div>
+      {ride.start_pin && (
+        <div className="rounded-2xl bg-gradient-primary text-primary-foreground p-4 shadow-elevated">
+          <div className="flex items-center justify-between mb-1.5">
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-widest opacity-80">رمز الركوب</div>
+              <div className="text-[11px] opacity-75">اعطي السائق الرقم ده لبدء الرحلة</div>
+            </div>
+            <span className="text-lg">🔐</span>
+          </div>
+          <div className="flex justify-center gap-2 mt-2">
+            {ride.start_pin.split("").map((d, i) => (
+              <div key={i} className="h-12 w-11 rounded-xl bg-white/15 backdrop-blur-sm grid place-items-center text-2xl font-black tracking-widest">
+                {d}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {ride.landmark_note && (
         <div className="flex items-start gap-2 rounded-xl bg-primary/5 border border-primary/20 p-3 text-[13px]">
           <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
