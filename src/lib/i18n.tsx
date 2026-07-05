@@ -115,6 +115,8 @@ const dict = {
     "book.cairo": "القاهرة",
     "book.cairo_eg": "القاهرة، مصر",
     "book.your_loc": "موقعك",
+    "book.landmark_ph": "علامة مميزة (اختياري) — مثال: قدام سوبر ماركت الأمانة",
+    "book.landmark_label": "علامة مميزة",
 
     // ride
     "ride.title": "رحلتك",
@@ -140,6 +142,12 @@ const dict = {
     "ride.min": "دقيقة",
     "ride.on_the_way": "في الطريق إليك",
     "ride.in_route": "نحو وجهتك",
+    "ride.quick_here": "أنا في موقعي الحالي 📍",
+    "ride.quick_jacket": "أرتدي جاكيت أسود 🧥",
+    "ride.quick_5min": "خمس دقايق وأكون عندك ⏱️",
+    "ride.share_wa": "شارك رحلتك على واتساب",
+    "ride.share_msg": "أنا راكب حالياً مع وصلني. السائق: {driver}، السيارة: {car}. تابع موقعي لايف من هنا: {link}",
+    "ride.landmark_hint": "علامة الراكب",
 
     // wallet
     "wallet.title": "المحفظة",
