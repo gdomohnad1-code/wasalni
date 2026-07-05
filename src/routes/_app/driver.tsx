@@ -19,6 +19,7 @@ import { IncomingRideModal } from "@/components/driver/IncomingRideModal";
 import { DriverReadyScreen } from "@/components/driver/DriverReadyScreen";
 import { ArrivalConfirmModal } from "@/components/driver/ArrivalConfirmModal";
 import { RateDialog } from "@/components/RateDialog";
+import { HomeDestSheet } from "@/components/driver/HomeDestSheet";
 
 export const Route = createFileRoute("/_app/driver")({
   component: DriverPage,
