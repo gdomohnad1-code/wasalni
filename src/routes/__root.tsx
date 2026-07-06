@@ -8,9 +8,13 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { useEffect } from "react";
+
 import { Toaster } from "@/components/ui/sonner";
 import { I18nProvider } from "@/lib/i18n";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
+import { registerPWA } from "@/pwa/register";
 
 import appCss from "../styles.css?url";
 
@@ -123,11 +127,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    registerPWA();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <OfflineBanner />
         <Outlet />
+        <PWAInstallBanner />
         <Toaster richColors position="top-center" />
       </I18nProvider>
     </QueryClientProvider>
