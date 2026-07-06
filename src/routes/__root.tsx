@@ -8,9 +8,13 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { useEffect } from "react";
+
 import { Toaster } from "@/components/ui/sonner";
 import { I18nProvider } from "@/lib/i18n";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
+import { registerPWA } from "@/pwa/register";
 
 import appCss from "../styles.css?url";
 
@@ -84,7 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "theme-color", content: "#0F172A" },
+      { name: "theme-color", content: "#0A192F" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Wasalny" },
@@ -123,11 +127,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    registerPWA();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <OfflineBanner />
         <Outlet />
+        <PWAInstallBanner />
         <Toaster richColors position="top-center" />
       </I18nProvider>
     </QueryClientProvider>
