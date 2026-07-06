@@ -12,7 +12,9 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.1",
     "@capacitor/core": "^8.4.1",
+    "@capacitor/ios": "^8.4.1",
     "@cloudflare/vite-plugin": "^1.25.5",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource/cairo": "^5.2.7",
