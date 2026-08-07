@@ -5,8 +5,8 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function prerender() {
-  const serverPath = join(__dirname, '..', 'dist', 'server', 'index.mjs');
-  const outputPath = join(__dirname, '..', 'dist', 'client', 'index.html');
+  const serverPath = join(__dirname, '..', '.output', 'server', 'index.mjs');
+  const outputPath = join(__dirname, '..', '.output', 'public', 'index.html');
 
   const mod = await import(serverPath);
   const req = new Request('http://localhost/');
