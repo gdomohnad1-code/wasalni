@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
-      java: 17
+      java: 21
       node: 22
     scripts:
       - name: Install JavaScript dependencies
@@ -36,7 +36,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-      node: 22
+      node: 20
       cocoapods: default
     scripts:
       - name: Install JavaScript dependencies
