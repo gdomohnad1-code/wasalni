@@ -21,7 +21,7 @@ workflows:
         script: |
           cd android && ./gradlew assembleRelease
     artifacts:
-      - android/app/build/outputs/bundle/release/*.aab
+      - android/app/build/outputs/bundle/release/*.apk
 
   ios-app-store:
     name: Wassalni iOS App Store Build
