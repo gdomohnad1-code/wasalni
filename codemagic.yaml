@@ -17,9 +17,9 @@ workflows:
         script: |
           npx cap add android || true
           npx cap sync android
-      - name: Build Android AAB Release
+      - name: Build Android APK Release
         script: |
-          cd android && ./gradlew bundleRelease
+          cd android && ./gradlew assembleRelease
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab
 
