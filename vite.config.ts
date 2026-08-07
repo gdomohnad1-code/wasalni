@@ -43,6 +43,7 @@ export default defineConfig({
           ],
         },
         workbox: {
+          globStrict: false,
           globPatterns: ["**/*.{js,css,html}", "**/*.{svg,png,ico,jpg,jpeg,webp,woff,woff2}"],
           globIgnores: ["**/node_modules/**/*", "sw.js", "workbox-*.js"],
           
