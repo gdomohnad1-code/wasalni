@@ -7,7 +7,6 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    base:'./',
     plugins: [
       mcpPlugin(),
       VitePWA({
