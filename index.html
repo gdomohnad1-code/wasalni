@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wassalni</title>
     
+    <!-- The Capacitor URL Rewrite Fix -->
+    <script>
+      if (window.location.href.includes('index.html')) {
+        window.history.replaceState(null, '', '/');
+      }
+    </script>
+
     <!-- Nuclear Offline Debugger -->
     <script>
       window.onerror = function(msg, url, line, col, error) {
