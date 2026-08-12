@@ -1,31 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Wassalni</title>
-    <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wassalni</title>
-    <!-- Nuclear Offline Debugger -->
+    
+    <!-- Router SSR Fail-Safe -->
     <script>
-      window.onerror = function(msg, url, line, col, error) {
-        document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:white;color:red;z-index:9999;padding:20px;overflow-y:auto;font-family:monospace;direction:ltr;text-align:left;"><b>JS Error:</b><br>' + msg + '<br><b>Line:</b> ' + line + '<br><b>Stack:</b><br>' + (error ? error.stack : 'N/A') + '</div>';
-        return false;
-      };
-      window.addEventListener("unhandledrejection", function(event) {
-        document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:white;color:red;z-index:9999;padding:20px;overflow-y:auto;font-family:monospace;direction:ltr;text-align:left;"><b>Promise Error:</b><br>' + (event.reason ? (event.reason.stack || event.reason) : event) + '</div>';
-      });
+      window.$_TSR = { t: new Map(), buffer: [] };
+      window.__TSR__ = { matches: [] };
     </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
   </head>
   <body>
     <div id="root"></div>
