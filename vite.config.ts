@@ -12,7 +12,7 @@ export default defineConfig({
       mcpPlugin(),
       VitePWA({
         registerType: "autoUpdate",
-        injectRegister: null,
+        injectRegister: false,
         filename: "sw.js",
         devOptions: { enabled: false },
         includeAssets: ["logo.png", "favicon.ico", "offline.html"],
