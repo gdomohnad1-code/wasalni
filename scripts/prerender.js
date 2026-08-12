@@ -5,61 +5,62 @@ import { dirname, join } from "path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
-/**
- * Without the Nitro SSR server, no index.html is generated. We create a
- * static SPA shell that loads the built client bundle so Capacitor's
- * WebView has an HTML entry point.
- */
 function generateStaticHtml() {
   const clientDir = join(root, "dist", "client");
   const assetsDir = join(clientDir, "assets");
 
-  // Find the main entry JS bundle (TanStack Start names it index-*.js)
   let entryScript = null;
   let entryCss = null;
+  
   if (existsSync(assetsDir)) {
+    // Find all compiled JS files, ignoring node_modules
     const jsFiles = readdirSync(assetsDir).filter(
-      (f) => f.startsWith("index-") && f.endsWith(".js") && !f.includes("node_modules"),
+      (f) => f.endsWith(".js") && !f.includes("node_modules")
     );
-    // The main bundle is typically the largest index-*.js
+    
+    // Grab the largest JS bundle as the main client entry
     if (jsFiles.length > 0) {
-      entryScript = `/assets/${jsFiles.sort((a, b) => {
-        const sa = existsSync(join(assetsDir, a)) ? readFileSync(join(assetsDir, a)).length : 0;
-        const sb = existsSync(join(assetsDir, b)) ? readFileSync(join(assetsDir, b)).length : 0;
+      const largestJs = jsFiles.sort((a, b) => {
+        const sa = readFileSync(join(assetsDir, a)).length;
+        const sb = readFileSync(join(assetsDir, b)).length;
         return sb - sa;
-      })[0]}`;
+      })[0];
+      
+      // Use relative paths to prevent Capacitor routing conflicts
+      entryScript = `./assets/${largestJs}`;
     }
 
-    const cssFiles = readdirSync(assetsDir).filter(
-      (f) => f.startsWith("index-") && f.endsWith(".css"),
-    );
-    if (cssFiles.length > 0) entryCss = `/assets/${cssFiles[0]}`;
+    // Find all compiled CSS files
+    const cssFiles = readdirSync(assetsDir).filter((f) => f.endsWith(".css"));
+    if (cssFiles.length > 0) {
+        const largestCss = cssFiles.sort((a, b) => {
+            return readFileSync(join(assetsDir, b)).length - readFileSync(join(assetsDir, a)).length;
+        })[0];
+        entryCss = `./assets/${largestCss}`;
+    }
   }
 
   const templatePath = join(root, "index.html");
   let html = readFileSync(templatePath, "utf-8");
 
-  // Replace the dev entry point with the built bundle
+  // 1. Strip out any existing development scripts securely
+  html = html.replace(/<script type="module" src="[^"]+"><\/script>/g, "");
+
+  // 2. Inject the compiled client bundle right before the closing </body> tag
   if (entryScript) {
-    html = html.replace(
-      /<script type="module" src="\/src\/main\.tsx"><\/script>/,
-      `<script type="module" src="${entryScript}"></script>`,
-    );
+    html = html.replace("</body>", `  <script type="module" src="${entryScript}"></script>\n  </body>`);
   }
 
-  // Inject CSS link if found
+  // 3. Inject the CSS right before the closing </head> tag
   if (entryCss && !html.includes(entryCss)) {
-    html = html.replace(
-      "</head>",
-      `    <link rel="stylesheet" href="${entryCss}">\n  </head>`,
-    );
+    html = html.replace("</head>", `  <link rel="stylesheet" href="${entryCss}">\n  </head>`);
   }
 
   const outputPath = join(clientDir, "index.html");
   writeFileSync(outputPath, html, "utf-8");
   console.log(`Generated ${html.length} bytes to ${outputPath}`);
 
-  // Also copy to .output/public for Capacitor (webDir)
+  // Copy to .output/public for Capacitor
   const capacitorDir = join(root, ".output", "public");
   mkdirSync(join(root, ".output"), { recursive: true });
   cpSync(clientDir, capacitorDir, { recursive: true });
