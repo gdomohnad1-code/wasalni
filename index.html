@@ -5,10 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wassalni</title>
     
-    <!-- Router SSR Fail-Safe -->
+    <!-- Router SSR Fail-Safe (Client-only fallback) -->
     <script>
       window.$_TSR = { t: new Map(), buffer: [] };
-      window.__TSR__ = { matches: [] };
+      window.__TSR__ = { matches: [], dehydrated: { matches: [] } };
+    </script>
+
+    <!-- Nuclear Offline Debugger -->
+    <script>
+      window.onerror = function(msg, url, line, col, error) {
+        document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:black;color:#0f0;z-index:9999;padding:20px;overflow-y:auto;font-family:monospace;direction:ltr;text-align:left;"><b>JS Error:</b><br>' + msg + '<br><b>Line:</b> ' + line + '<br><b>Stack:</b><br>' + (error ? error.stack : 'N/A') + '</div>';
+        return false;
+      };
+      window.addEventListener("unhandledrejection", function(event) {
+        document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:black;color:#0f0;z-index:9999;padding:20px;overflow-y:auto;font-family:monospace;direction:ltr;text-align:left;"><b>Promise Error:</b><br>' + (event.reason ? (event.reason.stack || event.reason) : event) + '</div>';
+      });
     </script>
   </head>
   <body>
